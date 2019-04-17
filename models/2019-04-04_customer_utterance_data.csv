@@ -1,0 +1,44 @@
+ACTION,TOPIC,UTTERANCE
+C_ANYTHING_ELSE_AVAILABLE,,ok do you have any other cameras
+C_DECIDE_TO_BUY,,okay I think I'll take that
+C_ENTERS,,
+C_EXAMINES_CAMERA,,
+C_GOODBYE,,I'll see you later
+C_GREETS,,hello
+C_JUST_BROWSING,,I'm just browsing at the moment around
+C_LEAVES,,
+C_LOOKING_FOR_A_CAMERA,,I'm looking for a camera
+C_NOT_SURE,,I'm not really sure
+C_QUESTION_ABOUT_FEATURE,camera_name,what is this camera called
+C_QUESTION_ABOUT_FEATURE,camera_type,what kind of camera is this
+C_QUESTION_ABOUT_FEATURE,color,what colors does this one come in
+C_QUESTION_ABOUT_FEATURE,weight,how much does this one weigh
+C_QUESTION_ABOUT_FEATURE,preset_modes,does it have preset modes
+C_QUESTION_ABOUT_FEATURE,effects,does it have any effect modes
+C_QUESTION_ABOUT_FEATURE,price,how much does it cost
+C_QUESTION_ABOUT_FEATURE,resolution,what is the resolution
+C_QUESTION_ABOUT_FEATURE,optical_zoom,does it have optical zoom
+C_QUESTION_ABOUT_FEATURE,settings,what kind of settings does it have
+C_QUESTION_ABOUT_FEATURE,autofocus_points,how many autofocus points does it have
+C_QUESTION_ABOUT_FEATURE,sensor_size,what is the sensor size
+C_QUESTION_ABOUT_FEATURE,ISO,what is the ISO
+C_QUESTION_ABOUT_FEATURE,long_exposure,can it take long exposure shots
+C_QUESTION_ABOUT_FEATURE,bulb_mode_what,what is bulb mode
+C_QUESTION_ABOUT_FEATURE,glamour_retouch_effects_what,what are glamor retouch effects
+C_QUESTION_ABOUT_FEATURE,ISO_what,what is ISO
+C_QUESTION_ABOUT_FEATURE,megapixels_what,what does resolution mean
+C_QUESTION_ABOUT_FEATURE,optical_zoom_what,what is optical zoom
+C_QUESTION_ABOUT_FEATURE,preset_modes_what,what are preset modes
+C_QUESTION_ABOUT_FEATURE,sensor_size_what,what is the meaning of sensor size
+C_QUESTION_ABOUT_FEATURE,artistic_effects_what,what are artistic effects
+C_QUESTION_ABOUT_FEATURE,exposure_what,what is exposure
+C_QUESTION_ABOUT_FEATURE,mirrorless_what,what is a mirrorless camera
+C_SILENT_OR_BACKCHANNEL,,
+C_SILENT_OR_BACKCHANNEL,,alright
+C_SILENT_OR_BACKCHANNEL,,okay
+C_SILENT_OR_BACKCHANNEL,,I see
+C_TELL_ME_ABOUT_THIS_CAMERA,,can you tell me more about this camera
+C_THANK_YOU,,thank you for your help
+C_THINK_IT_OVER,,yeah I think I'll see about that and then I'll let you know
+C_WALKS_TO_CAMERA,,
+C_YES,,yes

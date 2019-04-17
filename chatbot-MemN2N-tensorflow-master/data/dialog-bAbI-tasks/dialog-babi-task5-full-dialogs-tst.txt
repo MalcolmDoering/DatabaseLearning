@@ -1,0 +1,36 @@
+1 D | Sony | LOCATION | DISPLAY_1
+2 D | Sony | PRICE | $550
+3 D | Nikon | LOCATION | DISPLAY_2
+4 D | Nikon | PRICE | $68
+5 C | DISPLAY_1 | How much is this one?
+6 S | DISPLAY_1 | This on is $550.
+7 C | DISPLAY_2 | How much is this one?
+8 S | DISPLAY_2 | This on is $68.
+
+1 D | Sony | LOCATION | DISPLAY_1
+2 D | Sony | PRICE | $550
+3 D | Nikon | LOCATION | DISPLAY_2
+4 D | Nikon | PRICE | $68
+5 C | DISPLAY_2 | How much is this one?
+6 S | DISPLAY_2 | This on is $68.
+7 C | DISPLAY_1 | How much is this one?
+8 S | DISPLAY_1 | This on is $550.
+
+1 D | Sony | LOCATION | DISPLAY_1
+2 D | Sony | PRICE | $500
+3 D | Nikon | LOCATION | DISPLAY_2
+4 D | Nikon | PRICE | $60
+5 C | DISPLAY_1 | How much is this one?
+6 S | DISPLAY_1 | This on is $500.
+7 C | DISPLAY_2 | How much is this one?
+8 S | DISPLAY_2 | This on is $60.
+
+1 D | Sony | LOCATION | DISPLAY_1
+2 D | Sony | PRICE | $500
+3 D | Nikon | LOCATION | DISPLAY_2
+4 D | Nikon | PRICE | $60
+5 C | DISPLAY_2 | How much is this one?
+6 S | DISPLAY_2 | This on is $60.
+7 C | DISPLAY_1 | How much is this one?
+8 S | DISPLAY_1 | This on is $500.
+

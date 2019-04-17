@@ -1,0 +1,73 @@
+ACTION,TOPIC,CAMERA_OF_CONVERSATION,UTTERANCE
+S_ANSWERS_QUESTION_ABOUT_FEATURE,artistic_effects_what,CAMERA_X,so basically when you take a picture of something then you can give a filter so it looks like a painting or like a drawing
+S_ANSWERS_QUESTION_ABOUT_FEATURE,autofocus_points,CAMERA_X,This one has {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,black,CAMERA_X,This one comes in {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,bulb_mode,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,bulb_mode_what,CAMERA_X,bulb mode so you just press the shutter once and then you can leave it as long as you can and it takes all the exposure and then if you press it again it will turn off
+S_ANSWERS_QUESTION_ABOUT_FEATURE,camera_type,CAMERA_X,This is a {} camera.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,color,CAMERA_X,This one comes in {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,DSLR,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,ease_of_use,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,effects,CAMERA_X,This one has {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,expensive,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,exposure,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,exposure_what,CAMERA_X,"exposure is how long you leave the shutter open. The longer it’s open, the more light can come in."
+S_ANSWERS_QUESTION_ABOUT_FEATURE,full_frame,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,glamour_retouch_effects_what,CAMERA_X,"when you're taking a picture of yourself, it can brighten your skin or widen your eyes"
+S_ANSWERS_QUESTION_ABOUT_FEATURE,high_performance,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,image_quality,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,ISO,CAMERA_X,This one has {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,ISO_what,CAMERA_X,"ISO is needed if you want to shoot in the dark, The higher the iso the better the quality of image when it's shooting in the dark"
+S_ANSWERS_QUESTION_ABOUT_FEATURE,lenses,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,lenses_sell,,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,long_exposure,CAMERA_X,This one can take long exposures up to {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,low_light_performance,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,manual_settings,,This one has {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,megapixels,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,megapixels_what,CAMERA_X,the megapixel tells you how much detail can be captured in the photograph
+S_ANSWERS_QUESTION_ABOUT_FEATURE,mirrorless,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,mirrorless_what,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,motion,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,movement,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,optical_zoom,CAMERA_X,This one has {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,optical_zoom_what,CAMERA_X,Optical zoom allows you to get a close up of whatever you're taking a picture of
+S_ANSWERS_QUESTION_ABOUT_FEATURE,pink,CAMERA_X,This one comes in {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,point_and_shoot,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,preset_modes,CAMERA_X,This one has {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,preset_modes_what,CAMERA_X,"Basically preset modes are automatic settings for shooting in certain conditions, like if you are at the beach or taking a portrait."
+S_ANSWERS_QUESTION_ABOUT_FEATURE,price,CAMERA_X,This one costs {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,red,CAMERA_X,This one comes in {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,resolution,CAMERA_X,This one has {} resolution.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,sensor_size,CAMERA_X,This one has a {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,sensor_size_what,CAMERA_X,the sensor size is how big the frame of you take each picture
+S_ANSWERS_QUESTION_ABOUT_FEATURE,settings,CAMERA_X,This one has {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,weight,CAMERA_X,This one weighs {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,white,CAMERA_X,This one comes in {}.
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,is there anything else I can help you with today?
+S_GOODBYE,,,have a great day
+S_GREET_RESPONSE,,,how can I help you today
+S_GREETS,,,can I help you?
+S_INTRODUCES_CAMERA,,CAMERA_X,Let me show you this. Here we have the {}.
+S_INTRODUCES_FEATURE,autofocus_points,CAMERA_X,This one has {}.
+S_INTRODUCES_FEATURE,camera_type,CAMERA_X,This is a {} camera.
+S_INTRODUCES_FEATURE,color,CAMERA_X,This one comes in {}.
+S_INTRODUCES_FEATURE,effects,CAMERA_X,This one has {}.
+S_INTRODUCES_FEATURE,ISO,CAMERA_X,This one has {}.
+S_INTRODUCES_FEATURE,long_exposure,CAMERA_X,This one can take long exposures up to {}.
+S_INTRODUCES_FEATURE,optical_zoom,CAMERA_X,This one has {}.
+S_INTRODUCES_FEATURE,preset_modes,CAMERA_X,This one has {}.
+S_INTRODUCES_FEATURE,price,CAMERA_X,This one costs {}.
+S_INTRODUCES_FEATURE,resolution,CAMERA_X,This one has {} resolution.
+S_INTRODUCES_FEATURE,sensor_size,CAMERA_X,This one has a {}.
+S_INTRODUCES_FEATURE,settings,CAMERA_X,This one has {}.
+S_INTRODUCES_FEATURE,weight,CAMERA_X,This one weighs {}.
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you have any more questions please let me know
+S_NO,,,no
+S_NONE,,,
+S_NOT_SURE,,,I'm not really sure about that
+S_RETURNS_TO_COUNTER,,,
+S_THANK_YOU,,,thank you very much
+S_TRY_IT_OUT,,,feel free to take some picture with it if you like
+S_YES,,,yes
+S_YOURE_WELCOME,,,come back anytime thank you have a good afternoon
+S_THATS_ALL_WE_HAVE_AVAILABLE,,,That’s all we have available at the moment.
