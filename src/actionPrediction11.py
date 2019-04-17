@@ -683,7 +683,7 @@ if __name__ == "__main__":
     #
     print("setting up the model...", flush=True)
     
-    batchSize = 256
+    batchSize = 1024
     embeddingSize = 30
     
     
@@ -739,7 +739,7 @@ if __name__ == "__main__":
     
     
     camerasOfInterest = ["CAMERA_1", "CAMERA_2"]
-    featuresOfInterest = ["price", "autofocus_points"]
+    featuresOfInterest = ["price", "camera_type"]
     
     #
     interestingTrainInstances = []
@@ -769,7 +769,7 @@ if __name__ == "__main__":
         for c in camerasOfInterest:
             for i in range(len(interactions0)):
                 if interactions0[i]["CUSTOMER_TOPIC"] == f and interactions0[i]["CURRENT_CAMERA_OF_CONVERSATION"] == c:
-                    interestingTrainInstances.append((i, "{} {} {}".format("DB2", c, f)))
+                    interestingTestInstances.append((i, "{} {} {}".format("DB2", c, f)))
                     break
     
     
@@ -820,7 +820,7 @@ if __name__ == "__main__":
         print(e, "train cost", trainCostAve, trainCostStd, flush=True)
         
         
-        if e % 60 == 0 or e == (numEpochs-1):
+        if e % 50 == 0 or e == (numEpochs-1):
             
             learner.save(sessionDir+"/{}_saved_session".format(e))
             
