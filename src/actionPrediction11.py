@@ -834,8 +834,8 @@ if __name__ == "__main__":
         
         # from DB 2
         for c in camerasOfInterest:
-            for i in range(len(interactions0)):
-                if interactions0[i]["CUSTOMER_TOPIC"] == f and interactions0[i]["CURRENT_CAMERA_OF_CONVERSATION"] == c:
+            for i in range(len(interactions2)):
+                if interactions2[i]["CUSTOMER_TOPIC"] == f and interactions2[i]["CURRENT_CAMERA_OF_CONVERSATION"] == c:
                     interestingTestInstances.append((i, "{} {} {}".format("DB2", c, f)))
                     break
     
