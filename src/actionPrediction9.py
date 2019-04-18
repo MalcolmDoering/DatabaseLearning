@@ -243,11 +243,11 @@ for e in range(numEpochs):
     
     trainLoss = network1.train(inputVecs[:4], outputClasses[:4])
     
-    trainPreds, _ = network1.predict(inputVecs[:4], outputClasses[:4])
-    testPreds, testLoss = network1.predict(inputVecs[4:], outputClasses[4:])
+    trainUttPreds, _ = network1.predict(inputVecs[:4], outputClasses[:4])
+    testUttPreds, testLoss = network1.predict(inputVecs[4:], outputClasses[4:])
     
-    trainAcc = accuracy_score(outputClasses[:4], trainPreds)
-    testAcc = accuracy_score(outputClasses[4:], testPreds)
+    trainAcc = accuracy_score(outputClasses[:4], trainUttPreds)
+    testAcc = accuracy_score(outputClasses[4:], testUttPreds)
     
     print e, trainLoss, trainAcc, testLoss, testAcc
     

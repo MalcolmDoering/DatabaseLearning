@@ -578,10 +578,10 @@ if __name__ == "__main__":
         trainCost = model.batch_fit(s[:4], q[:4], a[:4])
         
         
-        trainPreds = model.predict(s[:4], q[:4])
+        trainUttPreds = model.predict(s[:4], q[:4])
         
         # flatten the arrays
-        trainPredsFlat = np.array(trainPreds).flatten()
+        trainPredsFlat = np.array(trainUttPreds).flatten()
         sentCharIndexListsFlat = np.array(sentCharIndexLists[:4]).flatten()
         
         trainAcc = metrics.accuracy_score(trainPredsFlat, sentCharIndexListsFlat)
@@ -593,7 +593,7 @@ if __name__ == "__main__":
             print "****************************************************************"
             print "TRAIN", e, round(trainCost, 3), round(trainAcc, 2)
             
-            predSents = unvectorize_output_sentences(trainPreds, indexToChar)
+            predSents = unvectorize_output_sentences(trainUttPreds, indexToChar)
             
             for i in range(len(predSents)):
                 print "TRUE:", outputs[i]
@@ -601,11 +601,11 @@ if __name__ == "__main__":
                 print
             
             
-            testPreds = model.predict(s[4:], q[4:])
-            predSents = unvectorize_output_sentences(testPreds, indexToChar)
+            testUttPreds = model.predict(s[4:], q[4:])
+            predSents = unvectorize_output_sentences(testUttPreds, indexToChar)
             
             # flatten the arrays
-            testPredsFlat = np.array(testPreds).flatten()
+            testPredsFlat = np.array(testUttPreds).flatten()
             sentCharIndexListsFlat = np.array(sentCharIndexLists[4:]).flatten()
             
             testAcc = metrics.accuracy_score(testPredsFlat, sentCharIndexListsFlat)

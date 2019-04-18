@@ -494,8 +494,8 @@ if __name__ == "__main__":
         trainCost = model.batch_fit(s, q, a)
         
         
-        trainPreds = model.predict(s, q)
-        trainAcc = metrics.accuracy_score(np.array(trainPreds), a)
+        trainUttPreds = model.predict(s, q)
+        trainAcc = metrics.accuracy_score(np.array(trainUttPreds), a)
         
         
         print e, round(trainCost, 3), round(trainAcc, 2)

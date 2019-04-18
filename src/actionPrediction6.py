@@ -682,30 +682,30 @@ if __name__ == "__main__":
                 #
                 
                 # TRAIN
-                trainPreds, trainCopyScores, trainGenScores = sess.run([pred_op, copy_scores, gen_scores], feed_dict=train_feed_dict)
+                trainUttPreds, trainCopyScores, trainGenScores = sess.run([pred_op, copy_scores, gen_scores], feed_dict=train_feed_dict)
                 
                 trainAcc = 0.0
-                for i in range(len(trainPreds)):
-                    trainAcc = normalized_edit_distance(trainGroundTruth[i], trainPreds[i])
+                for i in range(len(trainUttPreds)):
+                    trainAcc = normalized_edit_distance(trainGroundTruth[i], trainUttPreds[i])
                 trainAcc /= len(trainGroundTruth)
                 
-                #trainPredsFlat = np.array(trainPreds).flatten()
+                #trainPredsFlat = np.array(trainUttPreds).flatten()
                 #trainAcc = metrics.accuracy_score(trainPredsFlat, trainGroundTruthFlat)
-                trainPredSents = unvectorize_sentences(trainPreds, indexToChar)
+                trainPredSents = unvectorize_sentences(trainUttPreds, indexToChar)
                 trainPredSents = color_results(trainPredSents, trainCopyScores, trainGenScores, charToIndex)
                 
                 
                 # TEST
-                testPreds, testCopyScores, testGenScores = sess.run([pred_op, copy_scores, gen_scores], feed_dict=test_feed_dict)
+                testUttPreds, testCopyScores, testGenScores = sess.run([pred_op, copy_scores, gen_scores], feed_dict=test_feed_dict)
                 
                 testAcc = 0.0
-                for i in range(len(testPreds)):
-                    testAcc = normalized_edit_distance(testGroundTruth[i], testPreds[i])
+                for i in range(len(testUttPreds)):
+                    testAcc = normalized_edit_distance(testGroundTruth[i], testUttPreds[i])
                 testAcc /= len(testGroundTruth)
                 
-                #testPredsFlat = np.array(testPreds).flatten()
+                #testPredsFlat = np.array(testUttPreds).flatten()
                 #testAcc = metrics.accuracy_score(testPredsFlat, testGroundTruthFlat)
-                testPredSents = unvectorize_sentences(testPreds, indexToChar)
+                testPredSents = unvectorize_sentences(testUttPreds, indexToChar)
                 testPredSents = color_results(testPredSents, testCopyScores, testGenScores, charToIndex)
                 
                 

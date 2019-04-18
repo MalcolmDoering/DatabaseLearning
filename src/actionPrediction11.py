@@ -885,7 +885,7 @@ if __name__ == "__main__":
                                            trainOutputShopkeeperLocations_shuf[i-batchSize:i])
             
             trainCosts.append(batchTrainCost)
-            print("\t", batchTrainCost, flush=True)
+            #print("\t", batchTrainCost, flush=True)
             #break
         trainCostAve = np.mean(trainCosts)
         trainCostStd = np.std(trainCosts)
@@ -894,7 +894,8 @@ if __name__ == "__main__":
         
         if e % 50 == 0 or e == (numEpochs-1):
             
-            learner.save(sessionDir+"/{}_saved_session".format(e))
+            saveModelDir = tools.create_directory(sessionDir+"/{}".format(e))
+            learner.save(saveModelDir+"/saved_session".format(e))
             
             #
             # compute accuracy, etc.
@@ -974,11 +975,12 @@ if __name__ == "__main__":
                 trainOutputIndexLists_.append(trainOutputIndexLists[i])
             
             trainPredSents = unvectorize_sentences(trainUttPreds_, indexToChar)
-            #trainPredSents2, trainCopyScores2, trainGenScores2, trainCopyScoresGt, trainGenScoresGt = color_results(trainPredSents, 
-            #                                                                                                        trainOutputIndexLists_,
-            #                                                                                                        trainCopyScores_, 
-            #                                                                                                        trainGenScores_, 
-            #                                                                                                        charToIndex)
+            
+            trainPredSentsColored, trainCopyScoresPred, trainGenScoresPred, trainCopyScoresTrue, trainGenScoresTrue = color_results(trainPredSents, 
+                                                                                                                                    trainOutputIndexLists_,
+                                                                                                                                    trainCopyScores_, 
+                                                                                                                                    trainGenScores_, 
+                                                                                                                                    charToIndex)
             
             
             # TEST
@@ -1072,11 +1074,12 @@ if __name__ == "__main__":
                 testOutputIndexLists_.append(testOutputIndexLists[i])
             
             testPredSents = unvectorize_sentences(testUttPreds_, indexToChar)
-            #testPredSents2, testCopyScores2, testGenScores2, testCopyScoresGt, testGenScoresGt = color_results(testPredSents, 
-            #                                                                                                   testOutputIndexLists_,
-            #                                                                                                   testCopyScores_, 
-            #                                                                                                   testGenScores_, 
-            #                                                                                                   charToIndex)
+            
+            testPredSentsColored, testCopyScoresPred, testGenScoresPred, testCopyScoresTrue, testGenScoresTrue = color_results(testPredSents, 
+                                                                                                                               testOutputIndexLists_,
+                                                                                                                               testCopyScores_, 
+                                                                                                                               testGenScores_, 
+                                                                                                                               charToIndex)
             
             
             print("****************************************************************", flush=True)
@@ -1120,45 +1123,75 @@ if __name__ == "__main__":
             print("****************************************************************", flush=True)
             
             
-            """
-            with open(sessionDir+"/{:}_outputs.csv".format(e), "wb") as csvfile:
+            
+            #
+            # save to file
+            #
+            with open(sessionDir+"/{:}_outputs.csv".format(e), "w", newline="") as csvfile:
                 
                 writer = csv.writer(csvfile)
                 
-                writer.writerow(["TRAIN", round(trainCost, 3), round(trainAcc, 3)])
                 
-                for i in range(len(trainPredSents)):
-                    writer.writerow(["TRUE:"] + [c for c in outputs[i]])
-                    writer.writerow(["PRED:"] + [c for c in trainPredSents[i]])
+                writer.writerow(["TRAIN", round(trainCostAve, 3), round(trainCostStd, 3)])
+                
+                for i in range(len(interestingTrainInstances)):
+                    index = interestingTrainInstances[i][0]
+                    info = interestingTrainInstances[i][1]
                     
-                    writer.writerow(["PRED COPY:"] + [c for c in trainCopyScores2[i]])
-                    writer.writerow(["PRED GEN:"] + [c for c in trainGenScores2[i]])
                     
-                    writer.writerow(["TRUE COPY:"] + [c for c in trainCopyScoresGt[i]])
-                    writer.writerow(["TRUE GEN:"] + [c for c in trainGenScoresGt[i]])
+                    writer.writerow(["TRUE:"] + 
+                                    [locationLabelEncoder.classes_[np.argmax(trainOutputShopkeeperLocations[index])]] +
+                                    [c for c in trainOutputStrings[index]])
+                    
+                    writer.writerow(["PRED:"] + 
+                                    [locationLabelEncoder.classes_[trainLocPreds_[i]]] +
+                                    [c for c in trainPredSents[i]])
+                    
+                    writer.writerow(["PRED COPY:"] + [""] + [c for c in trainCopyScoresPred[i]])
+                    writer.writerow(["PRED GEN:"] + [""] + [c for c in trainGenScoresPred[i]])
+                    
+                    writer.writerow(["TRUE COPY:"] + [""] + [c for c in trainCopyScoresTrue[i]])
+                    writer.writerow(["TRUE GEN:"] + [""] + [c for c in trainGenScoresTrue[i]])
+                    
+                    writer.writerow(["CAM MATCH:"] + [np.round(p, 3) for p in trainCamMatch_[i]])
+                    writer.writerow(["ATT MATCH:"] + [np.round(p, 3) for p in trainAttMatch_[i]])
+                    
+                    writer.writerow(["TOP MATCH:", cameras[trainCamMatchArgMax[i]]+" "+dbFieldnames[trainAttMatchArgMax[i]]])
+                    writer.writerow(["TRUE MATCH:", info])
                     
                     writer.writerow([])
                 
                 
-                writer.writerow(["TEST", round(testAcc, 3)])
+                writer.writerow(["TEST", round(testCostAve, 3), round(testCostStd, 3)])
                 
-                for i in range(len(testPredSents)):
-                    writer.writerow(["TRUE:"] + [c for c in outputs[i+4]])
-                    writer.writerow(["PRED:"] + [c for c in testPredSents[i]])
+                for i in range(len(interestingTestInstances)):
+                    index = interestingTestInstances[i][0]
+                    info = interestingTestInstances[i][1]
                     
-                    writer.writerow(["PRED COPY:"] + [c for c in testCopyScores2[i]])
-                    writer.writerow(["PRED GEN:"] + [c for c in testGenScores2[i]])
                     
-                    writer.writerow(["TRUE COPY:"] + [c for c in testCopyScoresGt[i]])
-                    writer.writerow(["TRUE GEN:"] + [c for c in testGenScoresGt[i]])    
+                    writer.writerow(["TRUE:"] + 
+                                    [locationLabelEncoder.classes_[np.argmax(testOutputShopkeeperLocations[index])]] +
+                                    [c for c in testOutputStrings[index]])
+                    
+                    writer.writerow(["PRED:"] + 
+                                    [locationLabelEncoder.classes_[testLocPreds_[i]]] +
+                                    [c for c in testPredSents[i]])
+                    
+                    
+                    writer.writerow(["PRED COPY:"] + [""] +[c for c in testCopyScoresPred[i]])
+                    writer.writerow(["PRED GEN:"] + [""] +[c for c in testGenScoresPred[i]])
+                    
+                    writer.writerow(["TRUE COPY:"] + [""] +[c for c in testCopyScoresTrue[i]])
+                    writer.writerow(["TRUE GEN:"] + [""] +[c for c in testGenScoresTrue[i]])
+                    
+                    writer.writerow(["CAM MATCH:"] + [np.round(p, 3) for p in testCamMatch_[i]])
+                    writer.writerow(["ATT MATCH:"] + [np.round(p, 3) for p in testAttMatch_[i]])
+                    
+                    writer.writerow(["TOP MATCH:", cameras[testCamMatchArgMax[i]]+" "+dbFieldnames[testAttMatchArgMax[i]]])
+                    writer.writerow(["TRUE MATCH:", info])
                     
                     writer.writerow([])
-            
-            
-            if trainAcc == 0.0:
-                print("training error is 0.0")
-                break
-            """
+        
         
         print("epoch time", round(time.time() - startTime, 2), flush=True)
         
