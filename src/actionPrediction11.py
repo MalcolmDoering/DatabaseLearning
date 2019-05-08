@@ -29,21 +29,23 @@ from sklearn import preprocessing
 import tools
 from copynet import copynet
 
+seed = 7
+gpu = 7
 
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 
 
 print("tensorflow version", tf.__version__, flush=True)
 
 
-sessionDir = tools.create_session_dir("actionPrediction11_dbl")
+sessionDir = tools.create_session_dir("actionPrediction11_{}_dbl".format(seed))
 
 eosChar = "#"
 goChar = "~"
 
 tf.reset_default_graph()
-tf.set_random_seed(0)
+tf.set_random_seed(seed)
 
 cameras = ["CAMERA_1", "CAMERA_2", "CAMERA_3"]
 
@@ -64,7 +66,7 @@ class CustomNeuralNetwork(object):
         self.charToIndex = charToIndex
         
         self.gumbel_softmax_temp_cams = 3
-        self.gumbel_softmax_temp_atts = 10
+        self.gumbel_softmax_temp_atts = 7
         
         
         #
