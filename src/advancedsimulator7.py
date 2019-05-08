@@ -88,7 +88,7 @@ def read_database_file(filename):
         reader = csv.DictReader(csvfile)
         
         for row in reader:
-            for att, val in row.items():
+            for att, val in list(row.items()):
                 database[row["camera_ID"]][att] = val
                 
     return database
@@ -347,7 +347,7 @@ class CustomerAgent(object):
         currIntState.customerSpeech = np.random.choice(customerUtteranceMap[currIntState.customerAction][top])
         
         if DEBUG_FLAG:
-            print currIntState.customerAction, top
+            print(currIntState.customerAction, top)
         
         
         return currIntState
@@ -569,7 +569,7 @@ class CustomerAgent(object):
             currIntState.currentCameraOfConversation = prevIntState.outputCustomerLocation
             
             if currIntState.currentCameraOfConversation not in cameras:
-                print "WARNING: Customer is not currently located at a camera!"
+                print("WARNING: Customer is not currently located at a camera!")
         
         # choose a feature to ask about
         
@@ -686,13 +686,13 @@ class ShopkeeperAgent(object):
             coc = currIntState.currentCameraOfConversation
         
         if DEBUG_FLAG:
-            print currIntState.outputShopkeeperAction, top, coc
+            print(currIntState.outputShopkeeperAction, top, coc)
         
         
         try:
             currIntState.shopkeeperSpeech = np.random.choice(shopkeeperUtteranceMap[currIntState.outputShopkeeperAction][top][coc])
-        except Exception, e:
-            print str(e)
+        except Exception as e:
+            print(str(e))
             pass
         
         return currIntState
@@ -1040,7 +1040,7 @@ def simulate_n_interactions(n, flatten=True, startSeed=0):
             interactions.append(simulate_interaction(i, startSeed+i))
         
         if DEBUG_FLAG:
-            print
+            print()
     
     return interactions
 
@@ -1055,7 +1055,7 @@ if __name__ == "__main__":
     global DEBUG_FLAG
     DEBUG_FLAG = False
     
-    print "started"
+    print("started")
     
     #generate_shopkeeper_utterance_file()
     
@@ -1081,12 +1081,12 @@ if __name__ == "__main__":
                 
     
     
-    print "finished"
+    print("finished")
     
     interactionLens = [len(i) for i in interactions]
     
-    print interactionLens
-    print "ave interaction len is", round(np.mean(interactionLens)), "s.d.", round(np.std(interactionLens))
+    print(interactionLens)
+    print("ave interaction len is", round(np.mean(interactionLens)), "s.d.", round(np.std(interactionLens)))
     
     
     
