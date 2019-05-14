@@ -75,6 +75,8 @@ fieldnames = ["TRIAL",
               #"OUTPUT_SPATIAL_STATE",
               #"OUTPUT_STATE_TARGET"
               
+              "SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"
+              
               ]
 
 
@@ -97,6 +99,7 @@ def read_database_file(filename):
 def read_shopkeeper_utterance_file(filename, database):
     
     shopkeeperUtteranceMap = {}
+    shkpUttToDbEntryRange = {}
     
     with open(filename) as csvfile:
         reader = csv.DictReader(csvfile)
@@ -130,12 +133,26 @@ def read_shopkeeper_utterance_file(filename, database):
                     for c in cameras:
                         
                         if top in database[c] and database[c][top] != "":
+                            
+                            dbEntryStartIndex = utt.find("{")
+                            dbEntryEndIndex = dbEntryStartIndex + len(database[c][top])
+                            
                             uttMod = utt.replace("{}", database[c][top])
                             shopkeeperUtteranceMap[act][top][c].append(uttMod)
                             
+                            shkpUttToDbEntryRange[uttMod] = "{}~{}".format(dbEntryStartIndex, dbEntryEndIndex)
+                            
+                            
                         elif act == "S_INTRODUCES_CAMERA":
+                            
+                            dbEntryStartIndex = utt.find("{")
+                            dbEntryEndIndex = dbEntryStartIndex + len(database[c]["camera_name"])
+                            
                             uttMod = utt.replace("{}", database[c]["camera_name"])
                             shopkeeperUtteranceMap[act][top][c].append(uttMod)
+                            
+                            shkpUttToDbEntryRange[uttMod] = "{}~{}".format(dbEntryStartIndex, dbEntryEndIndex)
+                            
                             
                         elif top not in database[c]:
                             shopkeeperUtteranceMap[act][top][c].append(utt)
@@ -149,7 +166,7 @@ def read_shopkeeper_utterance_file(filename, database):
                     if len(shopkeeperUtteranceMap[act][top][coc]) == 0:
                         shopkeeperUtteranceMap[act][top][coc].append("")
     
-    return shopkeeperUtteranceMap
+    return shopkeeperUtteranceMap, shkpUttToDbEntryRange
 
 
 def read_customer_utterance_file(filename):
@@ -183,7 +200,7 @@ def read_customer_utterance_file(filename):
 
 
 database = read_database_file(tools.modelDir+"database_2.csv")
-shopkeeperUtteranceMap = read_shopkeeper_utterance_file(tools.modelDir+"2019-04-04_shopkeeper_utterance_data.csv", database)
+shopkeeperUtteranceMap, shkpUttToDbEntryRange = read_shopkeeper_utterance_file(tools.modelDir+"2019-04-04_shopkeeper_utterance_data.csv", database)
 customerUtteranceMap = read_customer_utterance_file(tools.modelDir+"2019-04-04_customer_utterance_data.csv")                            
 
 
@@ -261,6 +278,11 @@ class InteractionState(object):
                       "CUSTOMER_LOCATION":self.customerLocation,
                       "OUTPUT_SHOPKEEPER_LOCATION":self.outputShopkeeperLocation
                       }
+        
+        if self.shopkeeperSpeech in shkpUttToDbEntryRange:
+            dictionary["SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"] = shkpUttToDbEntryRange[self.shopkeeperSpeech]
+        else:
+            dictionary["SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"] = ""
         
         return dictionary
 
@@ -1052,7 +1074,7 @@ if __name__ == "__main__":
     
     sessionDir = tools.create_session_dir("advancedSimulator7")
     
-    global DEBUG_FLAG
+    #global DEBUG_FLAG
     DEBUG_FLAG = False
     
     print("started")
@@ -1069,7 +1091,7 @@ if __name__ == "__main__":
     # save to file
     #
     
-    with open(sessionDir+"/simulated data.csv", "wb") as csvfile:
+    with open(sessionDir+"/simulated data.csv", "w", newline="") as csvfile:
         
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         

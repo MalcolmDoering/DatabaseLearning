@@ -29,8 +29,8 @@ from sklearn import preprocessing
 import tools
 from copynet import copynet
 
-seed = 7
-gpu = 7
+seed = 0
+gpu = 0
 
 
 os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
@@ -360,6 +360,33 @@ def normalized_edit_distance(s1, s2):
 
 
 
+def compute_db_substring_match(groundTruthUtterances, predictedUtterances, shkpUttToDbEntryRange):
+    
+    subStringCharMatchAccuracies = []
+    
+    for i in range(len(groundTruthUtterances)):
+        
+        gtUtt = groundTruthUtterances[i]
+        predUtt = predictedUtterances[i]
+        
+        if gtUtt in shkpUttToDbEntryRange:
+            
+            subStringCharMatchCount = 0.0
+            subStringCharTotalCount = 0.0
+            
+            for j in range(shkpUttToDbEntryRange[gtUtt][0], shkpUttToDbEntryRange[gtUtt][1]):
+                
+                if gtUtt[j] == predUtt[j]:
+                    subStringCharMatchCount += 1
+                
+                subStringCharTotalCount += 1
+            
+            
+            subStringCharMatchAccuracies.append(subStringCharMatchCount / subStringCharTotalCount)
+    
+    return subStringCharMatchAccuracies
+
+
 def vectorize_sentences(sentences, charToIndex, maxSentLen):
     
     maxSentLen += 1 # for the EOS char
@@ -504,6 +531,7 @@ def read_database_file(filename):
 
 def read_simulated_interactions(filename, keepActions=None):
     interactions = []
+    shkpUttToDbEntryRange = {}
     
     fieldnames = ["TRIAL",
                   "TURN_COUNT",
@@ -532,8 +560,11 @@ def read_simulated_interactions(filename, keepActions=None):
                 interactions.append(row)
             elif row["OUTPUT_SHOPKEEPER_ACTION"] in keepActions:
                 interactions.append(row)
+            
+            if row["SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"] != "":
+                shkpUttToDbEntryRange[row["SHOPKEEPER_SPEECH"]] = [int(i) for i in row["SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"].split("~")]
                 
-    return interactions
+    return interactions, shkpUttToDbEntryRange
 
 
 def get_input_output_strings_and_location_vectors(interactions):
@@ -600,18 +631,21 @@ if __name__ == "__main__":
     database1Filename = tools.modelDir+"/database_1.csv"
     database2Filename = tools.modelDir+"/database_2.csv"
     
-    interactions0Filename = tools.dataDir+"/20190409_simulated_data_1000_database_0.csv"
-    interactions1Filename = tools.dataDir+"/20190409_simulated_data_1000_database_1.csv"
-    interactions2Filename = tools.dataDir+"/20190409_simulated_data_1000_database_2.csv"
+    interactions0Filename = tools.dataDir+"/20190508_simulated_data_1000_database_0.csv"
+    interactions1Filename = tools.dataDir+"/20190508_simulated_data_1000_database_1.csv"
+    interactions2Filename = tools.dataDir+"/20190508_simulated_data_1000_database_2.csv"
     
     
     database0, dbFieldnames = read_database_file(database0Filename)
     database1, _ = read_database_file(database1Filename)
     database2, _ = read_database_file(database2Filename)
     
-    interactions0 = read_simulated_interactions(interactions0Filename, keepActions=["S_ANSWERS_QUESTION_ABOUT_FEATURE"]) # S_INTRODUCES_CAMERA S_INTRODUCES_FEATURE
-    interactions1 = read_simulated_interactions(interactions1Filename, keepActions=["S_ANSWERS_QUESTION_ABOUT_FEATURE"])
-    interactions2 = read_simulated_interactions(interactions2Filename, keepActions=["S_ANSWERS_QUESTION_ABOUT_FEATURE"])
+    interactions0, shkpUttToDbEntryRange0 = read_simulated_interactions(interactions0Filename, keepActions=["S_ANSWERS_QUESTION_ABOUT_FEATURE"]) # S_INTRODUCES_CAMERA S_INTRODUCES_FEATURE
+    interactions1, shkpUttToDbEntryRange1 = read_simulated_interactions(interactions1Filename, keepActions=["S_ANSWERS_QUESTION_ABOUT_FEATURE"])
+    interactions2, shkpUttToDbEntryRange2 = read_simulated_interactions(interactions2Filename, keepActions=["S_ANSWERS_QUESTION_ABOUT_FEATURE"])
+    
+    
+    shkpUttToDbEntryRange = {**shkpUttToDbEntryRange0, **shkpUttToDbEntryRange1, **shkpUttToDbEntryRange2}
     
     
     dataset0Size = len(interactions0)
@@ -913,6 +947,7 @@ if __name__ == "__main__":
             trainAttMatchArgMax = []
             trainCamMatch = []
             trainAttMatch  = []
+            trainGtSents = []
             
             for i in trainBatchEndIndices:
                 
@@ -930,7 +965,8 @@ if __name__ == "__main__":
                 trainAttMatchArgMax.append(batchTrainAttMatchArgMax)
                 trainCamMatch.append(batchTrainCamMatch)
                 trainAttMatch.append(batchTrainAttMatch)
-        
+                trainGtSents += trainOutputStrings[i-batchSize:i]
+                
             trainUttPreds = np.concatenate(trainUttPreds)
             trainLocPreds = np.concatenate(trainLocPreds)
             trainCopyScores = np.concatenate(trainCopyScores)
@@ -939,6 +975,21 @@ if __name__ == "__main__":
             trainAttMatchArgMax = np.concatenate(trainAttMatchArgMax)
             trainCamMatch = np.concatenate(trainCamMatch)
             trainAttMatch  = np.concatenate(trainAttMatch)
+            
+            trainPredSents = unvectorize_sentences(trainUttPreds, indexToChar)
+            
+            
+            # compute how much of the substring that should be copied from the DB is correct
+            trainSubstrCharMatchAccs = compute_db_substring_match(trainGtSents, trainPredSents, shkpUttToDbEntryRange)
+            
+            # how many 100% correct substrings
+            trainSubstrAllCorr = trainSubstrCharMatchAccs.count(1.0) / len(trainSubstrCharMatchAccs)
+            
+            # average substring correctness
+            trainSubstrAveCorr = np.mean(trainSubstrCharMatchAccs)
+            trainSubstrSdCorr = np.std(trainSubstrCharMatchAccs)
+            
+            print("train substr all correct {}, ave correctness {} ({})".format(trainSubstrAllCorr, trainSubstrAveCorr, trainSubstrSdCorr))
             
             
             #trainAcc = 0.0
@@ -975,10 +1026,10 @@ if __name__ == "__main__":
                 trainAttMatch_.append(trainAttMatch[i])
                 
                 trainOutputIndexLists_.append(trainOutputIndexLists[i])
+                trainPredSents_.append(trainPredSents[i])
+                
             
-            trainPredSents = unvectorize_sentences(trainUttPreds_, indexToChar)
-            
-            trainPredSentsColored, trainCopyScoresPred, trainGenScoresPred, trainCopyScoresTrue, trainGenScoresTrue = color_results(trainPredSents, 
+            trainPredSentsColored, trainCopyScoresPred, trainGenScoresPred, trainCopyScoresTrue, trainGenScoresTrue = color_results(trainPredSents_, 
                                                                                                                                     trainOutputIndexLists_,
                                                                                                                                     trainCopyScores_, 
                                                                                                                                     trainGenScores_, 
@@ -994,6 +1045,7 @@ if __name__ == "__main__":
             testAttMatchArgMax = []
             testCamMatch = []
             testAttMatch  = []
+            testGtSents = []
             
             testCosts = []
             
@@ -1025,7 +1077,9 @@ if __name__ == "__main__":
                 testAttMatchArgMax.append(batchTestAttMatchArgMax)
                 testCamMatch.append(batchTestCamMatch)
                 testAttMatch.append(batchTestAttMatch)
-        
+                testGtSents += testOutputStrings[i-batchSize:i]
+                
+                
             testUttPreds = np.concatenate(testUttPreds)
             testLocPreds = np.concatenate(testLocPreds)
             testCopyScores = np.concatenate(testCopyScores)
@@ -1039,8 +1093,24 @@ if __name__ == "__main__":
             testCostAve = np.mean(testCosts)
             testCostStd = np.std(testCosts)
             print("test cost", testCostAve, testCostStd, flush=True)
-        
-                        
+            
+            
+            testPredSents = unvectorize_sentences(testUttPreds, indexToChar)
+            
+            
+            # compute how much of the substring that should be copied from the DB is correct
+            testSubstrCharMatchAccs = compute_db_substring_match(testGtSents, testPredSents, shkpUttToDbEntryRange)
+            
+            # how many 100% correct substrings
+            testSubstrAllCorr = testSubstrCharMatchAccs.count(1.0) / len(testSubstrCharMatchAccs)
+            
+            # average substring correctness
+            testSubstrAveCorr = np.mean(testSubstrCharMatchAccs)
+            testSubstrSdCorr = np.std(testSubstrCharMatchAccs)
+            
+            print("test substr all correct {}, ave correctness {} ({})".format(testSubstrAllCorr, testSubstrAveCorr, testSubstrSdCorr))
+            
+            
             #testAcc = 0.0
             #for i in range(len(testUttPreds)):
             #    testAcc += normalized_edit_distance(testOutputIndexLists[i], testUttPreds[i])
@@ -1059,6 +1129,7 @@ if __name__ == "__main__":
             testAttMatch_  = []
             
             testOutputIndexLists_ = []
+            testPredSents_ = []
             
             for tup in interestingTestInstances:
                 i = tup[0]
@@ -1074,10 +1145,10 @@ if __name__ == "__main__":
                 testAttMatch_.append(testAttMatch[i])
                 
                 testOutputIndexLists_.append(testOutputIndexLists[i])
+                testPredSents_.append(testPredSents[i])
+                
             
-            testPredSents = unvectorize_sentences(testUttPreds_, indexToChar)
-            
-            testPredSentsColored, testCopyScoresPred, testGenScoresPred, testCopyScoresTrue, testGenScoresTrue = color_results(testPredSents, 
+            testPredSentsColored, testCopyScoresPred, testGenScoresPred, testCopyScoresTrue, testGenScoresTrue = color_results(testPredSents_, 
                                                                                                                                testOutputIndexLists_,
                                                                                                                                testCopyScores_, 
                                                                                                                                testGenScores_, 
@@ -1092,7 +1163,7 @@ if __name__ == "__main__":
                 info = interestingTrainInstances[i][1]
                 
                 print("TRUE:", locationLabelEncoder.classes_[np.argmax(trainOutputShopkeeperLocations[index])], trainOutputStrings[index], flush=True)
-                print("PRED:", locationLabelEncoder.classes_[trainLocPreds_[i]], trainPredSents[i], flush=True)
+                print("PRED:", locationLabelEncoder.classes_[trainLocPreds_[i]], trainPredSents_[i], flush=True)
                 
                 print(np.round(trainCamMatch_[i], 3), flush=True)
                 print(np.round(trainAttMatch_[i], 3), flush=True)
@@ -1112,7 +1183,7 @@ if __name__ == "__main__":
                 info = interestingTestInstances[i][1]
                 
                 print("TRUE:", locationLabelEncoder.classes_[np.argmax(testOutputShopkeeperLocations[index])], testOutputStrings[index], flush=True)
-                print("PRED:", locationLabelEncoder.classes_[testLocPreds_[i]], testPredSents[i], flush=True)
+                print("PRED:", locationLabelEncoder.classes_[testLocPreds_[i]], testPredSents_[i], flush=True)
                 
                 print(np.round(testCamMatch_[i], 3), flush=True)
                 print(np.round(testAttMatch_[i], 3), flush=True)
@@ -1147,7 +1218,7 @@ if __name__ == "__main__":
                     
                     writer.writerow(["PRED:"] + 
                                     [locationLabelEncoder.classes_[trainLocPreds_[i]]] +
-                                    [c for c in trainPredSents[i]])
+                                    [c for c in trainPredSents_[i]])
                     
                     writer.writerow(["PRED COPY:"] + [""] + [c for c in trainCopyScoresPred[i]])
                     writer.writerow(["PRED GEN:"] + [""] + [c for c in trainGenScoresPred[i]])
@@ -1177,7 +1248,7 @@ if __name__ == "__main__":
                     
                     writer.writerow(["PRED:"] + 
                                     [locationLabelEncoder.classes_[testLocPreds_[i]]] +
-                                    [c for c in testPredSents[i]])
+                                    [c for c in testPredSents_[i]])
                     
                     
                     writer.writerow(["PRED COPY:"] + [""] +[c for c in testCopyScoresPred[i]])
