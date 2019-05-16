@@ -32,6 +32,9 @@ from copynet import copynet
 seed = 0
 gpu = 0
 
+camTemp = 3
+attTemp = 7
+
 
 os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 
@@ -65,8 +68,8 @@ class CustomNeuralNetwork(object):
         self.embeddingSize = embeddingSize
         self.charToIndex = charToIndex
         
-        self.gumbel_softmax_temp_cams = 3
-        self.gumbel_softmax_temp_atts = 7
+        self.gumbel_softmax_temp_cams = camTemp
+        self.gumbel_softmax_temp_atts = attTemp
         
         
         #
@@ -627,13 +630,13 @@ if __name__ == "__main__":
     inputs = []
     outputs = []
     
-    database0Filename = tools.modelDir+"/database_0.csv"
-    database1Filename = tools.modelDir+"/database_1.csv"
-    database2Filename = tools.modelDir+"/database_2.csv"
+    database0Filename = tools.modelDir+"/database_0a.csv"
+    database1Filename = tools.modelDir+"/database_0b.csv"
+    database2Filename = tools.modelDir+"/database_0c.csv"
     
-    interactions0Filename = tools.dataDir+"/20190508_simulated_data_1000_database_0.csv"
-    interactions1Filename = tools.dataDir+"/20190508_simulated_data_1000_database_1.csv"
-    interactions2Filename = tools.dataDir+"/20190508_simulated_data_1000_database_2.csv"
+    interactions0Filename = tools.dataDir+"/20190508_simulated_data_1000_database_0a.csv"
+    interactions1Filename = tools.dataDir+"/20190508_simulated_data_1000_database_0b.csv"
+    interactions2Filename = tools.dataDir+"/20190508_simulated_data_1000_database_0c.csv"
     
     
     database0, dbFieldnames = read_database_file(database0Filename)
@@ -645,6 +648,7 @@ if __name__ == "__main__":
     interactions2, shkpUttToDbEntryRange2 = read_simulated_interactions(interactions2Filename, keepActions=["S_ANSWERS_QUESTION_ABOUT_FEATURE"])
     
     
+    # combine the three dictionaries into one
     shkpUttToDbEntryRange = {**shkpUttToDbEntryRange0, **shkpUttToDbEntryRange1, **shkpUttToDbEntryRange2}
     
     
@@ -842,7 +846,7 @@ if __name__ == "__main__":
     
     
     camerasOfInterest = ["CAMERA_1", "CAMERA_2"]
-    featuresOfInterest = ["price", "camera_type"]
+    featuresOfInterest = ["price"] #, "camera_type"]
     
     #
     interestingTrainInstances = []
@@ -895,6 +899,28 @@ if __name__ == "__main__":
                                 (234, "DB2, Cam2, AF")
                                 ]
     """
+    
+    
+    sessionIdentifier = "rs{}_ct{}_at{}".format(seed, camTemp, attTemp)
+    sessionLogFile = sessionDir + "/session_log_{}.csv".format(sessionIdentifier)
+    
+    # write header
+    with open(sessionLogFile, "w", newline="") as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(["Epoch", 
+                         "Train Cost Ave ({})".format(sessionIdentifier), 
+                         "Train Cost SD ({})".format(sessionIdentifier), 
+                         "Train DB Substring Correct All ({})".format(sessionIdentifier), 
+                         "Train DB Substring Correct Ave ({})".format(sessionIdentifier), 
+                         "Train DB Substring Correct SD ({})".format(sessionIdentifier), 
+                         
+                         "Test Cost Ave({})".format(sessionIdentifier),
+                         "Test Cost SD ({})".format(sessionIdentifier), 
+                         "Test DB Substring Correct All ({})".format(sessionIdentifier), 
+                         "Test DB Substring Correct Ave ({})".format(sessionIdentifier), 
+                         "Test DB Substring Correct SD ({})".format(sessionIdentifier), 
+                         ])
+    
     
     for e in range(numEpochs):
         
@@ -1264,6 +1290,24 @@ if __name__ == "__main__":
                     writer.writerow(["TRUE MATCH:", info])
                     
                     writer.writerow([])
+        
+        
+            # append to session log   
+            with open(sessionLogFile, "a", newline="") as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow([e,                 #"Epoch", 
+                                 trainCostAve,      #"Train Cost Ave ({})".format(seed), 
+                                 trainCostStd,      #"Train Cost SD ({})".format(seed), 
+                                 trainSubstrAllCorr,    #"Train DB Substring Correct All ({})".format(seed), 
+                                 trainSubstrAveCorr,    #"Train DB Substring Correct Ave ({})".format(seed), 
+                                 trainSubstrSdCorr, #"Train DB Substring Correct SD ({})".format(seed), 
+                                 
+                                 testCostAve,       #"Test Cost Ave({})".format(seed),
+                                 testCostStd,       #"Test Cost SD ({})".format(seed), 
+                                 testSubstrAllCorr, #"Test DB Substring Correct All ({})".format(seed), 
+                                 testSubstrAveCorr, #"Test DB Substring Correct Ave ({})".format(seed), 
+                                 testSubstrSdCorr,  #"Test DB Substring Correct SD ({})".format(seed), 
+                                 ])    
         
         
         print("epoch time", round(time.time() - startTime, 2), flush=True)

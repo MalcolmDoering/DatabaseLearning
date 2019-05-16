@@ -199,7 +199,7 @@ def read_customer_utterance_file(filename):
 
 
 
-database = read_database_file(tools.modelDir+"database_2.csv")
+database = read_database_file(tools.modelDir+"database_0a.csv")
 shopkeeperUtteranceMap, shkpUttToDbEntryRange = read_shopkeeper_utterance_file(tools.modelDir+"2019-04-04_shopkeeper_utterance_data.csv", database)
 customerUtteranceMap = read_customer_utterance_file(tools.modelDir+"2019-04-04_customer_utterance_data.csv")                            
 
