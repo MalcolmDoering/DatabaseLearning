@@ -28,7 +28,7 @@ import sys
 import tools
 
 
-DEBUG = False
+DEBUG = True
 
 
 eosChar = "#"
@@ -258,7 +258,7 @@ def read_simulated_interactions(filename, keepActions=None):
     return interactions, shkpUttToDbEntryRange
 
 
-def get_input_output_strings_and_location_vectors(interactions):
+def get_input_output_strings_and_location_vectors(interactions, locationToIndex):
     
     inputStrings = []
     outputStrings = []
@@ -277,16 +277,23 @@ def get_input_output_strings_and_location_vectors(interactions):
         inputCustomerLocations.append(turn["CUSTOMER_LOCATION"])
         outputShopkeeperLocations.append(turn["OUTPUT_SHOPKEEPER_LOCATION"])
     
+        
+    inputCustomerLocationVectors = one_hot_vectorize(inputCustomerLocations, locationToIndex)
+    outputShopkeeperLocationVectors = one_hot_vectorize(outputShopkeeperLocations, locationToIndex)
     
-    locationLabelEncoder = preprocessing.LabelEncoder()
-    temp = locationLabelEncoder.fit_transform(inputCustomerLocations + outputShopkeeperLocations)
-    oneHotEncoder = preprocessing.OneHotEncoder(sparse=False)
-    oneHotEncoder.fit(temp.reshape(-1, 1))
+    return inputStrings, outputStrings, inputCustomerLocationVectors, outputShopkeeperLocationVectors
+
+
+def one_hot_vectorize(labels, labelToIndex):
     
-    inputCustomerLocationVectors = oneHotEncoder.transform(locationLabelEncoder.transform(inputCustomerLocations).reshape(-1, 1))
-    outputShopkeeperLocationVectors = oneHotEncoder.transform(locationLabelEncoder.transform(outputShopkeeperLocations).reshape(-1, 1))
+    oneHotEncodings = []
     
-    return inputStrings, outputStrings, inputCustomerLocationVectors, outputShopkeeperLocationVectors, locationLabelEncoder
+    for label in labels:
+        vec = np.zeros(len(labelToIndex))
+        vec[labelToIndex[label]] = 1
+        oneHotEncodings.append(vec)
+    
+    return oneHotEncodings
 
 
 def get_database_value_strings(database, fieldnames):
@@ -330,50 +337,105 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
     
     
     
-    
-    
     #
     # load the simulated interactions and databases
     #
     print("loading data...", flush=True, file=sessionTerminalOutputStream)
     
-    database0Filename = tools.modelDir+"/database_0a.csv"
-    database1Filename = tools.modelDir+"/database_0b.csv"
-    database2Filename = tools.modelDir+"/database_0c.csv"
     
-    interactions0Filename = tools.dataDir+"/20190508_simulated_data_1000_database_0a.csv"
-    interactions1Filename = tools.dataDir+"/20190508_simulated_data_1000_database_0b.csv"
-    interactions2Filename = tools.dataDir+"/20190508_simulated_data_1000_database_0c.csv"
+    dataDirectory = tools.dataDir+"/2019-05-21_14-11-57_advancedSimulator8"
     
+    filenames = os.listdir(dataDirectory)
+    filenames.sort()
     
-    database0, dbFieldnames = read_database_file(database0Filename)
-    database1, _ = read_database_file(database1Filename)
-    database2, _ = read_database_file(database2Filename)
-    
-    interactions0, shkpUttToDbEntryRange0 = read_simulated_interactions(interactions0Filename, keepActions=["S_ANSWERS_QUESTION_ABOUT_FEATURE"]) # S_INTRODUCES_CAMERA S_INTRODUCES_FEATURE
-    interactions1, shkpUttToDbEntryRange1 = read_simulated_interactions(interactions1Filename, keepActions=["S_ANSWERS_QUESTION_ABOUT_FEATURE"])
-    interactions2, shkpUttToDbEntryRange2 = read_simulated_interactions(interactions2Filename, keepActions=["S_ANSWERS_QUESTION_ABOUT_FEATURE"])
+    databaseFilenamesAll = [dataDirectory+"/"+fn for fn in filenames if "simulated" not in fn]
+    interactionFilenamesAll = [dataDirectory+"/"+fn for fn in filenames if "simulated" in fn]
     
     
-    # combine the three dictionaries into one
-    shkpUttToDbEntryRange = {**shkpUttToDbEntryRange0, **shkpUttToDbEntryRange1, **shkpUttToDbEntryRange2}
+    numTrainDbs = 10
+    
+    """
+    databaseFilenames = [tools.modelDir+"/database_0a.csv",
+                         tools.modelDir+"/database_0b.csv",
+                         tools.modelDir+"/database_0c.csv"]
+    
+    interactionFilenames = [tools.dataDir+"/20190508_simulated_data_1000_database_0a.csv",
+                            tools.dataDir+"/20190508_simulated_data_1000_database_0b.csv",
+                            tools.dataDir+"/20190508_simulated_data_1000_database_0c.csv"]
+    """
+    
+    databaseFilenames = databaseFilenamesAll[:numTrainDbs+1]
+    interactionFilenames = interactionFilenamesAll[:numTrainDbs+1]
     
     
-    dataset0Size = len(interactions0)
-    dataset1Size = len(interactions1)
-    dataset2Size = len(interactions2)
+    databases = []
+    databaseIds = []
+    dbFieldnames = None # these should be the same for all DBs
+    
+    for dbFn in databaseFilenames:
+        db, dbFieldnames = read_database_file(dbFn)
+        
+        databaseIds.append(dbFn.split("_")[-1].split(".")[0])
+        
+        databases.append(db)
+    
+    numDatabases = len(databases)
+    
+    interactions = []
+    datasetSizes = []
+    shkpUttToDbEntryRange = {}
+    
+    for i in range(len(interactionFilenames)):
+        iFn = interactionFilenames[i]
+        
+        inters, sutder = read_simulated_interactions(iFn, keepActions=["S_ANSWERS_QUESTION_ABOUT_FEATURE"]) # S_INTRODUCES_CAMERA S_INTRODUCES_FEATURE
+        
+        if i < numTrainDbs:
+            # reduce the amount of training data because we have increased the number of training databases (assumes 1000 interactions per DB)
+            inters = inters[: int(2 * len(inters) / numTrainDbs)] # two is the minimum number of training databases 
+        
+        interactions.append(inters)
+        datasetSizes.append(len(inters))
+        
+        # combine the three dictionaries into one
+        shkpUttToDbEntryRange = {**shkpUttToDbEntryRange, **sutder}
+    
     
     
     #
     # get the strings to be encoded
     #
-    inputStrings0, outputStrings0, inputCustomerLocationVectors0, outputShopkeeperLocationVectors0, locationLabelEncoder = get_input_output_strings_and_location_vectors(interactions0)
-    inputStrings1, outputStrings1, inputCustomerLocationVectors1, outputShopkeeperLocationVectors1, _ = get_input_output_strings_and_location_vectors(interactions1)
-    inputStrings2, outputStrings2, inputCustomerLocationVectors2, outputShopkeeperLocationVectors2, _  = get_input_output_strings_and_location_vectors(interactions2)
+    inputStrings = []
+    outputStrings = []
+    inputCustomerLocationVectors = []
+    outputShopkeeperLocationVectors = []
     
-    dbStrings0 = get_database_value_strings(database0, dbFieldnames)
-    dbStrings1 = get_database_value_strings(database1, dbFieldnames)
-    dbStrings2 = get_database_value_strings(database2, dbFieldnames)
+    locationToIndex = {}
+    locationToIndex["DOOR"] = 0
+    locationToIndex["MIDDLE"] = len(locationToIndex)
+    locationToIndex["CAMERA_1"] = len(locationToIndex)
+    locationToIndex["CAMERA_2"] = len(locationToIndex)
+    locationToIndex["CAMERA_3"] = len(locationToIndex)
+    locationToIndex["SERVICE_COUNTER"] = len(locationToIndex)
+    
+    indexToLocation = dict(map(reversed, locationToIndex.items()))
+    
+    
+    for intSet in interactions:
+        inStrs, outStrs, inCustLocVecs, outCustLocVecs = get_input_output_strings_and_location_vectors(intSet, locationToIndex)
+        
+        inputStrings.append(inStrs)
+        outputStrings.append(outStrs)
+        inputCustomerLocationVectors.append(inCustLocVecs)
+        outputShopkeeperLocationVectors.append(outCustLocVecs)
+    
+    
+    dbStrings = []
+    
+    for db in databases:
+        dbStrs = get_database_value_strings(db, dbFieldnames)
+        dbStrings.append(dbStrs)
+    
     
     
     #
@@ -381,12 +443,17 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
     #
     print("creating character encoder...", flush=True, file=sessionTerminalOutputStream)
     
-    allStrings = inputStrings0 + outputStrings0
-    allStrings += inputStrings1 + outputStrings1
-    allStrings += inputStrings2 + outputStrings2
+    allStrings = []
     
-    for row in dbStrings0+dbStrings1+dbStrings2:
-        allStrings += row
+    for inStrs in inputStrings:
+        allStrings += inStrs
+    
+    for outStrs in outputStrings:
+        allStrings += outStrs
+    
+    for dbStrs in dbStrings:
+        for row in dbStrs:
+            allStrings += row
     
     
     charToIndex = {}
@@ -404,7 +471,7 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
     charToIndex[goChar] = len(charToIndex)
     indexToChar[charToIndex[goChar]] = goChar
     
-        
+    
     
     #
     # vectorize the simulated interactions and databases
@@ -412,73 +479,93 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
     print("vectorizing the string data...", flush=True, file=sessionTerminalOutputStream)
     
     # find max input length
-    allInputLens = [len(i) for i in inputStrings0+inputStrings1+inputStrings2]
+    allInputLens = []
+    
+    for inStrs in inputStrings:
+        allInputLens += [len(i) for i in inStrs]
+    
     maxInputLen = max(allInputLens)
     
+    
     # find max output length
-    allOutputLens = [len(i) for i in outputStrings0+outputStrings1+outputStrings2]
+    allOutputLens = []
+    
+    for outStrs in outputStrings:
+        allOutputLens += [len(i) for i in outStrs]
+    
     maxOutputLen = max(allOutputLens)
+    
     
     # find max DB value length
     allDbValueLens = []
     
-    for row in dbStrings0+dbStrings1+dbStrings2:
-        allDbValueLens += [len(v) for v in row]
+    for dbStrs in dbStrings:
+        for row in dbStrs:
+            allDbValueLens += [len(v) for v in row]
     
     maxDbValueLen = max(allDbValueLens)
     
     
     # vectorize the inputs
-    _, inputIndexLists0 = vectorize_sentences(inputStrings0, charToIndex, maxInputLen)
-    _, inputIndexLists1 = vectorize_sentences(inputStrings1, charToIndex, maxInputLen)
-    _, inputIndexLists2 = vectorize_sentences(inputStrings2, charToIndex, maxInputLen)
+    inputIndexLists = []
+    
+    for inStrs in inputStrings:
+        _, inIndLst = vectorize_sentences(inStrs, charToIndex, maxInputLen)
+        inputIndexLists.append(inIndLst)
+    
     
     # vectorize the outputs
-    _, outputIndexLists0 = vectorize_sentences(outputStrings0, charToIndex, maxOutputLen)
-    _, outputIndexLists1 = vectorize_sentences(outputStrings1, charToIndex, maxOutputLen)
-    _, outputIndexLists2 = vectorize_sentences(outputStrings2, charToIndex, maxOutputLen)
+    outputIndexLists = []
+    
+    for outStrs in outputStrings:
+        _, outIndLst = vectorize_sentences(outStrs, charToIndex, maxOutputLen)
+        outputIndexLists.append(outIndLst)
+    
     
     # vectorize the DB values
-    dbVectors0, _ = vectorize_databases(dbStrings0, charToIndex, maxDbValueLen)
-    dbVectors1, _ = vectorize_databases(dbStrings1, charToIndex, maxDbValueLen)
-    dbVectors2, _ = vectorize_databases(dbStrings2, charToIndex, maxDbValueLen)        
+    dbVectors = []
+    
+    for dbStrs in dbStrings:
+        dbVecs, _ = vectorize_databases(dbStrs, charToIndex, maxDbValueLen)
+        dbVectors.append(dbVecs)
     
     
     #
     # split into training and testing sets
     #
     
+    def prepare_split(startDbIndex, stopDbIndex):
+        """input the which DB to start with and which DB to end with + 1"""
+        
+        splitInputIndexLists = []
+        splitOutputIndexLists = []
+        splitOutputStrings = []
+        
+        for i in range(startDbIndex, stopDbIndex):
+            splitInputIndexLists += inputIndexLists[i]
+            splitOutputIndexLists += outputIndexLists[i]
+            splitOutputStrings += outputStrings[i]
+        
+        
+        splitInputCustomerLocations = np.concatenate(inputCustomerLocationVectors[startDbIndex:stopDbIndex])
+        splitOutputShopkeeperLocations = np.concatenate(outputShopkeeperLocationVectors[startDbIndex:stopDbIndex])
+        
+        splitDbVectors = []
+        
+        for i in range(startDbIndex, stopDbIndex):
+            for j in range(datasetSizes[i]):
+                splitDbVectors.append(dbVectors[i])
+        
+        return splitInputIndexLists, splitOutputIndexLists, splitOutputStrings, splitInputCustomerLocations, splitOutputShopkeeperLocations, splitDbVectors
+        
+    
+    
     # training
-    trainInputIndexLists = inputIndexLists0 + inputIndexLists1
-    trainOutputIndexLists = outputIndexLists0 + outputIndexLists1
-    trainOutputStrings = outputStrings0 + outputStrings1
-    
-    trainInputCustomerLocations = np.concatenate([inputCustomerLocationVectors0, inputCustomerLocationVectors1])
-    trainOutputShopkeeperLocations = np.concatenate([outputShopkeeperLocationVectors0, outputShopkeeperLocationVectors1])
-    
-    
-    trainDbVectors = []
-    
-    for i in range(len(inputIndexLists0)):
-        trainDbVectors.append(dbVectors0)
-
-    for i in range(len(inputIndexLists1)):
-        trainDbVectors.append(dbVectors1)
-    
+    trainInputIndexLists, trainOutputIndexLists, trainOutputStrings, trainInputCustomerLocations, trainOutputShopkeeperLocations, trainDbVectors = prepare_split(0, numTrainDbs)
     
     # testing
-    testInputIndexLists = inputIndexLists2
-    testOutputIndexLists = outputIndexLists2
-    testOutputStrings = outputStrings2
+    testInputIndexLists, testOutputIndexLists, testOutputStrings, testInputCustomerLocations, testOutputShopkeeperLocations, testDbVectors = prepare_split(numTrainDbs, numDatabases)
     
-    testInputCustomerLocations = inputCustomerLocationVectors2
-    testOutputShopkeeperLocations = outputShopkeeperLocationVectors2
-    
-    
-    testDbVectors = []
-    
-    for i in range(len(inputIndexLists2)):
-        testDbVectors.append(dbVectors2)
     
     
     print(len(trainInputIndexLists), "training examples", flush=True, file=sessionTerminalOutputStream)
@@ -502,7 +589,7 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
     outputLen = maxOutputLen + 2
     dbValLen = maxDbValueLen + 1
     
-    locationVecLen = locationLabelEncoder.classes_.size
+    locationVecLen = len(locationToIndex)
     
     
     """
@@ -562,53 +649,26 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
     interestingTrainInstances = []
     
     for f in featuresOfInterest:
-        
-        # from DB 0
         for c in camerasOfInterest:
-            for i in range(len(interactions0)):
-                if interactions0[i]["CUSTOMER_TOPIC"] == f and interactions0[i]["CURRENT_CAMERA_OF_CONVERSATION"] == c:
-                    interestingTrainInstances.append((i, "{} {} {}".format("DB0", c, f)))
-                    break
+            for i in range(numTrainDbs):
+                for j in range(datasetSizes[i]):
+                    if interactions[i][j]["CUSTOMER_TOPIC"] == f and interactions[i][j]["CURRENT_CAMERA_OF_CONVERSATION"] == c:
+                        interestingTrainInstances.append((j + sum(len(l) for l in interactions[:i]),
+                                                          "DB{} {} {}".format(databaseIds[i], c, f)))
+                        break
         
-        # from DB 1
-        for c in camerasOfInterest:
-            for i in range(len(interactions1)):
-                if interactions1[i]["CUSTOMER_TOPIC"] == f and interactions1[i]["CURRENT_CAMERA_OF_CONVERSATION"] == c:
-                    interestingTrainInstances.append((i+dataset0Size, "{} {} {}".format("DB1", c, f)))
-                    break
-    
     #
     interestingTestInstances = []
     
     for f in featuresOfInterest:
-        
-        # from DB 2
         for c in camerasOfInterest:
-            for i in range(len(interactions2)):
-                if interactions2[i]["CUSTOMER_TOPIC"] == f and interactions2[i]["CURRENT_CAMERA_OF_CONVERSATION"] == c:
-                    interestingTestInstances.append((i, "{} {} {}".format("DB2", c, f)))
-                    break
+            for i in range(numTrainDbs, numDatabases):
+                for j in range(datasetSizes[i]):
+                    if interactions[i][j]["CUSTOMER_TOPIC"] == f and interactions[i][j]["CURRENT_CAMERA_OF_CONVERSATION"] == c:
+                        interestingTestInstances.append((j + sum(len(l) for l in interactions[numTrainDbs:i]),
+                                                         "DB{} {} {}".format(databaseIds[i], c, f)))
+                        break
     
-    
-    """
-    interestingTrainInstances = [(898, "DB0, Cam1, Price"),
-                                 (812, "DB0, Cam2, Price"),
-                                 (5+len(inputStrings0), "DB1, Cam1, Price"),
-                                 (237+len(inputStrings0), "DB1, Cam2, Price"),
-                                 
-                                 (1004, "DB0, Cam1, AF"),
-                                 (1024, "DB0, Cam2, AF"),
-                                 (4+len(inputStrings0), "DB1, Cam1, AF"),
-                                 (13+len(inputStrings0), "DB1, Cam2, AF")
-                                 ]
-    
-    interestingTestInstances = [(203, "DB2, Cam1, Price"),
-                                (163, "DB2, Cam2, Price"),
-                                
-                                (171, "DB2, Cam1, AF"),
-                                (234, "DB2, Cam2, AF")
-                                ]
-    """
     
     
     # write header in csv log file
@@ -895,8 +955,8 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
                 index = interestingTrainInstances[i][0]
                 info = interestingTrainInstances[i][1]
                 
-                print("TRUE:", locationLabelEncoder.classes_[np.argmax(trainOutputShopkeeperLocations[index])], trainOutputStrings[index], flush=True, file=sessionTerminalOutputStream)
-                print("PRED:", locationLabelEncoder.classes_[trainLocPreds_[i]], trainPredSents_[i], flush=True, file=sessionTerminalOutputStream)
+                print("TRUE:", indexToLocation[np.argmax(trainOutputShopkeeperLocations[index])], trainOutputStrings[index], flush=True, file=sessionTerminalOutputStream)
+                print("PRED:", indexToLocation[trainLocPreds_[i]], trainPredSents_[i], flush=True, file=sessionTerminalOutputStream)
                 
                 print(np.round(trainCamMatch_[i], 3), flush=True, file=sessionTerminalOutputStream)
                 print(np.round(trainAttMatch_[i], 3), flush=True, file=sessionTerminalOutputStream)
@@ -915,8 +975,8 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
                 index = interestingTestInstances[i][0]
                 info = interestingTestInstances[i][1]
                 
-                print("TRUE:", locationLabelEncoder.classes_[np.argmax(testOutputShopkeeperLocations[index])], testOutputStrings[index], flush=True, file=sessionTerminalOutputStream)
-                print("PRED:", locationLabelEncoder.classes_[testLocPreds_[i]], testPredSents_[i], flush=True, file=sessionTerminalOutputStream)
+                print("TRUE:", indexToLocation[np.argmax(testOutputShopkeeperLocations[index])], testOutputStrings[index], flush=True, file=sessionTerminalOutputStream)
+                print("PRED:", indexToLocation[testLocPreds_[i]], testPredSents_[i], flush=True, file=sessionTerminalOutputStream)
                 
                 print(np.round(testCamMatch_[i], 3), flush=True, file=sessionTerminalOutputStream)
                 print(np.round(testAttMatch_[i], 3), flush=True, file=sessionTerminalOutputStream)
@@ -946,11 +1006,11 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
                     
                     
                     writer.writerow(["TRUE:"] + 
-                                    [locationLabelEncoder.classes_[np.argmax(trainOutputShopkeeperLocations[index])]] +
+                                    [indexToLocation[np.argmax(trainOutputShopkeeperLocations[index])]] +
                                     [c for c in trainOutputStrings[index]])
                     
                     writer.writerow(["PRED:"] + 
-                                    [locationLabelEncoder.classes_[trainLocPreds_[i]]] +
+                                    [indexToLocation[trainLocPreds_[i]]] +
                                     [c for c in trainPredSents_[i]])
                     
                     writer.writerow(["PRED COPY:"] + [""] + [c for c in trainCopyScoresPred[i]])
@@ -976,11 +1036,11 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
                     
                     
                     writer.writerow(["TRUE:"] + 
-                                    [locationLabelEncoder.classes_[np.argmax(testOutputShopkeeperLocations[index])]] +
+                                    [indexToLocation[np.argmax(testOutputShopkeeperLocations[index])]] +
                                     [c for c in testOutputStrings[index]])
                     
                     writer.writerow(["PRED:"] + 
-                                    [locationLabelEncoder.classes_[testLocPreds_[i]]] +
+                                    [indexToLocation[testLocPreds_[i]]] +
                                     [c for c in testPredSents_[i]])
                     
                     
@@ -1029,15 +1089,16 @@ if __name__ == "__main__":
     attTemp = 6
     
     
+    run(0, 0, camTemp, attTemp, sessionDir)
     
+    """
     for gpu in range(8):
         
         seed = gpu
-        
-            
+                
         process = Process(target=run, args=[gpu, seed, camTemp, attTemp, sessionDir])
         process.start()
-        
+    """ 
     
 
 

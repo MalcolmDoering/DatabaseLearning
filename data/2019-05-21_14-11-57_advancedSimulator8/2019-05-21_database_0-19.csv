@@ -1,0 +1,4 @@
+camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
+CAMERA_1,Nikon Coolpix S2800,point and shoot,"purple, pink, black, silver, red",120 grams,"18 preset modes (e.g. beach, snow, night portrait)","12 glamor retouch effects (e.g. skin softening, small face, big eyes)",$2671,20.1 megapixels,5x optical zoom,limited manual settings,,,,
+CAMERA_2,Sony Alpha a6000,mirrorless,"white, silver, black",470 grams,"9 preset modes (e.g. beach, snow, night, portrait)","13 artistic effect modes (e.g. toy camera, soft focus)",$4211,,,full manual control,179 autofocus points,APS-C sensor (crop sensor),up to 3200 ISO with little noise,up to 30 seconds
+CAMERA_3,Canon EOS 5D Mark III,DSLR,black,950 grams (only body),,,$4058,,,full manual control,61 autofocus points,full frame,up to 6400 ISO with little noise,"up to 30 seconds, bulb mode: expose as long as you want"
