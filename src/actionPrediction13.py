@@ -28,7 +28,7 @@ import sys
 import tools
 
 
-DEBUG = True
+DEBUG = False
 
 
 eosChar = "#"
@@ -38,7 +38,7 @@ goChar = "~"
 cameras = ["CAMERA_1", "CAMERA_2", "CAMERA_3"]
 
 
-sessionDir = tools.create_session_dir("actionPrediction12_dbl")
+sessionDir = tools.create_session_dir("actionPrediction13_dbl")
     
 
 
@@ -1089,16 +1089,16 @@ if __name__ == "__main__":
     attTemp = 6
     
     
-    run(0, 0, camTemp, attTemp, sessionDir)
+    #run(0, 0, camTemp, attTemp, sessionDir)
     
-    """
+    
     for gpu in range(8):
         
         seed = gpu
                 
         process = Process(target=run, args=[gpu, seed, camTemp, attTemp, sessionDir])
         process.start()
-    """ 
+     
     
 
 
