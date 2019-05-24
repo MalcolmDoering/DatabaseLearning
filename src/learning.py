@@ -48,6 +48,9 @@ class CustomNeuralNetwork(object):
         #
         # build the model
         #
+        self._gtDbCams = tf.placeholder(tf.float32, [self.batchSize, self.numUniqueCams], name='gt_db_cameras')
+        self._gtDbAtts = tf.placeholder(tf.float32, [self.batchSize, self.numUniqueAtts], name='gt_db_attributes')
+        
         
         #with tf.name_scope("input encoder"):
         self._inputs = tf.placeholder(tf.int32, [self.batchSize, self.inputSeqLen, ], name='customer_inputs')
@@ -95,20 +98,35 @@ class CustomNeuralNetwork(object):
         with tf.variable_scope("DB_matcher"):
             # find the best matching camera and attribute from the database
             
-            cam1 = tf.layers.dense(self._input_encoding_2, self.numUniqueCams, activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
+            #cam1 = tf.layers.dense(self._input_encoding_2, self.numUniqueCams, activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
             #cam2 = tf.layers.dense(cam1, self.numUniqueCams, activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
-            cam3 = tf.nn.softmax(cam1)
             
-            att1 = tf.layers.dense(self._input_encoding_2, self.numUniqueAtts, activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
+            
+            #att1 = tf.layers.dense(self._input_encoding_2, self.numUniqueAtts, activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
             #att2 = tf.layers.dense(att1, self.numUniqueAtts, activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
-            att3 = tf.nn.softmax(att1)
             
-            # use gumbel softmax to get a "one-hot" vector
-            #self.camMatch = cam3 
-            #self.attMatch = att3
             
-            self.camMatch = tf.contrib.distributions.RelaxedOneHotCategorical(self.gumbel_softmax_temp_cams, probs=cam3).sample()
-            self.attMatch = tf.contrib.distributions.RelaxedOneHotCategorical(self.gumbel_softmax_temp_atts, probs=att3).sample()
+            
+            # gumbel softmax used till 20190525
+            #cam3 = tf.nn.softmax(cam1)
+            #att3 = tf.nn.softmax(att1)
+            
+            #self.camMatch = tf.contrib.distributions.RelaxedOneHotCategorical(self.gumbel_softmax_temp_cams, probs=cam3).sample()
+            #self.attMatch = tf.contrib.distributions.RelaxedOneHotCategorical(self.gumbel_softmax_temp_atts, probs=att3).sample()
+            
+            
+            # use sharpening instead of gumbel softmax
+            #cam3 = tf.pow(cam1, 2)
+            #att3 = tf.pow(att1, 2)
+            
+            #self.camMatch = tf.nn.softmax(cam3)
+            #self.attMatch = tf.nn.softmax(att3)
+            
+            
+            # provide the ground truth DB entries
+            self.camMatch = self._gtDbCams
+            self.attMatch = self._gtDbAtts
+            
             
             self.camMatchIndex = tf.argmax(self.camMatch, axis=1)
             self.attMatchIndex = tf.argmax(self.attMatch, axis=1)
@@ -122,6 +140,8 @@ class CustomNeuralNetwork(object):
             # multiply by the match vectors and sum so that only the matching value remains
             self.db_match_val = tf.einsum("bcalv,ba->bclv", self._db_entries, self.attMatch)
             self.db_match_val = tf.einsum("bclv,bc->blv", self.db_match_val, self.camMatch)
+            
+            # TODO would it make sense to do softmax over the chars in db_match_val???
             
             self.db_match_val_charindices = tf.argmax(self.db_match_val, axis=2)
             
@@ -283,36 +303,42 @@ class CustomNeuralNetwork(object):
         self._sess.run(self._init_op)
         
     
-    def train(self, inputUtts, inputCustLocs, databases, groundTruthUttOutputs, groundTruthOutputShkpLocs):
+    def train(self, inputUtts, inputCustLocs, databases, groundTruthUttOutputs, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts):
         feedDict = {self._inputs: inputUtts, 
                     self._location_inputs: inputCustLocs, 
                     self._db_entries: databases, 
                     self._ground_truth_outputs: groundTruthUttOutputs,
-                    self._ground_truth_location_outputs: groundTruthOutputShkpLocs}
+                    self._ground_truth_location_outputs: groundTruthOutputShkpLocs,
+                    self._gtDbCams: gtDbCams, 
+                    self._gtDbAtts: gtDbAtts}
         
         trainingLoss, _ = self._sess.run([self._loss, self._train_op], feed_dict=feedDict)
         
         return trainingLoss
     
     
-    def loss(self, inputUtts, inputCustLocs, databases, groundTruthOutputs, groundTruthOutputShkpLocs):
+    def loss(self, inputUtts, inputCustLocs, databases, groundTruthOutputs, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts):
         feedDict = {self._inputs: inputUtts, 
                     self._location_inputs: inputCustLocs, 
                     self._db_entries: databases, 
                     self._ground_truth_outputs: groundTruthOutputs,
-                    self._ground_truth_location_outputs: groundTruthOutputShkpLocs}
+                    self._ground_truth_location_outputs: groundTruthOutputShkpLocs,
+                    self._gtDbCams: gtDbCams, 
+                    self._gtDbAtts: gtDbAtts}
         
         loss = self._sess.run(self._loss, feed_dict=feedDict)
         
         return loss
     
     
-    def predict(self, inputUtts, inputCustLocs, databases, groundTruthOutputs, groundTruthOutputShkpLocs):
+    def predict(self, inputUtts, inputCustLocs, databases, groundTruthOutputs, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts):
         feedDict = {self._inputs: inputUtts, 
                     self._location_inputs: inputCustLocs, 
                     self._db_entries: databases, 
                     self._ground_truth_outputs: groundTruthOutputs,
-                    self._ground_truth_location_outputs: groundTruthOutputShkpLocs}
+                    self._ground_truth_location_outputs: groundTruthOutputShkpLocs,
+                    self._gtDbCams: gtDbCams, 
+                    self._gtDbAtts: gtDbAtts}
         
         predUtts, predShkpLocs, copyScores, genScores, camMatchArgMax, attMatchArgMax, camMatch, attMatch = self._sess.run([self._pred_utt_op,
                                                                                                                             self._pred_shkp_loc_op,

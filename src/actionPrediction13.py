@@ -28,7 +28,7 @@ import sys
 import tools
 
 
-DEBUG = False
+DEBUG = True
 
 
 eosChar = "#"
@@ -60,21 +60,21 @@ def compute_db_substring_match(groundTruthUtterances, predictedUtterances, shkpU
             
             # TODO: take this out later
             # this only looks at things from the price column
-            if "$" in gtUtt[shkpUttToDbEntryRange[gtUtt][0]:shkpUttToDbEntryRange[gtUtt][1]]:
+            #if "$" in gtUtt[shkpUttToDbEntryRange[gtUtt][0]:shkpUttToDbEntryRange[gtUtt][1]]:
                 
-                subStringCharMatchCount = 0.0
-                subStringCharTotalCount = 0.0
+            subStringCharMatchCount = 0.0
+            subStringCharTotalCount = 0.0
+            
+            for j in range(shkpUttToDbEntryRange[gtUtt][0], shkpUttToDbEntryRange[gtUtt][1]):
                 
-                for j in range(shkpUttToDbEntryRange[gtUtt][0], shkpUttToDbEntryRange[gtUtt][1]):
-                    
-                    if gtUtt[j] == predUtt[j]:
-                        subStringCharMatchCount += 1
-                    
-                    subStringCharTotalCount += 1
+                if gtUtt[j] == predUtt[j]:
+                    subStringCharMatchCount += 1
                 
-                
-                subStringCharMatchAccuracies.append(subStringCharMatchCount / subStringCharTotalCount)
-        
+                subStringCharTotalCount += 1
+            
+            
+            subStringCharMatchAccuracies.append(subStringCharMatchCount / subStringCharTotalCount)
+    
     return subStringCharMatchAccuracies
 
 
@@ -220,8 +220,12 @@ def read_database_file(filename):
     return database, fieldnames
 
 
-def read_simulated_interactions(filename, keepActions=None):
+def read_simulated_interactions(filename, dbFieldnames, keepActions=None):
     interactions = []
+    gtDbCamera = []
+    gtDbAttribute = []
+    
+    
     shkpUttToDbEntryRange = {}
     
     fieldnames = ["TRIAL",
@@ -247,15 +251,29 @@ def read_simulated_interactions(filename, keepActions=None):
         reader = csv.DictReader(csvfile)
         
         for row in reader:
-            if keepActions == None:
+            
+            if (keepActions == None) or (row["OUTPUT_SHOPKEEPER_ACTION"] in keepActions):
                 interactions.append(row)
-            elif row["OUTPUT_SHOPKEEPER_ACTION"] in keepActions:
-                interactions.append(row)
+                
+                try:
+                    dbRow = np.zeros(len(cameras))
+                    dbRow[cameras.index(row["CURRENT_CAMERA_OF_CONVERSATION"])] = 1
+                except:
+                    dbRow = np.ones(len(cameras))
+                
+                try:
+                    dbCol = np.zeros(len(dbFieldnames))
+                    dbCol[dbFieldnames.index(row["SHOPKEEPER_TOPIC"])] = 1
+                except:
+                    dbCol = np.ones(len(dbFieldnames))
+                
+                gtDbCamera.append(dbRow)
+                gtDbAttribute.append(dbCol)        
             
             if row["SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"] != "":
                 shkpUttToDbEntryRange[row["SHOPKEEPER_SPEECH"]] = [int(i) for i in row["SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"].split("~")]
-                
-    return interactions, shkpUttToDbEntryRange
+    
+    return interactions, shkpUttToDbEntryRange, gtDbCamera, gtDbAttribute
 
 
 def get_input_output_strings_and_location_vectors(interactions, locationToIndex):
@@ -383,19 +401,29 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
     
     interactions = []
     datasetSizes = []
+    gtDatabaseCameras = []
+    gtDatabaseAttributes = []
+    
     shkpUttToDbEntryRange = {}
     
     for i in range(len(interactionFilenames)):
         iFn = interactionFilenames[i]
         
-        inters, sutder = read_simulated_interactions(iFn, keepActions=["S_ANSWERS_QUESTION_ABOUT_FEATURE"]) # S_INTRODUCES_CAMERA S_INTRODUCES_FEATURE
+        inters, sutder, gtDbCamera, gtDbAttribute = read_simulated_interactions(iFn, dbFieldnames, keepActions=["S_ANSWERS_QUESTION_ABOUT_FEATURE"]) # S_INTRODUCES_CAMERA S_INTRODUCES_FEATURE
         
         if i < numTrainDbs:
             # reduce the amount of training data because we have increased the number of training databases (assumes 1000 interactions per DB)
             inters = inters[: int(2 * len(inters) / numTrainDbs)] # two is the minimum number of training databases 
+            gtDbCamera = gtDbCamera[: int(2 * len(gtDbCamera) / numTrainDbs)]
+            gtDbAttribute = gtDbAttribute[: int(2 * len(gtDbAttribute) / numTrainDbs)]
+        
         
         interactions.append(inters)
         datasetSizes.append(len(inters))
+        
+        gtDatabaseCameras.append(gtDbCamera)
+        gtDatabaseAttributes.append(gtDbAttribute)
+        
         
         # combine the three dictionaries into one
         shkpUttToDbEntryRange = {**shkpUttToDbEntryRange, **sutder}
@@ -435,6 +463,9 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
     for db in databases:
         dbStrs = get_database_value_strings(db, dbFieldnames)
         dbStrings.append(dbStrs)
+    
+    
+    
     
     
     
@@ -541,10 +572,19 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
         splitOutputIndexLists = []
         splitOutputStrings = []
         
+        splitGtDatabasebCameras = []
+        splitGtDatabaseAttributes = []
+        
+        
         for i in range(startDbIndex, stopDbIndex):
             splitInputIndexLists += inputIndexLists[i]
             splitOutputIndexLists += outputIndexLists[i]
             splitOutputStrings += outputStrings[i]
+            
+            splitGtDatabasebCameras += gtDatabaseCameras[i]
+            splitGtDatabaseAttributes += gtDatabaseAttributes[i]
+        
+            
         
         
         splitInputCustomerLocations = np.concatenate(inputCustomerLocationVectors[startDbIndex:stopDbIndex])
@@ -556,15 +596,15 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
             for j in range(datasetSizes[i]):
                 splitDbVectors.append(dbVectors[i])
         
-        return splitInputIndexLists, splitOutputIndexLists, splitOutputStrings, splitInputCustomerLocations, splitOutputShopkeeperLocations, splitDbVectors
+        return splitInputIndexLists, splitOutputIndexLists, splitOutputStrings, splitInputCustomerLocations, splitOutputShopkeeperLocations, splitDbVectors, splitGtDatabasebCameras, splitGtDatabaseAttributes
         
     
     
     # training
-    trainInputIndexLists, trainOutputIndexLists, trainOutputStrings, trainInputCustomerLocations, trainOutputShopkeeperLocations, trainDbVectors = prepare_split(0, numTrainDbs)
+    trainInputIndexLists, trainOutputIndexLists, trainOutputStrings, trainInputCustomerLocations, trainOutputShopkeeperLocations, trainDbVectors, trainGtDatabasebCameras, trainGtDatabaseAttributes = prepare_split(0, numTrainDbs)
     
     # testing
-    testInputIndexLists, testOutputIndexLists, testOutputStrings, testInputCustomerLocations, testOutputShopkeeperLocations, testDbVectors = prepare_split(numTrainDbs, numDatabases)
+    testInputIndexLists, testOutputIndexLists, testOutputStrings, testInputCustomerLocations, testOutputShopkeeperLocations, testDbVectors, testGtDatabasebCameras, testGtDatabaseAttributes = prepare_split(numTrainDbs, numDatabases)
     
     
     
@@ -711,11 +751,13 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
                                            trainInputCustomerLocations_shuf[i-batchSize:i],
                                            trainDbVectors_shuf[i-batchSize:i], 
                                            trainOutputIndexLists_shuf[i-batchSize:i],
-                                           trainOutputShopkeeperLocations_shuf[i-batchSize:i])
+                                           trainOutputShopkeeperLocations_shuf[i-batchSize:i],
+                                           trainGtDatabasebCameras[i-batchSize:i],
+                                           trainGtDatabaseAttributes[i-batchSize:i])
             
             trainCosts.append(batchTrainCost)
             #print("\t", batchTrainCost, flush=True, file=sessionTerminalOutputStream)
-            #break
+            break
         trainCostAve = np.mean(trainCosts)
         trainCostStd = np.std(trainCosts)
         print(e, "train cost", trainCostAve, trainCostStd, flush=True, file=sessionTerminalOutputStream)
@@ -748,7 +790,9 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
                                                                                                                                                                                          trainInputCustomerLocations[i-batchSize:i],
                                                                                                                                                                                          trainDbVectors[i-batchSize:i], 
                                                                                                                                                                                          trainOutputIndexLists[i-batchSize:i],
-                                                                                                                                                                                         trainOutputShopkeeperLocations[i-batchSize:i])
+                                                                                                                                                                                         trainOutputShopkeeperLocations[i-batchSize:i],
+                                                                                                                                                                                         trainGtDatabasebCameras[i-batchSize:i],
+                                                                                                                                                                                         trainGtDatabaseAttributes[i-batchSize:i])
                 
                 trainUttPreds.append(batchTrainUttPreds)
                 trainLocPreds.append(batchTrainLocPreds)
@@ -850,7 +894,9 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
                                              testInputCustomerLocations[i-batchSize:i], 
                                              testDbVectors[i-batchSize:i], 
                                              testOutputIndexLists[i-batchSize:i],
-                                             testOutputShopkeeperLocations[i-batchSize:i])
+                                             testOutputShopkeeperLocations[i-batchSize:i],
+                                             testGtDatabasebCameras[i-batchSize:i],
+                                             testGtDatabaseAttributes[i-batchSize:i])
                 
                 testCosts.append(batchTestCost)
                 #print("\t", batchTestCost, flush=True, file=sessionTerminalOutputStream)
@@ -860,7 +906,9 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
                                                                                                                                                                                   testInputCustomerLocations[i-batchSize:i],
                                                                                                                                                                                   testDbVectors[i-batchSize:i], 
                                                                                                                                                                                   testOutputIndexLists[i-batchSize:i],
-                                                                                                                                                                                  testOutputShopkeeperLocations[i-batchSize:i])
+                                                                                                                                                                                  testOutputShopkeeperLocations[i-batchSize:i],
+                                                                                                                                                                                  testGtDatabasebCameras[i-batchSize:i],
+                                                                                                                                                                                  testGtDatabaseAttributes[i-batchSize:i])
                 
                 testUttPreds.append(batchTestUttPreds)
                 testLocPreds.append(batchTestLocPreds)
@@ -960,7 +1008,7 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
                 
                 print(np.round(trainCamMatch_[i], 3), flush=True, file=sessionTerminalOutputStream)
                 print(np.round(trainAttMatch_[i], 3), flush=True, file=sessionTerminalOutputStream)
-                print("best match:", cameras[trainCamMatchArgMax[i]], dbFieldnames[trainAttMatchArgMax[i]], flush=True, file=sessionTerminalOutputStream)
+                print("best match:", cameras[trainCamMatchArgMax_[i]], dbFieldnames[trainAttMatchArgMax_[i]], flush=True, file=sessionTerminalOutputStream)
                 print("true match:", info, flush=True, file=sessionTerminalOutputStream)
                 
                 #print("\x1b[31m"+ indexToCam[trainCamMatchArgMax[i]] +" "+ indexToAtt[trainAttMatchArgMax[i]] +" "+ databases[i][indexToCam[trainCamMatchArgMax[i]]][indexToAtt[trainAttMatchArgMax[i]]] +"\x1b[0m", trainCamMatch[i], trainAttMatch[i])
@@ -980,7 +1028,7 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
                 
                 print(np.round(testCamMatch_[i], 3), flush=True, file=sessionTerminalOutputStream)
                 print(np.round(testAttMatch_[i], 3), flush=True, file=sessionTerminalOutputStream)
-                print("best match:", cameras[testCamMatchArgMax[i]], dbFieldnames[testAttMatchArgMax[i]], flush=True, file=sessionTerminalOutputStream)
+                print("best match:", cameras[testCamMatchArgMax_[i]], dbFieldnames[testAttMatchArgMax_[i]], flush=True, file=sessionTerminalOutputStream)
                 print("true match:", info, flush=True, file=sessionTerminalOutputStream)
                 
                 #print("\x1b[31m"+ indexToCam[testCamMatchArgMax[i]] +" "+ indexToAtt[testAttMatchArgMax[i]] +" "+ databases[i+4][indexToCam[testCamMatchArgMax[i]]][indexToAtt[testAttMatchArgMax[i]]] +"\x1b[0m", testCamMatch[i], testAttMatch[i])
@@ -1085,20 +1133,20 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
 if __name__ == "__main__":
     
     
-    camTemp = 3
-    attTemp = 6
+    camTemp = 0
+    attTemp = 0
     
     
-    #run(0, 0, camTemp, attTemp, sessionDir)
+    run(0, 0, camTemp, attTemp, sessionDir)
     
-    
+    """
     for gpu in range(8):
         
         seed = gpu
                 
         process = Process(target=run, args=[gpu, seed, camTemp, attTemp, sessionDir])
         process.start()
-     
+    """
     
 
 
