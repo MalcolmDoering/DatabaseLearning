@@ -28,7 +28,7 @@ import sys
 import tools
 
 
-DEBUG = True
+DEBUG = False
 
 
 eosChar = "#"
@@ -757,7 +757,7 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
             
             trainCosts.append(batchTrainCost)
             #print("\t", batchTrainCost, flush=True, file=sessionTerminalOutputStream)
-            break
+            #break
         trainCostAve = np.mean(trainCosts)
         trainCostStd = np.std(trainCosts)
         print(e, "train cost", trainCostAve, trainCostStd, flush=True, file=sessionTerminalOutputStream)
@@ -1137,16 +1137,16 @@ if __name__ == "__main__":
     attTemp = 0
     
     
-    run(0, 0, camTemp, attTemp, sessionDir)
+    #run(0, 0, camTemp, attTemp, sessionDir)
     
-    """
+    
     for gpu in range(8):
         
         seed = gpu
                 
         process = Process(target=run, args=[gpu, seed, camTemp, attTemp, sessionDir])
         process.start()
-    """
+    
     
 
 
