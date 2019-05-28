@@ -48,8 +48,13 @@ class CustomNeuralNetwork(object):
         #
         # build the model
         #
-        self._gtDbCams = tf.placeholder(tf.float32, [self.batchSize, self.numUniqueCams], name='gt_db_cameras')
-        self._gtDbAtts = tf.placeholder(tf.float32, [self.batchSize, self.numUniqueAtts], name='gt_db_attributes')
+        
+        
+        self._gtDbCamIndices = tf.placeholder(tf.int32, [self.batchSize, ], name='gt_db_cameras')
+        self._gtDbAttIndices = tf.placeholder(tf.int32, [self.batchSize, ], name='gt_db_attributes')
+        
+        self._gtDbCams = tf.one_hot(self._gtDbCamIndices, self.numUniqueCams)
+        self._gtDbAtts = tf.one_hot(self._gtDbAttIndices, self.numUniqueAtts)
         
         
         #with tf.name_scope("input encoder"):
@@ -309,8 +314,8 @@ class CustomNeuralNetwork(object):
                     self._db_entries: databases, 
                     self._ground_truth_outputs: groundTruthUttOutputs,
                     self._ground_truth_location_outputs: groundTruthOutputShkpLocs,
-                    self._gtDbCams: gtDbCams, 
-                    self._gtDbAtts: gtDbAtts}
+                    self._gtDbCamIndices: gtDbCams, 
+                    self._gtDbAttIndices: gtDbAtts}
         
         trainingLoss, _ = self._sess.run([self._loss, self._train_op], feed_dict=feedDict)
         
@@ -323,8 +328,8 @@ class CustomNeuralNetwork(object):
                     self._db_entries: databases, 
                     self._ground_truth_outputs: groundTruthOutputs,
                     self._ground_truth_location_outputs: groundTruthOutputShkpLocs,
-                    self._gtDbCams: gtDbCams, 
-                    self._gtDbAtts: gtDbAtts}
+                    self._gtDbCamIndices: gtDbCams, 
+                    self._gtDbAttIndices: gtDbAtts}
         
         loss = self._sess.run(self._loss, feed_dict=feedDict)
         
@@ -337,8 +342,8 @@ class CustomNeuralNetwork(object):
                     self._db_entries: databases, 
                     self._ground_truth_outputs: groundTruthOutputs,
                     self._ground_truth_location_outputs: groundTruthOutputShkpLocs,
-                    self._gtDbCams: gtDbCams, 
-                    self._gtDbAtts: gtDbAtts}
+                    self._gtDbCamIndices: gtDbCams, 
+                    self._gtDbAttIndices: gtDbAtts}
         
         predUtts, predShkpLocs, copyScores, genScores, camMatchArgMax, attMatchArgMax, camMatch, attMatch = self._sess.run([self._pred_utt_op,
                                                                                                                             self._pred_shkp_loc_op,
