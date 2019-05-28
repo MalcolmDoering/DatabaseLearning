@@ -98,11 +98,11 @@ class CustomNeuralNetwork(object):
         with tf.variable_scope("DB_matcher"):
             # find the best matching camera and attribute from the database
             
-            #cam1 = tf.layers.dense(self._input_encoding_2, self.numUniqueCams, activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
+            cam1 = tf.layers.dense(self._input_encoding_2, self.numUniqueCams, activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
             #cam2 = tf.layers.dense(cam1, self.numUniqueCams, activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
             
             
-            #att1 = tf.layers.dense(self._input_encoding_2, self.numUniqueAtts, activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
+            att1 = tf.layers.dense(self._input_encoding_2, self.numUniqueAtts, activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
             #att2 = tf.layers.dense(att1, self.numUniqueAtts, activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
             
             
@@ -116,16 +116,16 @@ class CustomNeuralNetwork(object):
             
             
             # use sharpening instead of gumbel softmax
-            #cam3 = tf.pow(cam1, 2)
-            #att3 = tf.pow(att1, 2)
+            cam3 = tf.pow(cam1, 2)
+            att3 = tf.pow(att1, 2)
             
-            #self.camMatch = tf.nn.softmax(cam3)
-            #self.attMatch = tf.nn.softmax(att3)
+            self.camMatch = tf.nn.softmax(cam3)
+            self.attMatch = tf.nn.softmax(att3)
             
             
             # provide the ground truth DB entries
-            self.camMatch = self._gtDbCams
-            self.attMatch = self._gtDbAtts
+            #self.camMatch = self._gtDbCams
+            #self.attMatch = self._gtDbAtts
             
             
             self.camMatchIndex = tf.argmax(self.camMatch, axis=1)
