@@ -78,6 +78,39 @@ def compute_db_substring_match(groundTruthUtterances, predictedUtterances, shkpU
     return subStringCharMatchAccuracies
 
 
+
+def compute_db_address_match(gtCamIndex, gtAttrIndex, predCamIndex, predAttIndex):
+        
+    camCorrect = []
+    attrCorrect = []
+    bothCorrect = []
+    
+    for i in range(len(gtCamIndex)):
+        
+        # make sure this is an instance that contains a DB string
+        if gtCamIndex[i] != -1:
+            
+            camMatch = 0.0
+            attrMatch = 0.0
+            bothMatch = 0.0
+            
+            if gtCamIndex[i] == predCamIndex[i]:
+                camMatch = 1.0
+            
+            if gtAttrIndex[i] == predAttIndex[i]:
+                attrMatch = 1.0
+                
+            if camMatch and attrMatch:
+                bothMatch = 1.0
+                
+            camCorrect.append(camMatch)
+            attrCorrect.append(attrMatch)
+            bothCorrect.append(bothMatch)
+        
+    return camCorrect, attrCorrect, bothCorrect
+
+
+
 def vectorize_sentences(sentences, charToIndex, maxSentLen):
     
     maxSentLen += 1 # for the EOS char
@@ -256,16 +289,14 @@ def read_simulated_interactions(filename, dbFieldnames, keepActions=None):
                 interactions.append(row)
                 
                 try:
-                    dbRow = np.zeros(len(cameras))
-                    dbRow[cameras.index(row["CURRENT_CAMERA_OF_CONVERSATION"])] = 1
+                    dbRow = cameras.index(row["CURRENT_CAMERA_OF_CONVERSATION"])
                 except:
-                    dbRow = np.ones(len(cameras))
+                    dbRow = -1
                 
                 try:
-                    dbCol = np.zeros(len(dbFieldnames))
-                    dbCol[dbFieldnames.index(row["SHOPKEEPER_TOPIC"])] = 1
+                    dbCol = dbFieldnames.index(row["SHOPKEEPER_TOPIC"])
                 except:
-                    dbCol = np.ones(len(dbFieldnames))
+                    dbCol = -1
                 
                 gtDbCamera.append(dbRow)
                 gtDbAttribute.append(dbCol)        
@@ -783,6 +814,9 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
             trainCamMatch = []
             trainAttMatch  = []
             trainGtSents = []
+            trainGtCamIndx = []
+            trainGtAttIndx = []
+            
             
             for i in trainBatchEndIndices:
                 
@@ -803,6 +837,8 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
                 trainCamMatch.append(batchTrainCamMatch)
                 trainAttMatch.append(batchTrainAttMatch)
                 trainGtSents += trainOutputStrings[i-batchSize:i]
+                trainGtCamIndx += trainGtDatabasebCameras[i-batchSize:i]
+                trainGtAttIndx += trainGtDatabaseAttributes[i-batchSize:i]
                 
             trainUttPreds = np.concatenate(trainUttPreds)
             trainLocPreds = np.concatenate(trainLocPreds)
@@ -827,6 +863,19 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
             trainSubstrSdCorr = np.std(trainSubstrCharMatchAccs)
             
             print("train substr all correct {}, ave correctness {} ({})".format(trainSubstrAllCorr, trainSubstrAveCorr, trainSubstrSdCorr), flush=True, file=sessionTerminalOutputStream)
+            
+            
+            
+            trainCamCorr, trainAttrCorr, trainBothCorr = compute_db_address_match(trainGtCamIndx, trainGtAttIndx, trainCamMatchArgMax, trainAttMatchArgMax)
+            
+            trainCamCorrAve = np.mean(trainCamCorr)
+            trainAttrCorrAve = np.mean(trainAttrCorr)
+            trainBothCorrAve = np.mean(trainBothCorr)
+            
+            print("train DB addressing correctness: cam. {}, attr. {}, both {}".format(trainCamCorrAve, trainAttrCorrAve, trainBothCorrAve), flush=True, file=sessionTerminalOutputStream)
+            
+            
+            
             
             
             #trainAcc = 0.0
@@ -883,6 +932,8 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
             testCamMatch = []
             testAttMatch  = []
             testGtSents = []
+            testGtCamIndx = []
+            testGtAttIndx = []
             
             testCosts = []
             
@@ -919,6 +970,8 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
                 testCamMatch.append(batchTestCamMatch)
                 testAttMatch.append(batchTestAttMatch)
                 testGtSents += testOutputStrings[i-batchSize:i]
+                testGtCamIndx += testGtDatabasebCameras[i-batchSize:i]
+                testGtAttIndx += testGtDatabaseAttributes[i-batchSize:i]
                 
                 
             testUttPreds = np.concatenate(testUttPreds)
@@ -950,6 +1003,18 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
             testSubstrSdCorr = np.std(testSubstrCharMatchAccs)
             
             print("test substr all correct {}, ave correctness {} ({})".format(testSubstrAllCorr, testSubstrAveCorr, testSubstrSdCorr), flush=True, file=sessionTerminalOutputStream)
+            
+            
+            
+            testCamCorr, testAttrCorr, testBothCorr = compute_db_address_match(testGtCamIndx, testGtAttIndx, testCamMatchArgMax, testAttMatchArgMax)
+            
+            testCamCorrAve = np.mean(testCamCorr)
+            testAttrCorrAve = np.mean(testAttrCorr)
+            testBothCorrAve = np.mean(testBothCorr)
+            
+            print("test DB addressing correctness: cam. {}, attr. {}, both {}".format(testCamCorrAve, testAttrCorrAve, testBothCorrAve), flush=True, file=sessionTerminalOutputStream)
+            
+            
             
             
             #testAcc = 0.0
@@ -1116,12 +1181,18 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
                                  trainSubstrAllCorr,    #"Train DB Substring Correct All ({})".format(seed), 
                                  trainSubstrAveCorr,    #"Train DB Substring Correct Ave ({})".format(seed), 
                                  trainSubstrSdCorr, #"Train DB Substring Correct SD ({})".format(seed), 
+                                 trainCamCorrAve,
+                                 trainAttrCorrAve,
+                                 trainBothCorrAve,
                                  
                                  testCostAve,       #"Test Cost Ave({})".format(seed),
                                  testCostStd,       #"Test Cost SD ({})".format(seed), 
                                  testSubstrAllCorr, #"Test DB Substring Correct All ({})".format(seed), 
                                  testSubstrAveCorr, #"Test DB Substring Correct Ave ({})".format(seed), 
-                                 testSubstrSdCorr,  #"Test DB Substring Correct SD ({})".format(seed), 
+                                 testSubstrSdCorr,  #"Test DB Substring Correct SD ({})".format(seed),
+                                 testCamCorrAve,
+                                 testAttrCorrAve,
+                                 testBothCorrAve
                                  ])    
         
         

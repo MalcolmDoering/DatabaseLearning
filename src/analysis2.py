@@ -21,9 +21,12 @@ import copy
 #plt.style.use('seaborn-white')
 
 
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-05-17_11-30-24_actionPrediction12_dbl - save"
-expLogDir = "C:/Users/robovie/eclipse-log/2019-05-21_14-54-06_actionPrediction13_dbl"
+#expLogDir = "C:/Users/robovie/eclipse-log/2019-05-17_11-30-24_actionPrediction12_dbl - save" # 2 training databases, presented in 20190524 meeting
+#expLogDir = "C:/Users/robovie/eclipse-log/2019-05-21_14-54-06_actionPrediction13_dbl - save" # 10 training databases, presented in 20190524 meeting
 
+#expLogDir = "C:/Users/robovie/eclipse-log/2019-05-24_19-00-07_actionPrediction13_dbl" # 10 databases, GT database entries given
+
+expLogDir = "C:/Users/robovie/eclipse-log/2019-05-27_12-29-06_actionPrediction13_dbl" # 10 databases, sharpening used for addressing
 
 
 
