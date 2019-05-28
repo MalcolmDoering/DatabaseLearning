@@ -28,7 +28,7 @@ import sys
 import tools
 
 
-DEBUG = False
+DEBUG = True
 
 
 eosChar = "#"
@@ -750,13 +750,21 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
                          "Train Cost SD ({})".format(sessionIdentifier), 
                          "Train DB Substring Correct All ({})".format(sessionIdentifier), 
                          "Train DB Substring Correct Ave ({})".format(sessionIdentifier), 
-                         "Train DB Substring Correct SD ({})".format(sessionIdentifier), 
+                         "Train DB Substring Correct SD ({})".format(sessionIdentifier),
+                         
+                         "Train Cam. Address Correct ({})".format(sessionIdentifier),
+                         "Train Attr. Address Correct ({})".format(sessionIdentifier),
+                         "Train Both Addresses Correct ({})".format(sessionIdentifier),
                          
                          "Test Cost Ave({})".format(sessionIdentifier),
                          "Test Cost SD ({})".format(sessionIdentifier), 
                          "Test DB Substring Correct All ({})".format(sessionIdentifier), 
                          "Test DB Substring Correct Ave ({})".format(sessionIdentifier), 
                          "Test DB Substring Correct SD ({})".format(sessionIdentifier), 
+                         
+                         "Test Cam. Address Correct ({})".format(sessionIdentifier),
+                         "Test Attr. Address Correct ({})".format(sessionIdentifier),
+                         "Test Both Addresses Correct ({})".format(sessionIdentifier)
                          ])
     
     
@@ -1208,7 +1216,7 @@ if __name__ == "__main__":
     attTemp = 0
     
     
-    #run(0, 0, camTemp, attTemp, sessionDir)
+    run(0, 0, camTemp, attTemp, sessionDir)
     
     
     for gpu in range(8):
