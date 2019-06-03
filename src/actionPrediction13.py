@@ -28,7 +28,7 @@ import sys
 import tools
 
 
-DEBUG = True
+DEBUG = False
 
 
 eosChar = "#"
@@ -38,8 +38,16 @@ goChar = "~"
 cameras = ["CAMERA_1", "CAMERA_2", "CAMERA_3"]
 
 
+numTrainDbs = 10
+batchSize = 256
+embeddingSize = 30
+numEpochs = 7500
+evalEvery = 50
+
+
+
 sessionDir = tools.create_session_dir("actionPrediction13_dbl")
-    
+
 
 
 def normalized_edit_distance(s1, s2):
@@ -285,7 +293,7 @@ def read_simulated_interactions(filename, dbFieldnames, keepActions=None):
         
         for row in reader:
             
-            if (keepActions == None) or (row["OUTPUT_SHOPKEEPER_ACTION"] in keepActions):
+            if (keepActions == None) or (row["OUTPUT_SHOPKEEPER_ACTION"] in keepActions and row["SHOPKEEPER_TOPIC"] == "price"):
                 interactions.append(row)
                 
                 try:
@@ -401,7 +409,7 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
     interactionFilenamesAll = [dataDirectory+"/"+fn for fn in filenames if "simulated" in fn]
     
     
-    numTrainDbs = 10
+    
     
     """
     databaseFilenames = [tools.modelDir+"/database_0a.csv",
@@ -652,8 +660,7 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
     #
     print("setting up the model...", flush=True, file=sessionTerminalOutputStream)
     
-    batchSize = 256
-    embeddingSize = 30
+    
     
     
     inputLen = maxInputLen + 2
@@ -708,7 +715,7 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
     testDbVectors = testDbVectors[:1500]
     """
     
-    numEpochs = 20000
+    
     trainBatchEndIndices = list(range(batchSize, len(trainInputIndexLists), batchSize))
     testBatchEndIndices = list(range(batchSize, len(testInputIndexLists), batchSize))
     
@@ -724,8 +731,11 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
             for i in range(numTrainDbs):
                 for j in range(datasetSizes[i]):
                     if interactions[i][j]["CUSTOMER_TOPIC"] == f and interactions[i][j]["CURRENT_CAMERA_OF_CONVERSATION"] == c:
-                        interestingTrainInstances.append((j + sum(len(l) for l in interactions[:i]),
-                                                          "DB{} {} {}".format(databaseIds[i], c, f)))
+                        index = j + sum(len(l) for l in interactions[:i])
+                        
+                        # the training data that doesn't fit into one of the batches will not be included, so skip interesting instance that fall in this range
+                        if index < trainBatchEndIndices[-1]: 
+                            interestingTrainInstances.append((index, "DB{} {} {}".format(databaseIds[i], c, f)))
                         break
         
     #
@@ -736,8 +746,11 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
             for i in range(numTrainDbs, numDatabases):
                 for j in range(datasetSizes[i]):
                     if interactions[i][j]["CUSTOMER_TOPIC"] == f and interactions[i][j]["CURRENT_CAMERA_OF_CONVERSATION"] == c:
-                        interestingTestInstances.append((j + sum(len(l) for l in interactions[numTrainDbs:i]),
-                                                         "DB{} {} {}".format(databaseIds[i], c, f)))
+                        index = j + sum(len(l) for l in interactions[:i])
+                        
+                        # same as above
+                        if index < testBatchEndIndices[-1]: 
+                            interestingTestInstances.append((index, "DB{} {} {}".format(databaseIds[i], c, f)))
                         break
     
     
@@ -802,7 +815,7 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
         print(e, "train cost", trainCostAve, trainCostStd, flush=True, file=sessionTerminalOutputStream)
         
         
-        if e % 50 == 0 or e == (numEpochs-1):
+        if e % evalEvery == 0 or e == (numEpochs-1):
             
             saveModelDir = tools.create_directory(sessionDir+"/{}".format(e))
             learner.save(saveModelDir+"/saved_session".format(e))
@@ -1143,7 +1156,7 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
                     writer.writerow(["CAM MATCH:"] + [np.round(p, 3) for p in trainCamMatch_[i]])
                     writer.writerow(["ATT MATCH:"] + [np.round(p, 3) for p in trainAttMatch_[i]])
                     
-                    writer.writerow(["TOP MATCH:", cameras[trainCamMatchArgMax[i]]+" "+dbFieldnames[trainAttMatchArgMax[i]]])
+                    writer.writerow(["TOP MATCH:", cameras[trainCamMatchArgMax_[i]]+" "+dbFieldnames[trainAttMatchArgMax_[i]]])
                     writer.writerow(["TRUE MATCH:", info])
                     
                     writer.writerow([])
@@ -1174,7 +1187,7 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
                     writer.writerow(["CAM MATCH:"] + [np.round(p, 3) for p in testCamMatch_[i]])
                     writer.writerow(["ATT MATCH:"] + [np.round(p, 3) for p in testAttMatch_[i]])
                     
-                    writer.writerow(["TOP MATCH:", cameras[testCamMatchArgMax[i]]+" "+dbFieldnames[testAttMatchArgMax[i]]])
+                    writer.writerow(["TOP MATCH:", cameras[testCamMatchArgMax_[i]]+" "+dbFieldnames[testAttMatchArgMax_[i]]])
                     writer.writerow(["TRUE MATCH:", info])
                     
                     writer.writerow([])
@@ -1212,22 +1225,39 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
 if __name__ == "__main__":
     
     
-    camTemp = 0
-    attTemp = 0
+    #camTemp = 2
+    #attTemp = 2
     
     
-    run(0, 0, camTemp, attTemp, sessionDir)
+    #run(0, 0, camTemp, attTemp, sessionDir)
     
-    
+    """
     for gpu in range(8):
         
         seed = gpu
                 
         process = Process(target=run, args=[gpu, seed, camTemp, attTemp, sessionDir])
         process.start()
+    """
     
     
-
+    #gpu = 0
+    
+    processes = []
+    
+    for camTemp in [2, 2.5, 3]:    
+        for attTemp in [2, 3, 4, 5, 6]:
+                
+                for gpu in range(8):
+                    process = Process(target=run, args=[gpu, gpu, camTemp, attTemp, sessionDir])
+                    process.start()
+                    processes.append(process)
+                
+                for process in processes:
+                    process.join()
+                
+    
+    
 
 
 

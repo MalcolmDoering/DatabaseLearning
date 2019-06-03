@@ -113,19 +113,19 @@ class CustomNeuralNetwork(object):
             
             
             # gumbel softmax used till 20190525
-            #cam3 = tf.nn.softmax(cam1)
-            #att3 = tf.nn.softmax(att1)
+            cam3 = tf.nn.softmax(cam1)
+            att3 = tf.nn.softmax(att1)
             
-            #self.camMatch = tf.contrib.distributions.RelaxedOneHotCategorical(self.gumbel_softmax_temp_cams, probs=cam3).sample()
-            #self.attMatch = tf.contrib.distributions.RelaxedOneHotCategorical(self.gumbel_softmax_temp_atts, probs=att3).sample()
+            self.camMatch = tf.contrib.distributions.RelaxedOneHotCategorical(self.gumbel_softmax_temp_cams, probs=cam3).sample()
+            self.attMatch = tf.contrib.distributions.RelaxedOneHotCategorical(self.gumbel_softmax_temp_atts, probs=att3).sample()
             
             
             # use sharpening instead of gumbel softmax
-            cam3 = tf.pow(cam1, 2)
-            att3 = tf.pow(att1, 2)
+            #cam3 = tf.pow(cam1, 2)
+            #att3 = tf.pow(att1, 2)
             
-            self.camMatch = tf.nn.softmax(cam3)
-            self.attMatch = tf.nn.softmax(att3)
+            #self.camMatch = tf.nn.softmax(cam3)
+            #self.attMatch = tf.nn.softmax(att3)
             
             
             # provide the ground truth DB entries
