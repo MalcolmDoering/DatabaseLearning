@@ -24,9 +24,142 @@ import copy
 #expLogDir = "C:/Users/robovie/eclipse-log/2019-05-17_11-30-24_actionPrediction12_dbl - save" # 2 training databases, presented in 20190524 meeting
 #expLogDir = "C:/Users/robovie/eclipse-log/2019-05-21_14-54-06_actionPrediction13_dbl - save" # 10 training databases, presented in 20190524 meeting
 
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-05-24_19-00-07_actionPrediction13_dbl" # 10 databases, GT database entries given
+#expLogDir = "C:/Users/robovie/eclipse-log/2019-05-24_19-00-07_actionPrediction13_dbl - GT DB entries" # 10 databases, GT database entries given
+#expLogDir = "C:/Users/robovie/eclipse-log/2019-05-31_11-34-31_actionPrediction13_dbl" # 10 databases, GT database entries given, and the new metrics, only shopkeeper responses to question about price included in data
 
-expLogDir = "C:/Users/robovie/eclipse-log/2019-05-27_12-29-06_actionPrediction13_dbl" # 10 databases, sharpening used for addressing
+#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-03_18-17-08_actionPrediction13_dbl" # 10 databases, GT database entries given, DB entries padded with 0 vecs
+
+#expLogDir = "C:/Users/robovie/eclipse-log/2019-05-31_15-35-15_actionPrediction13_dbl" # 2 databases, GT database entries given, and the new metrics, only shopkeeper responses to question about price included in data
+
+
+
+#expLogDir = "C:/Users/robovie/eclipse-log/2019-05-31_17-54-56_actionPrediction13_dbl" # 2 databases, temp grid search, and the new metrics, only shopkeeper responses to question about price included in data
+expLogDir = "C:/Users/robovie/eclipse-log/2019-06-03_13-03-18_actionPrediction13_dbl" # 10 databases, temp grid search, and the new metrics, only shopkeeper responses to question about price included in data
+
+
+
+
+#expLogDir = "C:/Users/robovie/eclipse-log/2019-05-27_12-29-06_actionPrediction13_dbl" # 10 databases, sharpening used for addressing
+#expLogDir = "C:/Users/robovie/eclipse-log/2019-05-28_14-34-02_actionPrediction13_dbl" # 10 databases, sharpening used for addressing, and the new metrics
+
+
+
+
+
+def plot_2_conditions_3_metrics(runIdToData, runDirNames, metric1Name, metric2Name, metric3Name):
+    
+    fig, axes = plt.subplots(3, 2, sharex='col', sharey='row')
+    
+    
+    cmap = plt.get_cmap("tab20")
+    colors = list(cmap.colors)
+    runIdToColor = {}
+    
+    
+    i = 0
+    for runId in runIdToData:
+        runIdToColor[runId] = colors[i % len(colors)]
+        i += 1
+    
+    
+    for runId in runDirNames:
+        
+        # training
+        # graph Cost Ave
+        runIdToData[runId].plot(x="Epoch", y="Train {} ({})".format(metric1Name, runId), ax=axes[0,0],
+                                color=runIdToColor[runId],
+                                legend=None)
+        
+        
+        # graph Substring Correct All
+        runIdToData[runId].plot(x="Epoch", y="Train {} ({})".format(metric2Name, runId), ax=axes[1,0],
+                                color=runIdToColor[runId],
+                                legend=None)
+        
+        
+        # graph Substring Correct Ave
+        runIdToData[runId].plot(x="Epoch", y="Train {} ({})".format(metric3Name, runId), ax=axes[2,0],
+                                color=runIdToColor[runId],
+                                legend=None)
+        
+            
+        # testing
+        
+        # graph Cost Ave
+        if metric1Name == "Cost Ave":
+            yColName = "Test {}({})".format(metric1Name, runId) # there's a typo in these column names (missing space)
+        else:
+            yColName = "Test {} ({})".format(metric1Name, runId)
+        
+        
+        runIdToData[runId].plot(x="Epoch", y=yColName, ax=axes[0,1],
+                                color=runIdToColor[runId],
+                                legend=None)
+        
+        
+        
+        # graph Substring Correct All
+        runIdToData[runId].plot(x="Epoch", y="Test {} ({})".format(metric2Name, runId), ax=axes[1,1],
+                                color=runIdToColor[runId],
+                                legend=None)
+        
+        
+        # graph Substring Correct Ave
+        runIdToData[runId].plot(x="Epoch", y="Test {} ({})".format(metric3Name, runId), ax=axes[2,1],
+                                color=runIdToColor[runId],
+                                legend=None)
+    
+    
+    plt.legend(runDirNames,
+               loc="upper center",   # Position of legend
+               borderaxespad=0.1,    # Small spacing around legend box
+               title="Run Parameters - rs (random seed), ct (camera temp.), at (attribute temp.)",
+               
+               # for 120 run gridsearch
+               ncol=12,
+               bbox_to_anchor=(-0.05, -0.2)
+               
+               # for 8 runs
+               #ncol=8,
+               #bbox_to_anchor=(0, -.5)
+               )
+    
+    
+    # Adjust the scaling factor to fit your legend text completely outside the plot
+    # (smaller value results in more space being made for the legend)
+    
+    # for 120 run gridsearch
+    plt.subplots_adjust(bottom=.3)
+    
+    # for 8 runs
+    #plt.subplots_adjust(bottom=.2)
+    
+    
+    cols = ["Training", "Testing"]
+    rows = [metric1Name, metric2Name, metric3Name]
+    
+    
+    for ax, col in zip(axes[0], cols):
+        ax.set_title(col)
+    
+    for ax, row in zip(axes[:,0], rows):
+        ax.set_ylabel(row, rotation=90, size='medium')
+    
+    
+    
+    plt.subplots_adjust(wspace=.1, hspace=.05)
+    #fig.tight_layout()
+    
+    
+    for i in range(axes.shape[0]):
+        for j in range(axes.shape[1]):
+            axes[i,j].xaxis.set_tick_params(which='both', direction="in", length=5)
+            axes[i,j].yaxis.set_tick_params(which='both', direction="in", length=5)
+            
+    
+    
+    plt.show()
+
 
 
 
@@ -50,134 +183,9 @@ for rdn in runDirNames:
 # graph the data
 #
 
-"""
-Train Cost Ave *
-Train Cost SD 
-Train DB Substring Correct All *
-Train DB Substring Correct Ave *
-Train DB Substring Correct SD
+plot_2_conditions_3_metrics(runIdToData, runDirNames, "Cost Ave", "DB Substring Correct Ave", "DB Substring Correct All")
 
-Test Cost Ave
-Test Cost SD
-Test DB Substring Correct All
-Test DB Substring Correct Ave
-Test DB Substring Correct SD
-"""
-
-
-#fig0, axes0 = plt.subplots()
-
-fig, axes = plt.subplots(3, 2, sharex='col', sharey='row')
-
-
-cmap = plt.get_cmap("tab10")
-colors = cmap.colors
-runIdToColor = {}
-
-i = 0
-for runId in runIdToData:
-    runIdToColor[runId] = list(cmap.colors)[i]
-    i += 1
-
-
-for runId in runDirNames:
-    
-    # training
-    
-    # graph Cost Ave
-    runIdToData[runId].plot(x="Epoch", y="Train Cost Ave ({})".format(runId), ax=axes[0,0],
-                            color=runIdToColor[runId],
-                            legend=None)
-    
-    
-    # graph Substring Correct All
-    runIdToData[runId].plot(x="Epoch", y="Train DB Substring Correct Ave ({})".format(runId), ax=axes[1,0],
-                            color=runIdToColor[runId],
-                            legend=None)
-    
-    
-    # graph Substring Correct Ave
-    runIdToData[runId].plot(x="Epoch", y="Train DB Substring Correct All ({})".format(runId), ax=axes[2,0],
-                            color=runIdToColor[runId],
-                            legend=None)
-    
-    #ax[2,0]
-    
-    
-    
-    
-    # testing
-    
-    # graph Cost Ave
-    runIdToData[runId].plot(x="Epoch", y="Test Cost Ave({})".format(runId), ax=axes[0,1],
-                            color=runIdToColor[runId],
-                            legend=None)
-    
-    
-    
-    # graph Substring Correct All
-    runIdToData[runId].plot(x="Epoch", y="Test DB Substring Correct Ave ({})".format(runId), ax=axes[1,1],
-                            color=runIdToColor[runId],
-                            legend=None)
-    
-    
-    # graph Substring Correct Ave
-    runIdToData[runId].plot(x="Epoch", y="Test DB Substring Correct All ({})".format(runId), ax=axes[2,1],
-                            color=runIdToColor[runId],
-                            legend=None)
-    
-
-plt.legend(runDirNames,
-           loc="lower center",   # Position of legend
-           borderaxespad=0.1,    # Small spacing around legend box
-           title="Run Parameters - rs (random seed), ct (camera temp.), at (attribute temp.)",
-           ncol=8,
-           bbox_to_anchor=(0, -.5))
-
-# Adjust the scaling factor to fit your legend text completely outside the plot
-# (smaller value results in more space being made for the legend)
-plt.subplots_adjust(bottom=.2)
-
-
-cols = ["Training", "Testing"]
-rows = ["Ave. Cost", "DB Substring Correct (Ave.)", "DB Substring Correct (All)"]
-
-
-for ax, col in zip(axes[0], cols):
-    ax.set_title(col)
-
-for ax, row in zip(axes[:,0], rows):
-    ax.set_ylabel(row, rotation=90, size='medium')
-
-
-
-plt.subplots_adjust(wspace=.1, hspace=.05)
-#fig.tight_layout()
-
-
-for i in range(axes.shape[0]):
-    for j in range(axes.shape[1]):
-        axes[i,j].xaxis.set_tick_params(which='both', direction="in", length=5)
-        axes[i,j].yaxis.set_tick_params(which='both', direction="in", length=5)
-        
-
-
-plt.show()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+plot_2_conditions_3_metrics(runIdToData, runDirNames, "Cam. Address Correct", "Attr. Address Correct", "Both Addresses Correct")
 
 
 

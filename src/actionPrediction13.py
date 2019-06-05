@@ -28,7 +28,7 @@ import sys
 import tools
 
 
-DEBUG = False
+DEBUG = True
 
 
 eosChar = "#"
@@ -41,7 +41,7 @@ cameras = ["CAMERA_1", "CAMERA_2", "CAMERA_3"]
 numTrainDbs = 10
 batchSize = 256
 embeddingSize = 30
-numEpochs = 7500
+numEpochs = 10000
 evalEvery = 50
 
 
@@ -119,7 +119,7 @@ def compute_db_address_match(gtCamIndex, gtAttrIndex, predCamIndex, predAttIndex
 
 
 
-def vectorize_sentences(sentences, charToIndex, maxSentLen):
+def vectorize_sentences(sentences, charToIndex, maxSentLen, padChar=None):
     
     maxSentLen += 1 # for the EOS char
     
@@ -136,9 +136,9 @@ def vectorize_sentences(sentences, charToIndex, maxSentLen):
             if j < len(sentences[i]):
                 sentVec[j, charToIndex[sentences[i][j]]] = 1.0
                 sentCharIndexList.append(charToIndex[sentences[i][j]])
-            else:
-                sentVec[j, charToIndex[" "]] = 1.0 # pad the end of sentences with spaces
-                sentCharIndexList.append(charToIndex[" "])
+            elif padChar != None:
+                sentVec[j, charToIndex[padChar]] = 1.0 # pad the end of sentences with spaces
+                sentCharIndexList.append(charToIndex[padChar])
         
         
         sentVec[-1, charToIndex[eosChar]] = 1
@@ -158,7 +158,7 @@ def vectorize_databases(dbStrings, charToIndex, maxDbValLen):
     dbIndexLists = []
     
     for row in dbStrings:
-        valVecs, valCharIndexLists = vectorize_sentences(row, charToIndex, maxDbValLen)
+        valVecs, valCharIndexLists = vectorize_sentences(row, charToIndex, maxDbValLen, padChar=None)
         
         dbVectors.append(valVecs)
         dbIndexLists.append(valCharIndexLists)
@@ -580,7 +580,7 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
     inputIndexLists = []
     
     for inStrs in inputStrings:
-        _, inIndLst = vectorize_sentences(inStrs, charToIndex, maxInputLen)
+        _, inIndLst = vectorize_sentences(inStrs, charToIndex, maxInputLen, padChar=" ")
         inputIndexLists.append(inIndLst)
     
     
@@ -588,7 +588,7 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
     outputIndexLists = []
     
     for outStrs in outputStrings:
-        _, outIndLst = vectorize_sentences(outStrs, charToIndex, maxOutputLen)
+        _, outIndLst = vectorize_sentences(outStrs, charToIndex, maxOutputLen, padChar=" ")
         outputIndexLists.append(outIndLst)
     
     
@@ -735,7 +735,7 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
                         
                         # the training data that doesn't fit into one of the batches will not be included, so skip interesting instance that fall in this range
                         if index < trainBatchEndIndices[-1]: 
-                            interestingTrainInstances.append((index, "DB{} {} {}".format(databaseIds[i], c, f)))
+                            interestingTrainInstances.append((index, "DB{} {} {} {}".format(databaseIds[i], c, f, databases[i][cameras.index(c)][f])))
                         break
         
     #
@@ -750,7 +750,7 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
                         
                         # same as above
                         if index < testBatchEndIndices[-1]: 
-                            interestingTestInstances.append((index, "DB{} {} {}".format(databaseIds[i], c, f)))
+                            interestingTestInstances.append((index, "DB{} {} {} {}".format(databaseIds[i], c, f, databases[i][cameras.index(c)][f])))
                         break
     
     
@@ -1225,11 +1225,11 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
 if __name__ == "__main__":
     
     
-    #camTemp = 2
-    #attTemp = 2
+    camTemp = 0
+    attTemp = 0
     
     
-    #run(0, 0, camTemp, attTemp, sessionDir)
+    run(0, 0, camTemp, attTemp, sessionDir)
     
     """
     for gpu in range(8):
@@ -1242,7 +1242,7 @@ if __name__ == "__main__":
     
     
     #gpu = 0
-    
+    """
     processes = []
     
     for camTemp in [2, 2.5, 3]:    
@@ -1255,7 +1255,7 @@ if __name__ == "__main__":
                 
                 for process in processes:
                     process.join()
-                
+    """         
     
     
 
