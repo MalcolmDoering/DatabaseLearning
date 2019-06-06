@@ -1229,16 +1229,16 @@ if __name__ == "__main__":
     attTemp = 0
     
     
-    run(0, 0, camTemp, attTemp, sessionDir)
+    #run(0, 0, camTemp, attTemp, sessionDir)
     
-    """
+    
     for gpu in range(8):
         
         seed = gpu
                 
         process = Process(target=run, args=[gpu, seed, camTemp, attTemp, sessionDir])
         process.start()
-    """
+    
     
     
     #gpu = 0
