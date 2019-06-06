@@ -26,6 +26,7 @@ from multiprocessing import Process
 import sys
 
 import tools
+from collections import OrderedDict
 
 
 DEBUG = True
@@ -39,12 +40,11 @@ cameras = ["CAMERA_1", "CAMERA_2", "CAMERA_3"]
 
 
 numTrainDbs = 10
-batchSize = 256
+batchSize = 50
 embeddingSize = 30
 numEpochs = 10000
 evalEvery = 50
-
-
+randomizeTrainingBatches = False
 
 sessionDir = tools.create_session_dir("actionPrediction13_dbl")
 
@@ -746,12 +746,108 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
             for i in range(numTrainDbs, numDatabases):
                 for j in range(datasetSizes[i]):
                     if interactions[i][j]["CUSTOMER_TOPIC"] == f and interactions[i][j]["CURRENT_CAMERA_OF_CONVERSATION"] == c:
-                        index = j + sum(len(l) for l in interactions[:i])
+                        index = j
                         
                         # same as above
                         if index < testBatchEndIndices[-1]: 
                             interestingTestInstances.append((index, "DB{} {} {} {}".format(databaseIds[i], c, f, databases[i][cameras.index(c)][f])))
                         break
+    
+    
+    #
+    # count the occurrences of different chars in the DB substrings in the training data
+    # This code only gives useful data if the training data is not shuffled (because we do not know which data is excluded  for being outside batches) 
+    # TODO: this will have to be updated if we include things beyond the price responses in the data
+    #
+    dbSubstrCharCounts = {}
+    
+    dbSubstrCharCounts["CAMERA_1"] = {}
+    dbSubstrCharCounts["CAMERA_2"] = {}
+    dbSubstrCharCounts["CAMERA_3"] = {}
+    dbSubstrCharCounts["Combined"] = {}
+    
+    
+    # iterate over the batches
+    for i in trainBatchEndIndices:
+        
+        # iterate over the output strings
+        for j in range(i-batchSize, i):
+            
+            trainOutStr = trainOutputStrings[j]
+            
+            
+            # iterate over the substring from the DB
+            countFromSubstrBegining = 0
+            
+            for k in range(shkpUttToDbEntryRange[trainOutStr][0], shkpUttToDbEntryRange[trainOutStr][1]):
+                
+                char = trainOutStr[k]
+                
+                
+                # compute for only the current camera
+                #
+                cam = cameras[trainGtDatabasebCameras[j]]
+                
+                if countFromSubstrBegining not in dbSubstrCharCounts[cam]:
+                    dbSubstrCharCounts[cam][countFromSubstrBegining] = {}
+                
+                if char not in dbSubstrCharCounts[cam][countFromSubstrBegining]:
+                    dbSubstrCharCounts[cam][countFromSubstrBegining][char] = 0
+                
+                dbSubstrCharCounts[cam][countFromSubstrBegining][char] += 1
+                
+                
+                # compute for all cameras combined
+                #
+                if countFromSubstrBegining not in dbSubstrCharCounts["Combined"]:
+                    dbSubstrCharCounts["Combined"][countFromSubstrBegining] = {}
+                
+                if char not in dbSubstrCharCounts["Combined"][countFromSubstrBegining]:
+                    dbSubstrCharCounts["Combined"][countFromSubstrBegining][char] = 0
+                
+                dbSubstrCharCounts["Combined"][countFromSubstrBegining][char] += 1
+                
+                
+                countFromSubstrBegining += 1
+    
+    
+    
+    
+    
+    
+    # write to a file
+    with open(sessionDir + "/DB_substring_char_counts_{}.csv".format(sessionIdentifier), "w", newline="") as csvfile:
+        writer = csv.writer(csvfile)
+        
+        chars = ["$", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+        majorCols = ["CAMERA_1", "CAMERA_2", "CAMERA_3", "Combined"]
+        
+        minorCols = []
+        
+        for majCol in majorCols:
+            for i in range(5):
+                minorCols.append("{} {}".format(majCol, i))
+        
+        
+        rows = OrderedDict()
+        
+        for char in chars:
+            rows[char] = []
+            
+            for majCol in majorCols:
+                for i in range(5):
+                    
+                    try:
+                        rows[char].append(dbSubstrCharCounts[majCol][i][char])
+                    except:
+                        rows[char].append(0)
+            
+        
+        writer.writerow(["Char"] + minorCols)
+        
+        for char, row in rows.items():
+            writer.writerow([char] + row)
+    
     
     
     
@@ -793,7 +889,8 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
         # shuffle the training data
         
         temp = list(zip(trainInputIndexLists, trainDbVectors, trainOutputIndexLists, trainInputCustomerLocations, trainOutputShopkeeperLocations))
-        random.shuffle(temp)
+        if randomizeTrainingBatches:
+            random.shuffle(temp)
         trainInputIndexLists_shuf, trainDbVectors_shuf, trainOutputIndexLists_shuf, trainInputCustomerLocations_shuf, trainOutputShopkeeperLocations_shuf = zip(*temp)
         
         
