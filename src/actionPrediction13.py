@@ -96,7 +96,7 @@ def compute_db_address_match(gtCamIndex, gtAttrIndex, predCamIndex, predAttIndex
     for i in range(len(gtCamIndex)):
         
         # make sure this is an instance that contains a DB string
-        if gtCamIndex[i] != -1:
+        if gtCamIndex[i] != -1 and gtAttrIndex[i] != -1:
             
             camMatch = 0.0
             attrMatch = 0.0
@@ -759,6 +759,7 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
     # This code only gives useful data if the training data is not shuffled (because we do not know which data is excluded  for being outside batches) 
     # TODO: this will have to be updated if we include things beyond the price responses in the data
     #
+    """
     dbSubstrCharCounts = {}
     
     dbSubstrCharCounts["CAMERA_1"] = {}
@@ -811,10 +812,6 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
                 countFromSubstrBegining += 1
     
     
-    
-    
-    
-    
     # write to a file
     with open(sessionDir + "/DB_substring_char_counts_{}.csv".format(sessionIdentifier), "w", newline="") as csvfile:
         writer = csv.writer(csvfile)
@@ -847,7 +844,7 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
         
         for char, row in rows.items():
             writer.writerow([char] + row)
-    
+    """
     
     
     
@@ -1189,8 +1186,8 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
                 print("TRUE:", indexToLocation[np.argmax(trainOutputShopkeeperLocations[index])], trainOutputStrings[index], flush=True, file=sessionTerminalOutputStream)
                 print("PRED:", indexToLocation[trainLocPreds_[i]], trainPredSents_[i], flush=True, file=sessionTerminalOutputStream)
                 
-                print(np.round(trainCamMatch_[i], 3), flush=True, file=sessionTerminalOutputStream)
-                print(np.round(trainAttMatch_[i], 3), flush=True, file=sessionTerminalOutputStream)
+                print(np.round(trainCamMatch_[i], 4), flush=True, file=sessionTerminalOutputStream)
+                print(np.round(trainAttMatch_[i], 4), flush=True, file=sessionTerminalOutputStream)
                 print("best match:", cameras[trainCamMatchArgMax_[i]], dbFieldnames[trainAttMatchArgMax_[i]], flush=True, file=sessionTerminalOutputStream)
                 print("true match:", info, flush=True, file=sessionTerminalOutputStream)
                 
@@ -1209,8 +1206,8 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
                 print("TRUE:", indexToLocation[np.argmax(testOutputShopkeeperLocations[index])], testOutputStrings[index], flush=True, file=sessionTerminalOutputStream)
                 print("PRED:", indexToLocation[testLocPreds_[i]], testPredSents_[i], flush=True, file=sessionTerminalOutputStream)
                 
-                print(np.round(testCamMatch_[i], 3), flush=True, file=sessionTerminalOutputStream)
-                print(np.round(testAttMatch_[i], 3), flush=True, file=sessionTerminalOutputStream)
+                print(np.round(testCamMatch_[i], 4), flush=True, file=sessionTerminalOutputStream)
+                print(np.round(testAttMatch_[i], 4), flush=True, file=sessionTerminalOutputStream)
                 print("best match:", cameras[testCamMatchArgMax_[i]], dbFieldnames[testAttMatchArgMax_[i]], flush=True, file=sessionTerminalOutputStream)
                 print("true match:", info, flush=True, file=sessionTerminalOutputStream)
                 

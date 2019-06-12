@@ -49,6 +49,14 @@ class CustomNeuralNetwork(object):
         # build the model
         #
         
+        #with tf.name_scope("input encoder"):
+        self._inputs = tf.placeholder(tf.int32, [self.batchSize, self.inputSeqLen, ], name='customer_inputs')
+        
+        
+        self._input_one_hot = tf.one_hot(self._inputs, self.vocabSize)
+        
+        self._location_inputs = tf.placeholder(tf.float32, [self.batchSize, self.locationVecLen])
+        
         
         self._gtDbCamIndices = tf.placeholder(tf.int32, [self.batchSize, ], name='gt_db_cameras')
         self._gtDbAttIndices = tf.placeholder(tf.int32, [self.batchSize, ], name='gt_db_attributes')
@@ -57,11 +65,6 @@ class CustomNeuralNetwork(object):
         self._gtDbAtts = tf.one_hot(self._gtDbAttIndices, self.numUniqueAtts)
         
         
-        #with tf.name_scope("input encoder"):
-        self._inputs = tf.placeholder(tf.int32, [self.batchSize, self.inputSeqLen, ], name='customer_inputs')
-        self._input_one_hot = tf.one_hot(self._inputs, self.vocabSize)
-        
-        self._location_inputs = tf.placeholder(tf.float32, [self.batchSize, self.locationVecLen])
         
         with tf.variable_scope("input_encoder_1"):
             # input encoder for the initial state of the copynet
@@ -75,12 +78,23 @@ class CustomNeuralNetwork(object):
             _, input_encoding = tf.nn.dynamic_rnn(stacked_rnn_cell, self._input_one_hot, dtype=tf.float32)
             
             # for single layer GRU
-            self._input_encoding = input_encoding[-1] # TODO why is this here??? [-1] A: get output instead of candidate 
+            self._input_utt_encoding = input_encoding[-1] # TODO why is this here??? [-1] A: get output instead of candidate 
         
             # for two layer LSTM
             #self._input_encoding = tf.concat([input_encoding[0][-1], input_encoding[1][-1]], axis=1)
             
-        
+            
+            
+            self._loc_utt_combined_input_encoding = tf.layers.dense(tf.concat([self._input_utt_encoding, self._location_inputs], axis=1),
+                                                                    self.embeddingSize, 
+                                                                    activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
+            
+            
+            
+            
+            
+            
+        """
         with tf.variable_scope("input_encoder_2"):
             # input encoder for finding the most relevant camera and attribute
             
@@ -97,27 +111,29 @@ class CustomNeuralNetwork(object):
         
             # for two layer LSTM
             #self._input_encoding_2 = tf.concat([input_encoding[0][-1], input_encoding[1][-1]], axis=1)
-            
+        """    
         
         
         with tf.variable_scope("DB_matcher"):
             # find the best matching camera and attribute from the database
             
-            cam1 = tf.layers.dense(self._input_encoding_2, self.numUniqueCams, activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
-            #cam2 = tf.layers.dense(cam1, self.numUniqueCams, activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
+            # use only softmax for addressing
+            cam1 = tf.layers.dense(self._loc_utt_combined_input_encoding, self.numUniqueCams, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
+            att1 = tf.layers.dense(self._loc_utt_combined_input_encoding, self.numUniqueAtts, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
             
-            
-            att1 = tf.layers.dense(self._input_encoding_2, self.numUniqueAtts, activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
-            #att2 = tf.layers.dense(att1, self.numUniqueAtts, activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
-            
+            self.camMatch = tf.nn.softmax(cam1)
+            self.attMatch = tf.nn.softmax(att1)
             
             
             # gumbel softmax used till 20190525
-            cam3 = tf.nn.softmax(cam1)
-            att3 = tf.nn.softmax(att1)
+            #cam1 = tf.layers.dense(self._input_encoding_2, self.numUniqueCams, activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
+            #att1 = tf.layers.dense(self._input_encoding_2, self.numUniqueAtts, activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
             
-            self.camMatch = tf.contrib.distributions.RelaxedOneHotCategorical(self.gumbel_softmax_temp_cams, probs=cam3).sample()
-            self.attMatch = tf.contrib.distributions.RelaxedOneHotCategorical(self.gumbel_softmax_temp_atts, probs=att3).sample()
+            #cam3 = tf.nn.softmax(cam1)
+            #att3 = tf.nn.softmax(att1)
+            
+            #self.camMatch = tf.contrib.distributions.RelaxedOneHotCategorical(self.gumbel_softmax_temp_cams, probs=cam3).sample()
+            #self.attMatch = tf.contrib.distributions.RelaxedOneHotCategorical(self.gumbel_softmax_temp_atts, probs=att3).sample()
             
             
             # use sharpening instead of gumbel softmax
@@ -147,6 +163,8 @@ class CustomNeuralNetwork(object):
             self.db_match_val = tf.einsum("bclv,bc->blv", self.db_match_val, self.camMatch)
             
             # TODO would it make sense to do softmax over the chars in db_match_val???
+            #self.db_match_val = tf.nn.softmax(self.db_match_val, axis=2)
+            
             
             self.db_match_val_charindices = tf.argmax(self.db_match_val, axis=2)
             
@@ -169,7 +187,7 @@ class CustomNeuralNetwork(object):
         with tf.variable_scope("location_layer"):
             # get the shopkeeper output location
             
-            locHid = tf.layers.dense(tf.concat([self._input_encoding, self._location_inputs], 1),
+            locHid = tf.layers.dense(self._loc_utt_combined_input_encoding,
                                      self.embeddingSize, 
                                      activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
             
@@ -197,7 +215,7 @@ class CustomNeuralNetwork(object):
                                                    vocab_size=self.vocabSize)
         
         
-        self.decoder_initial_state = self.copynet_cell.zero_state(self.batchSize, tf.float32).clone(cell_state=self._input_encoding)
+        self.decoder_initial_state = self.copynet_cell.zero_state(self.batchSize, tf.float32).clone(cell_state=self._loc_utt_combined_input_encoding)
         
         
         # append start char on to beginning of outputs so they can be used for teacher forcing - i.e. as inputs to the coipynet decoder
@@ -226,7 +244,9 @@ class CustomNeuralNetwork(object):
         #
         # setup the training function
         #
-        opt = tf.train.AdamOptimizer(learning_rate=1e-4)
+        opt = tf.train.AdamOptimizer(learning_rate=1e-3)
+        #opt = tf.train.GradientDescentOptimizer(learning_rate=1e-2)
+        
         
         gradients = opt.compute_gradients(self._loss)
         

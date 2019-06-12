@@ -28,15 +28,29 @@ import copy
 #expLogDir = "C:/Users/robovie/eclipse-log/2019-05-31_11-34-31_actionPrediction13_dbl" # 10 databases, GT database entries given, and the new metrics, only shopkeeper responses to question about price included in data
 
 #expLogDir = "C:/Users/robovie/eclipse-log/2019-06-03_18-17-08_actionPrediction13_dbl" # 10 databases, GT database entries given, DB entries padded with 0 vecs
+#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-05_13-47-27_actionPrediction13_dbl" # 10 databases, GT database entries given, DB entries padded with 0 vecs
+
+#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-06_16-33-38_actionPrediction13_dbl" # 10 databases, GT database entries given, DB entries padded with 0 vecs, reduced batch size and unrandomized training instance order
+#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-06_16-55-22_actionPrediction13_dbl" # 10 databases, GT database entries given, DB entries padded with 0 vecs, reduced batch size and randomized training instance order
+
+#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-07_15-05-37_actionPrediction13_dbl" # 10 databases all data, GT database entries given, DB entries padded with 0 vecs, reduced batch size and unrandomized training instance order
+
+
+expLogDir = "C:/Users/robovie/eclipse-log/2019-06-06_17-30-06_actionPrediction13_dbl" # 10 databases, tanh and softmax addressing, DB entries padded with 0 vecs, reduced batch size and unrandomized training instance order
+
+#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-10_14-30-33_actionPrediction13_dbl" # 10 databases, relu and softmax addressing, DB entries padded with 0 vecs, reduced batch size and unrandomized training instance order, softmaxed over weighted DB entry sums
+
+
+
 
 #expLogDir = "C:/Users/robovie/eclipse-log/2019-05-31_15-35-15_actionPrediction13_dbl" # 2 databases, GT database entries given, and the new metrics, only shopkeeper responses to question about price included in data
 
 
 
 #expLogDir = "C:/Users/robovie/eclipse-log/2019-05-31_17-54-56_actionPrediction13_dbl" # 2 databases, temp grid search, and the new metrics, only shopkeeper responses to question about price included in data
-expLogDir = "C:/Users/robovie/eclipse-log/2019-06-03_13-03-18_actionPrediction13_dbl" # 10 databases, temp grid search, and the new metrics, only shopkeeper responses to question about price included in data
+#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-03_13-03-18_actionPrediction13_dbl" # 10 databases, temp grid search, and the new metrics, only shopkeeper responses to question about price included in data
 
-
+#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-07_11-47-14_actionPrediction13_dbl" # 10 databases, temp grid search, and the new metrics, only shopkeeper responses to question about price included in data, 50 batch unrandomized
 
 
 #expLogDir = "C:/Users/robovie/eclipse-log/2019-05-27_12-29-06_actionPrediction13_dbl" # 10 databases, sharpening used for addressing
