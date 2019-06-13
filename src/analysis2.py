@@ -36,7 +36,6 @@ import copy
 #expLogDir = "C:/Users/robovie/eclipse-log/2019-06-07_15-05-37_actionPrediction13_dbl" # 10 databases all data, GT database entries given, DB entries padded with 0 vecs, reduced batch size and unrandomized training instance order
 
 
-expLogDir = "C:/Users/robovie/eclipse-log/2019-06-06_17-30-06_actionPrediction13_dbl" # 10 databases, tanh and softmax addressing, DB entries padded with 0 vecs, reduced batch size and unrandomized training instance order
 
 #expLogDir = "C:/Users/robovie/eclipse-log/2019-06-10_14-30-33_actionPrediction13_dbl" # 10 databases, relu and softmax addressing, DB entries padded with 0 vecs, reduced batch size and unrandomized training instance order, softmaxed over weighted DB entry sums
 
@@ -58,6 +57,35 @@ expLogDir = "C:/Users/robovie/eclipse-log/2019-06-06_17-30-06_actionPrediction13
 
 
 
+
+# 10 databases
+# only S_ANSWERS_QUESTION_ABOUT_FEATURE price included
+# tanh and softmax addressing
+# adam .0001 learning rate
+# DB entries padded with 0 vecs
+# 50 reduced batch size and unrandomized training instance order
+# only utt input to addressing layer and decoder initialization
+# result: attr addresses learned but not camera addresses (because loc was not input to addressing layer)
+#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-06_17-30-06_actionPrediction13_dbl" 
+
+# 10 databases
+# tanh and softmax addressing
+# adam .001 learning rate
+# DB entries padded with 0 vecs
+# 50 reduced batch size and unrandomized training instance order
+# combined loc and utt input to addressing layer, loc layer, and decoder initialization ***
+# result: camera addresses are learned but not
+# Q: why is the attr loc not learned? event though it was learned in the previous experiment? The only thing that changed besides the inputs is the learning rate...
+expLogDir = "C:/Users/robovie/eclipse-log/2019-06-12_18-48-35_actionPrediction13_dbl" 
+
+# 10 databases
+# tanh and softmax addressing
+# adam .0001 *** learning rate
+# DB entries padded with 0 vecs
+# 50 reduced batch size and unrandomized training instance order
+# combined loc and utt input to addressing layer, loc layer, and decoder initialization
+# result:
+#expLogDir = "C:/Users/robovie/eclipse-log/" 
 
 
 def plot_2_conditions_3_metrics(runIdToData, runDirNames, metric1Name, metric2Name, metric3Name):
@@ -130,12 +158,12 @@ def plot_2_conditions_3_metrics(runIdToData, runDirNames, metric1Name, metric2Na
                title="Run Parameters - rs (random seed), ct (camera temp.), at (attribute temp.)",
                
                # for 120 run gridsearch
-               ncol=12,
-               bbox_to_anchor=(-0.05, -0.2)
+               #ncol=12,
+               #bbox_to_anchor=(-0.05, -0.2)
                
                # for 8 runs
-               #ncol=8,
-               #bbox_to_anchor=(0, -.5)
+               ncol=8,
+               bbox_to_anchor=(0, -.5)
                )
     
     
@@ -143,10 +171,10 @@ def plot_2_conditions_3_metrics(runIdToData, runDirNames, metric1Name, metric2Na
     # (smaller value results in more space being made for the legend)
     
     # for 120 run gridsearch
-    plt.subplots_adjust(bottom=.3)
+    #plt.subplots_adjust(bottom=.3)
     
     # for 8 runs
-    #plt.subplots_adjust(bottom=.2)
+    plt.subplots_adjust(bottom=.2)
     
     
     cols = ["Training", "Testing"]
