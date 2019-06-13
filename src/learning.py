@@ -244,7 +244,11 @@ class CustomNeuralNetwork(object):
         #
         # setup the training function
         #
+<<<<<<< HEAD
         opt = tf.train.AdamOptimizer(learning_rate=1e-4)
+=======
+        opt = tf.train.AdamOptimizer(learning_rate=1e-3)
+>>>>>>> 4b6f6701a011cbc535037c0d1d7cc2fd4bf27626
         #opt = tf.train.GradientDescentOptimizer(learning_rate=1e-2)
         
         
