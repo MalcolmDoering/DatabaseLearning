@@ -29,7 +29,7 @@ import tools
 from collections import OrderedDict
 
 
-DEBUG = False
+DEBUG = True
 
 
 eosChar = "#"
@@ -851,7 +851,8 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
     # write header in csv log file
     with open(sessionLogFile, "w", newline="") as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow(["Epoch", 
+        writer.writerow(["Epoch",
+                         "Teacher Forcing Probability",
                          "Train Cost Ave ({})".format(sessionIdentifier), 
                          "Train Cost SD ({})".format(sessionIdentifier), 
                          "Train DB Substring Correct All ({})".format(sessionIdentifier), 
@@ -878,6 +879,8 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
         
         startTime = time.time()
         
+        teacherForcingProb = 1.0 - 1.0 / (1.0 + np.exp( - (e-1000.0)/200.0))
+        
         #
         # train
         #
@@ -899,7 +902,8 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
                                            trainOutputIndexLists_shuf[i-batchSize:i],
                                            trainOutputShopkeeperLocations_shuf[i-batchSize:i],
                                            trainGtDatabasebCameras[i-batchSize:i],
-                                           trainGtDatabaseAttributes[i-batchSize:i])
+                                           trainGtDatabaseAttributes[i-batchSize:i],
+                                           teacherForcingProb)
             
             trainCosts.append(batchTrainCost)
             #print("\t", batchTrainCost, flush=True, file=sessionTerminalOutputStream)
@@ -1056,13 +1060,14 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
                 
                 #print(i-batchSize, i, flush=True, file=sessionTerminalOutputStream)
                 
-                batchTestCost = learner.loss(testInputIndexLists[i-batchSize:i], 
+                batchTestCost = learner.train_loss(testInputIndexLists[i-batchSize:i], 
                                              testInputCustomerLocations[i-batchSize:i], 
                                              testDbVectors[i-batchSize:i], 
                                              testOutputIndexLists[i-batchSize:i],
                                              testOutputShopkeeperLocations[i-batchSize:i],
                                              testGtDatabasebCameras[i-batchSize:i],
-                                             testGtDatabaseAttributes[i-batchSize:i])
+                                             testGtDatabaseAttributes[i-batchSize:i],
+                                             teacherForcingProb)
                 
                 testCosts.append(batchTestCost)
                 #print("\t", batchTestCost, flush=True, file=sessionTerminalOutputStream)
@@ -1291,6 +1296,7 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
             with open(sessionLogFile, "a", newline="") as csvfile:
                 writer = csv.writer(csvfile)
                 writer.writerow([e,                 #"Epoch", 
+                                 teacherForcingProb,
                                  trainCostAve,      #"Train Cost Ave ({})".format(seed), 
                                  trainCostStd,      #"Train Cost SD ({})".format(seed), 
                                  trainSubstrAllCorr,    #"Train DB Substring Correct All ({})".format(seed), 
@@ -1323,16 +1329,16 @@ if __name__ == "__main__":
     attTemp = 0
     
     
-    #run(0, 0, camTemp, attTemp, sessionDir)
+    run(0, 0, camTemp, attTemp, sessionDir)
     
-    
+    """
     for gpu in range(8):
         
         seed = gpu
                 
         process = Process(target=run, args=[gpu, seed, camTemp, attTemp, sessionDir])
         process.start()
-    
+    """
     
     
     #gpu = 0

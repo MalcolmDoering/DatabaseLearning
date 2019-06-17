@@ -94,7 +94,7 @@ class CustomNeuralNetwork(object):
             
             
             
-        """
+        
         with tf.variable_scope("input_encoder_2"):
             # input encoder for finding the most relevant camera and attribute
             
@@ -107,19 +107,26 @@ class CustomNeuralNetwork(object):
             _, input_encoding = tf.nn.dynamic_rnn(stacked_rnn_cell, self._input_one_hot, dtype=tf.float32)
             
             # for single layer GRU
-            self._input_encoding_2 = input_encoding[-1] # TODO why is this here??? [-1] A: get output instead of candidate 
+            self._input_utt_encoding_2 = input_encoding[-1] # TODO why is this here??? [-1] A: get output instead of candidate 
         
             # for two layer LSTM
             #self._input_encoding_2 = tf.concat([input_encoding[0][-1], input_encoding[1][-1]], axis=1)
-        """    
+            
+            self._loc_utt_combined_input_encoding_2 = tf.layers.dense(tf.concat([self._input_utt_encoding_2, self._location_inputs], axis=1),
+                                                                    self.embeddingSize, 
+                                                                    activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
+        
+        
+        
+        
         
         
         with tf.variable_scope("DB_matcher"):
             # find the best matching camera and attribute from the database
             
             # use only softmax for addressing
-            cam1 = tf.layers.dense(self._loc_utt_combined_input_encoding, self.numUniqueCams, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
-            att1 = tf.layers.dense(self._loc_utt_combined_input_encoding, self.numUniqueAtts, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
+            cam1 = tf.layers.dense(self._loc_utt_combined_input_encoding_2, self.numUniqueCams, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
+            att1 = tf.layers.dense(self._loc_utt_combined_input_encoding_2, self.numUniqueAtts, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
             
             self.camMatch = tf.nn.softmax(cam1)
             self.attMatch = tf.nn.softmax(att1)
@@ -225,13 +232,15 @@ class CustomNeuralNetwork(object):
         self.decoder_inputs_one_hot = tf.one_hot(decoder_inputs, self.vocabSize)
         
         # rollout the decoder two times - once for use with teacher forcing (training) and once without (testing)
+        self._teacher_forcing_prob = tf.placeholder(tf.float32, shape=(), name='teacher_forcing_prob')
+        
         # for training
         self._loss, self._train_predicted_output_sequences, self._train_copy_scores, self._train_gen_scores = self.build_decoder(teacherForcing=True, scopeName="decoder_train")
         
         #self._loss = tf.check_numerics(self._loss, "_loss")
         
         # for testing
-        self._test_loss, self._test_predicted_output_sequences, self._test_copy_scores, self._test_gen_scores = self.build_decoder(teacherForcing=True, scopeName="decoder_test")
+        self._test_loss, self._test_predicted_output_sequences, self._test_copy_scores, self._test_gen_scores = self.build_decoder(teacherForcing=False, scopeName="decoder_test")
         
         
         # add the loss from the location predictions
@@ -296,7 +305,13 @@ class CustomNeuralNetwork(object):
                 
                 if teacherForcing:
                     # if using teacher forcing
-                    output, state, copy_score, gen_score = self.copynet_cell(self.decoder_inputs_one_hot[:, i, :], state)
+                    
+                    bernoulliSample = tf.to_float(tf.distributions.Bernoulli(probs=self._teacher_forcing_prob).sample())
+                    
+                    output = tf.math.scalar_mul(bernoulliSample, self.decoder_inputs_one_hot[:, i, :]) + tf.math.scalar_mul((1.0-bernoulliSample), output)
+                    
+                    output, state, copy_score, gen_score = self.copynet_cell(output, state)
+                    
                 else:
                     # if not using teacher forcing
                     output, state, copy_score, gen_score = self.copynet_cell(output, state)
@@ -328,28 +343,30 @@ class CustomNeuralNetwork(object):
         self._sess.run(self._init_op)
         
     
-    def train(self, inputUtts, inputCustLocs, databases, groundTruthUttOutputs, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts):
+    def train(self, inputUtts, inputCustLocs, databases, groundTruthUttOutputs, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, teacherForcingProb=1.0):
         feedDict = {self._inputs: inputUtts, 
                     self._location_inputs: inputCustLocs, 
                     self._db_entries: databases, 
                     self._ground_truth_outputs: groundTruthUttOutputs,
                     self._ground_truth_location_outputs: groundTruthOutputShkpLocs,
                     self._gtDbCamIndices: gtDbCams, 
-                    self._gtDbAttIndices: gtDbAtts}
+                    self._gtDbAttIndices: gtDbAtts,
+                    self._teacher_forcing_prob: teacherForcingProb}
         
         trainingLoss, _ = self._sess.run([self._loss, self._train_op], feed_dict=feedDict)
         
         return trainingLoss
     
     
-    def loss(self, inputUtts, inputCustLocs, databases, groundTruthOutputs, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts):
+    def train_loss(self, inputUtts, inputCustLocs, databases, groundTruthOutputs, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, teacherForcingProb=1.0):
         feedDict = {self._inputs: inputUtts, 
                     self._location_inputs: inputCustLocs, 
                     self._db_entries: databases, 
                     self._ground_truth_outputs: groundTruthOutputs,
                     self._ground_truth_location_outputs: groundTruthOutputShkpLocs,
                     self._gtDbCamIndices: gtDbCams, 
-                    self._gtDbAttIndices: gtDbAtts}
+                    self._gtDbAttIndices: gtDbAtts,
+                    self._teacher_forcing_prob: teacherForcingProb}
         
         loss = self._sess.run(self._loss, feed_dict=feedDict)
         
