@@ -29,7 +29,7 @@ import tools
 from collections import OrderedDict
 
 
-DEBUG = True
+DEBUG = False
 
 
 eosChar = "#"
@@ -879,7 +879,7 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
         
         startTime = time.time()
         
-        teacherForcingProb = 1.0 - 1.0 / (1.0 + np.exp( - (e-1000.0)/200.0))
+        teacherForcingProb = 0.0 #1.0 - 1.0 / (1.0 + np.exp( - (e-500.0)/100.0))
         
         #
         # train
@@ -1329,16 +1329,16 @@ if __name__ == "__main__":
     attTemp = 0
     
     
-    run(0, 0, camTemp, attTemp, sessionDir)
+    #run(0, 0, camTemp, attTemp, sessionDir)
     
-    """
+    
     for gpu in range(8):
         
         seed = gpu
                 
         process = Process(target=run, args=[gpu, seed, camTemp, attTemp, sessionDir])
         process.start()
-    """
+    
     
     
     #gpu = 0
