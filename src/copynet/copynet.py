@@ -216,12 +216,17 @@ class CopyNetWrapper3(tf.nn.rnn_cell.RNNCell):
             raise TypeError("Expected state to be instance of CopyNetWrapperState. "
                       "Received type %s instead."  % type(state))
         
-        last_ids = state.last_ids
+        last_ids = state.last_ids # why not replace this with argmax of the current input??? This would be necessary for teacher forcing
         prob_c = state.prob_c
         cell_state = state.cell_state
         
         # find places in the input where the previous char is the same as the char previously output by copynet
         last_ids_one_hot = tf.one_hot(last_ids, self._vocab_size)
+        
+        #last_ids_based_on_input = tf.argmax(inputs, axis=1)
+        #last_ids_one_hot = tf.one_hot(last_ids_based_on_input, self._vocab_size)
+        
+        
         
         #mask = tf.cast(tf.equal(tf.expand_dims(last_ids, 1),  self._encoder_input_ids), tf.float32) 
         #mask = tf.cast(tf.equal(tf.expand_dims(last_ids_one_hot, 1),  self._encoder_input_ids), tf.float32)

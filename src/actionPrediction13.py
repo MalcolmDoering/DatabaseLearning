@@ -370,7 +370,7 @@ def get_database_value_strings(database, fieldnames):
 
 
 
-def run(gpu, seed, camTemp, attTemp, sessionDir):
+def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
     import learning
@@ -720,7 +720,7 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
     testBatchEndIndices = list(range(batchSize, len(testInputIndexLists), batchSize))
     
     
-    camerasOfInterest = ["CAMERA_1", "CAMERA_2"]
+    camerasOfInterest = ["CAMERA_1", "CAMERA_2", "CAMERA_3"]
     featuresOfInterest = ["price"] #, "camera_type"]
     
     #
@@ -879,7 +879,7 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
         
         startTime = time.time()
         
-        teacherForcingProb = 0.0 #1.0 - 1.0 / (1.0 + np.exp( - (e-500.0)/100.0))
+        #teacherForcingProb = 0.6 #1.0 - 1.0 / (1.0 + np.exp( - (e-200.0)/10.0))
         
         #
         # train
@@ -1067,7 +1067,7 @@ def run(gpu, seed, camTemp, attTemp, sessionDir):
                                              testOutputShopkeeperLocations[i-batchSize:i],
                                              testGtDatabasebCameras[i-batchSize:i],
                                              testGtDatabaseAttributes[i-batchSize:i],
-                                             teacherForcingProb)
+                                             0.0)
                 
                 testCosts.append(batchTestCost)
                 #print("\t", batchTestCost, flush=True, file=sessionTerminalOutputStream)
@@ -1331,31 +1331,32 @@ if __name__ == "__main__":
     
     #run(0, 0, camTemp, attTemp, sessionDir)
     
-    
+    """
     for gpu in range(8):
         
         seed = gpu
                 
         process = Process(target=run, args=[gpu, seed, camTemp, attTemp, sessionDir])
         process.start()
-    
+    """
     
     
     #gpu = 0
-    """
+    
     processes = []
     
-    for camTemp in [2, 2.5, 3]:    
-        for attTemp in [2, 3, 4, 5, 6]:
-                
-                for gpu in range(8):
-                    process = Process(target=run, args=[gpu, gpu, camTemp, attTemp, sessionDir])
-                    process.start()
-                    processes.append(process)
-                
-                for process in processes:
-                    process.join()
-    """         
+    #for camTemp in [2, 2.5, 3]:    
+    #    for attTemp in [2, 3, 4, 5, 6]:
+     
+    for tfp in [0.7, 0.8, 0.9, 0.3]:
+        for gpu in range(8):
+            process = Process(target=run, args=[gpu, gpu, camTemp, attTemp, tfp, sessionDir])
+            process.start()
+            processes.append(process)
+        
+        for process in processes:
+            process.join()
+     
     
     
 
