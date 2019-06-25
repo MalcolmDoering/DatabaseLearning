@@ -46,7 +46,7 @@ numEpochs = 10000
 evalEvery = 50
 randomizeTrainingBatches = False
 
-sessionDir = tools.create_session_dir("actionPrediction13_dbl")
+sessionDir = tools.create_session_dir("actionPrediction14_dbl")
 
 
 
@@ -133,16 +133,25 @@ def vectorize_sentences(sentences, charToIndex, maxSentLen, padChar=None):
         
         for j in range(maxSentLen):
             
+            # vectorize the chars in the sentence
             if j < len(sentences[i]):
                 sentVec[j, charToIndex[sentences[i][j]]] = 1.0
                 sentCharIndexList.append(charToIndex[sentences[i][j]])
+            
+            # add the EOS char
+            elif j == len(sentences[i]):
+                sentVec[j, charToIndex[eosChar]] = 1.0
+                sentCharIndexList.append(charToIndex[eosChar])        
+            
+            # pad the rest of the sequence
             elif padChar != None:
-                sentVec[j, charToIndex[padChar]] = 1.0 # pad the end of sentences with spaces
+                sentVec[j, charToIndex[padChar]] = 1.0 # pad the end of sentences with spaces, etc.
                 sentCharIndexList.append(charToIndex[padChar])
+            
+            else:
+                sentCharIndexList.append(-1)
+            
         
-        
-        sentVec[-1, charToIndex[eosChar]] = 1
-        sentCharIndexList.append(charToIndex[eosChar])
         
         sentVecs.append(sentVec)
         sentCharIndexLists.append(sentCharIndexList)
@@ -580,7 +589,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     inputIndexLists = []
     
     for inStrs in inputStrings:
-        _, inIndLst = vectorize_sentences(inStrs, charToIndex, maxInputLen, padChar=" ")
+        _, inIndLst = vectorize_sentences(inStrs, charToIndex, maxInputLen, padChar=None)
         inputIndexLists.append(inIndLst)
     
     
@@ -588,7 +597,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     outputIndexLists = []
     
     for outStrs in outputStrings:
-        _, outIndLst = vectorize_sentences(outStrs, charToIndex, maxOutputLen, padChar=" ")
+        _, outIndLst = vectorize_sentences(outStrs, charToIndex, maxOutputLen, padChar=None)
         outputIndexLists.append(outIndLst)
     
     
@@ -663,8 +672,8 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     
     
     
-    inputLen = maxInputLen + 2
-    outputLen = maxOutputLen + 2
+    inputLen = maxInputLen + 1
+    outputLen = maxOutputLen + 1
     dbValLen = maxDbValueLen + 1
     
     locationVecLen = len(locationToIndex)
@@ -932,6 +941,9 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
             trainAttMatchArgMax = []
             trainCamMatch = []
             trainAttMatch  = []
+            trainDbReadWeights = []
+            trainCopyWeights = [] 
+            trainGenWeights = []
             trainGtSents = []
             trainGtCamIndx = []
             trainGtAttIndx = []
@@ -939,7 +951,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
             
             for i in trainBatchEndIndices:
                 
-                batchTrainUttPreds, batchTrainLocPreds, batchTrainCopyScores, batchTrainGenScores, batchTrainCamMatchArgMax, batchTrainAttMatchArgMax, batchTrainCamMatch, batchTrainAttMatch = learner.predict(trainInputIndexLists[i-batchSize:i], 
+                batchTrainUttPreds, batchTrainLocPreds, batchTrainCopyScores, batchTrainGenScores, batchTrainCamMatchArgMax, batchTrainAttMatchArgMax, batchTrainCamMatch, batchTrainAttMatch, batchTrainDbReadWeights, batchTrainCopyWeights, batchTrainGenWeights = learner.predict(trainInputIndexLists[i-batchSize:i], 
                                                                                                                                                                                          trainInputCustomerLocations[i-batchSize:i],
                                                                                                                                                                                          trainDbVectors[i-batchSize:i], 
                                                                                                                                                                                          trainOutputIndexLists[i-batchSize:i],
@@ -955,6 +967,10 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                 trainAttMatchArgMax.append(batchTrainAttMatchArgMax)
                 trainCamMatch.append(batchTrainCamMatch)
                 trainAttMatch.append(batchTrainAttMatch)
+                trainDbReadWeights.append(batchTrainDbReadWeights)
+                trainCopyWeights.append(batchTrainCopyWeights)
+                trainGenWeights.append(batchTrainGenWeights)
+                
                 trainGtSents += trainOutputStrings[i-batchSize:i]
                 trainGtCamIndx += trainGtDatabasebCameras[i-batchSize:i]
                 trainGtAttIndx += trainGtDatabaseAttributes[i-batchSize:i]
@@ -966,7 +982,13 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
             trainCamMatchArgMax = np.concatenate(trainCamMatchArgMax)
             trainAttMatchArgMax = np.concatenate(trainAttMatchArgMax)
             trainCamMatch = np.concatenate(trainCamMatch)
-            trainAttMatch  = np.concatenate(trainAttMatch)
+            trainAttMatch = np.concatenate(trainAttMatch)
+            trainDbReadWeights = np.concatenate(trainDbReadWeights)
+            trainCopyWeights = np.concatenate(trainCopyWeights)
+            trainGenWeights = np.concatenate(trainGenWeights)
+                
+            
+            
             
             trainPredSents = unvectorize_sentences(trainUttPreds, indexToChar)
             
@@ -1013,6 +1035,9 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
             trainAttMatchArgMax_ = []
             trainCamMatch_ = []
             trainAttMatch_  = []
+            trainDbReadWeights_ = []
+            trainCopyWeights_ = [] 
+            trainGenWeights_ = []
             
             trainOutputIndexLists_ = []
             trainPredSents_ = []
@@ -1029,12 +1054,15 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                 trainAttMatchArgMax_.append(trainAttMatchArgMax[i])
                 trainCamMatch_.append(trainCamMatch[i])
                 trainAttMatch_.append(trainAttMatch[i])
-                
+                trainDbReadWeights_.append(trainDbReadWeights[i])
+                trainCopyWeights_.append(trainCopyWeights[i])
+                trainGenWeights_.append(trainGenWeights[i])
+            
                 trainOutputIndexLists_.append(trainOutputIndexLists[i])
                 trainPredSents_.append(trainPredSents[i])
                 
             
-            trainPredSentsColored, trainCopyScoresPred, trainGenScoresPred, trainCopyScoresTrue, trainGenScoresTrue = color_results(trainPredSents_, 
+            trainPredSentsColored, trainCopyScoresPred_, trainGenScoresPred_, trainCopyScoresTrue_, trainGenScoresTrue_ = color_results(trainPredSents_, 
                                                                                                                                     trainOutputIndexLists_,
                                                                                                                                     trainCopyScores_, 
                                                                                                                                     trainGenScores_, 
@@ -1049,7 +1077,10 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
             testCamMatchArgMax = []
             testAttMatchArgMax = []
             testCamMatch = []
-            testAttMatch  = []
+            testAttMatch = []
+            testDbReadWeights = []
+            testCopyWeights = []
+            testGenWeights = []
             testGtSents = []
             testGtCamIndx = []
             testGtAttIndx = []
@@ -1073,7 +1104,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                 #print("\t", batchTestCost, flush=True, file=sessionTerminalOutputStream)
                 
                 
-                batchTestUttPreds, batchTestLocPreds, batchTestCopyScores, batchTestGenScores, batchTestCamMatchArgMax, batchTestAttMatchArgMax, batchTestCamMatch, batchTestAttMatch = learner.predict(testInputIndexLists[i-batchSize:i], 
+                batchTestUttPreds, batchTestLocPreds, batchTestCopyScores, batchTestGenScores, batchTestCamMatchArgMax, batchTestAttMatchArgMax, batchTestCamMatch, batchTestAttMatch, batchTestDbReadWeights, batchTestCopyWeights, batchTestGenWeights = learner.predict(testInputIndexLists[i-batchSize:i], 
                                                                                                                                                                                   testInputCustomerLocations[i-batchSize:i],
                                                                                                                                                                                   testDbVectors[i-batchSize:i], 
                                                                                                                                                                                   testOutputIndexLists[i-batchSize:i],
@@ -1089,6 +1120,9 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                 testAttMatchArgMax.append(batchTestAttMatchArgMax)
                 testCamMatch.append(batchTestCamMatch)
                 testAttMatch.append(batchTestAttMatch)
+                testDbReadWeights.append(batchTestDbReadWeights)
+                testCopyWeights.append(batchTestCopyWeights)
+                testGenWeights.append(batchTestGenWeights)
                 testGtSents += testOutputStrings[i-batchSize:i]
                 testGtCamIndx += testGtDatabasebCameras[i-batchSize:i]
                 testGtAttIndx += testGtDatabaseAttributes[i-batchSize:i]
@@ -1102,6 +1136,12 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
             testAttMatchArgMax = np.concatenate(testAttMatchArgMax)
             testCamMatch = np.concatenate(testCamMatch)
             testAttMatch  = np.concatenate(testAttMatch)
+            testDbReadWeights  = np.concatenate(testDbReadWeights)
+            testCopyWeights  = np.concatenate(testCopyWeights)
+            testGenWeights  = np.concatenate(testGenWeights)
+            
+            
+            
             
             
             testCostAve = np.mean(testCosts)
@@ -1153,7 +1193,9 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
             testAttMatchArgMax_ = []
             testCamMatch_ = []
             testAttMatch_  = []
-            
+            testDbReadWeights_ = []
+            testCopyWeights_ = []
+            testGenWeights_ = []
             testOutputIndexLists_ = []
             testPredSents_ = []
             
@@ -1168,13 +1210,16 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                 testCamMatchArgMax_.append(testCamMatchArgMax[i])
                 testAttMatchArgMax_.append(testAttMatchArgMax[i])
                 testCamMatch_.append(testCamMatch[i])
-                testAttMatch_.append(testAttMatch[i])
+                testAttMatch_.append(testAttMatch[i])    
+                testDbReadWeights_.append(testDbReadWeights[i])
+                testCopyWeights_.append(testCopyWeights[i])
+                testGenWeights_.append(testGenWeights[i])
                 
                 testOutputIndexLists_.append(testOutputIndexLists[i])
                 testPredSents_.append(testPredSents[i])
                 
             
-            testPredSentsColored, testCopyScoresPred, testGenScoresPred, testCopyScoresTrue, testGenScoresTrue = color_results(testPredSents_, 
+            testPredSentsColored, testCopyScoresPred_, testGenScoresPred_, testCopyScoresTrue_, testGenScoresTrue_ = color_results(testPredSents_, 
                                                                                                                                testOutputIndexLists_,
                                                                                                                                testCopyScores_, 
                                                                                                                                testGenScores_, 
@@ -1246,11 +1291,15 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                                     [indexToLocation[trainLocPreds_[i]]] +
                                     [c for c in trainPredSents_[i]])
                     
-                    writer.writerow(["PRED COPY:"] + [""] + [c for c in trainCopyScoresPred[i]])
-                    writer.writerow(["PRED GEN:"] + [""] + [c for c in trainGenScoresPred[i]])
+                    writer.writerow(["PRED COPY WEIGHT:"] + [""] + [c for c in trainCopyWeights_[i]])
+                    writer.writerow(["PRED GEN WEIGHT:"] + [""] + [c for c in trainGenWeights_[i]])
+                    writer.writerow(["PRED DB TO CAND WEIGHT:"] + [""] + [c for c in trainDbReadWeights_[i]])
                     
-                    writer.writerow(["TRUE COPY:"] + [""] + [c for c in trainCopyScoresTrue[i]])
-                    writer.writerow(["TRUE GEN:"] + [""] + [c for c in trainGenScoresTrue[i]])
+                    writer.writerow(["PRED COPY:"] + [""] + [c for c in trainCopyScoresPred_[i]])
+                    writer.writerow(["PRED GEN:"] + [""] + [c for c in trainGenScoresPred_[i]])
+                    
+                    writer.writerow(["TRUE COPY:"] + [""] + [c for c in trainCopyScoresTrue_[i]])
+                    writer.writerow(["TRUE GEN:"] + [""] + [c for c in trainGenScoresTrue_[i]])
                     
                     writer.writerow(["CAM MATCH:"] + [np.round(p, 3) for p in trainCamMatch_[i]])
                     writer.writerow(["ATT MATCH:"] + [np.round(p, 3) for p in trainAttMatch_[i]])
@@ -1277,11 +1326,15 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                                     [c for c in testPredSents_[i]])
                     
                     
-                    writer.writerow(["PRED COPY:"] + [""] +[c for c in testCopyScoresPred[i]])
-                    writer.writerow(["PRED GEN:"] + [""] +[c for c in testGenScoresPred[i]])
+                    writer.writerow(["PRED COPY WEIGHT:"] + [""] + [c for c in testCopyWeights_[i]])
+                    writer.writerow(["PRED GEN WEIGHT:"] + [""] + [c for c in testGenWeights_[i]])
+                    writer.writerow(["PRED DB TO CAND WEIGHT:"] + [""] + [c for c in testDbReadWeights_[i]])
                     
-                    writer.writerow(["TRUE COPY:"] + [""] +[c for c in testCopyScoresTrue[i]])
-                    writer.writerow(["TRUE GEN:"] + [""] +[c for c in testGenScoresTrue[i]])
+                    writer.writerow(["PRED COPY:"] + [""] +[c for c in testCopyScoresPred_[i]])
+                    writer.writerow(["PRED GEN:"] + [""] +[c for c in testGenScoresPred_[i]])
+                    
+                    writer.writerow(["TRUE COPY:"] + [""] +[c for c in testCopyScoresTrue_[i]])
+                    writer.writerow(["TRUE GEN:"] + [""] +[c for c in testGenScoresTrue_[i]])
                     
                     writer.writerow(["CAM MATCH:"] + [np.round(p, 3) for p in testCamMatch_[i]])
                     writer.writerow(["ATT MATCH:"] + [np.round(p, 3) for p in testAttMatch_[i]])
@@ -1329,7 +1382,7 @@ if __name__ == "__main__":
     attTemp = 0
     
     
-    run(0, 0, camTemp, attTemp, 0.7, sessionDir)
+    run(0, 0, camTemp, attTemp, 1.0, sessionDir)
     
     """
     for gpu in range(8):

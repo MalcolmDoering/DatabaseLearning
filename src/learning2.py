@@ -86,7 +86,7 @@ class CustomNeuralNetwork(object):
             
             self._loc_utt_combined_input_encoding = tf.layers.dense(tf.concat([self._input_utt_encoding, self._location_inputs], axis=1),
                                                                     self.embeddingSize, 
-                                                                    activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
+                                                                    activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
             
             
             
@@ -113,7 +113,7 @@ class CustomNeuralNetwork(object):
             
             self._loc_utt_combined_input_encoding_2 = tf.layers.dense(tf.concat([self._input_utt_encoding_2, self._location_inputs], axis=1),
                                                                     self.embeddingSize, 
-                                                                    activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
+                                                                    activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
         
         
         
@@ -127,13 +127,13 @@ class CustomNeuralNetwork(object):
             cam1 = tf.layers.dense(self._loc_utt_combined_input_encoding_2, self.numUniqueCams, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
             att1 = tf.layers.dense(self._loc_utt_combined_input_encoding_2, self.numUniqueAtts, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
             
-            self.camMatch = tf.nn.softmax(cam1)
-            self.attMatch = tf.nn.softmax(att1)
+            #self.camMatch = tf.nn.softmax(cam1)
+            #self.attMatch = tf.nn.softmax(att1)
             
             
             # gumbel softmax used till 20190525
-            #cam1 = tf.layers.dense(self._input_encoding_2, self.numUniqueCams, activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
-            #att1 = tf.layers.dense(self._input_encoding_2, self.numUniqueAtts, activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
+            #cam1 = tf.layers.dense(self._input_encoding_2, self.numUniqueCams, activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
+            #att1 = tf.layers.dense(self._input_encoding_2, self.numUniqueAtts, activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
             
             #cam3 = tf.nn.softmax(cam1)
             #att3 = tf.nn.softmax(att1)
@@ -151,8 +151,8 @@ class CustomNeuralNetwork(object):
             
             
             # provide the ground truth DB entries
-            #self.camMatch = self._gtDbCams
-            #self.attMatch = self._gtDbAtts
+            self.camMatch = self._gtDbCams
+            self.attMatch = self._gtDbAtts
             
             
             self.camMatchIndex = tf.argmax(self.camMatch, axis=1)
@@ -197,11 +197,11 @@ class CustomNeuralNetwork(object):
             
             locHid = tf.layers.dense(self._loc_utt_combined_input_encoding,
                                      self.embeddingSize, 
-                                     activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
+                                     activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
             
             self.locationOut = tf.layers.dense(locHid,
                                                self.locationVecLen, 
-                                               activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
+                                               activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
             
             
             
@@ -217,10 +217,10 @@ class CustomNeuralNetwork(object):
         
         
         
-        num_units = [self.embeddingSize, self.vocabSize+1]
+        #num_units = [self.embeddingSize, self.vocabSize+2]
         
         cells = [tf.nn.rnn_cell.GRUCell(num_units=self.embeddingSize, kernel_initializer=tf.initializers.glorot_normal()),
-                 tf.nn.rnn_cell.GRUCell(num_units=self.vocabSize+1, activation=tf.nn.relu, kernel_initializer=tf.initializers.glorot_normal())]
+                 tf.nn.rnn_cell.GRUCell(num_units=self.vocabSize+2, activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.glorot_normal())]
         
             
         self.decoder_cell = tf.contrib.rnn.MultiRNNCell(cells)
@@ -242,12 +242,12 @@ class CustomNeuralNetwork(object):
         self._teacher_forcing_prob = tf.placeholder(tf.float32, shape=(), name='teacher_forcing_prob')
         
         # for training
-        self._loss, self._train_predicted_output_sequences, self._train_copy_scores, self._train_gen_scores = self.build_decoder(teacherForcing=True, scopeName="decoder_train")
+        self._loss, self._train_predicted_output_sequences, self._train_copy_scores, self._train_gen_scores, self._train_db_read_weights, self._train_copy_weights, self._train_gen_weights = self.build_decoder(teacherForcing=True, scopeName="decoder_train")
         
         #self._loss = tf.check_numerics(self._loss, "_loss")
         
         # for testing
-        self._test_loss, self._test_predicted_output_sequences, self._test_copy_scores, self._test_gen_scores = self.build_decoder(teacherForcing=False, scopeName="decoder_test")
+        self._test_loss, self._test_predicted_output_sequences, self._test_copy_scores, self._test_gen_scores, self._test_db_read_weights, self._test_copy_weights, self._test_gen_weights = self.build_decoder(teacherForcing=True, scopeName="decoder_test")
         
         
         # add the loss from the location predictions
@@ -307,6 +307,11 @@ class CustomNeuralNetwork(object):
             predicted_output_sequences = []
             
             
+            db_read_weights = []
+            gen_weights = []
+            copy_weights = []
+            
+            
             
             # get the outputs
             for i in range(self.outputSeqLen):
@@ -321,18 +326,20 @@ class CustomNeuralNetwork(object):
                     output, state = self.decoder_cell(output, state)
                 
                 
-                output, db_read_weight = tf.split(output, [self.vocabSize, 1], axis=1)
+                output, db_read_weight, gen_vs_copy_weight = tf.split(output, [self.vocabSize, 1, 1], axis=1)
                 
                 gen_score = tf.reshape(output, shape=(tf.shape(output)[0], 1, self.vocabSize))
                 
                 
                 #db_read_weight = (db_read_weight + 1.0) / 2.0 # put the tanh function into the range (0,1)
-                db_read_weight = tf.nn.sigmoid(db_read_weight) 
+                db_read_weight = (2.0 * tf.nn.sigmoid(db_read_weight)) - 1.0
+                gen_weight = (2.0 * tf.nn.sigmoid(gen_vs_copy_weight)) - 1.0 
+                copy_weight = 1.0 - gen_weight
+                
                 
                 
                 copy_scores_i = tf.expand_dims(db_read_weight, 2) * self.db_match_val
-                copy_scores_i = tf.split(copy_scores_i, self.dbSeqLen, axis=1)
-                
+                copy_scores_i = tf.split(copy_scores_i, self.dbSeqLen, axis=1)    
                 
                 for j in range(self.dbSeqLen):
                     if (i+j) >= self.outputSeqLen:
@@ -340,9 +347,12 @@ class CustomNeuralNetwork(object):
                     else:
                         copy_scores_lists[i+j].append(copy_scores_i[j])
             
-                
-                
                 copy_score = tf.add_n(copy_scores_lists[i]) # the copy score for this step based on all copy scores previous to now
+                
+                
+                
+                gen_score = tf.expand_dims(gen_weight, 2) * gen_score
+                copy_score = tf.expand_dims(copy_weight, 2) * copy_score
                 
                 
                 #gen_score = tf.nn.softmax(gen_score)
@@ -354,7 +364,12 @@ class CustomNeuralNetwork(object):
                 gen_scores.append(gen_score)
                 copy_scores.append(copy_score)
                 predicted_output_sequences.append(predicted_output_char)
-            
+                
+                
+                db_read_weights.append(db_read_weight)
+                gen_weights.append(gen_weight)
+                copy_weights.append(copy_weight)
+                
             
             
             # combine chars in lists into a single sequence
@@ -362,7 +377,10 @@ class CustomNeuralNetwork(object):
             copy_scores = tf.concat(copy_scores, 1)
             predicted_output_sequences = tf.concat(predicted_output_sequences, 1)
             
-            
+            db_read_weights = tf.concat(db_read_weights, 1)
+            gen_weights = tf.concat(gen_weights, 1)
+            copy_weights = tf.concat(copy_weights, 1)
+                
             
             # compute the loss
             for i in range(self.outputSeqLen):
@@ -379,7 +397,7 @@ class CustomNeuralNetwork(object):
         
         
         
-        return loss, predicted_output_sequences, copy_scores, gen_scores
+        return loss, predicted_output_sequences, copy_scores, gen_scores, db_read_weights, copy_weights, gen_weights
     
     
     
@@ -418,25 +436,29 @@ class CustomNeuralNetwork(object):
         return loss
     
     
-    def predict(self, inputUtts, inputCustLocs, databases, groundTruthOutputs, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts):
+    def predict(self, inputUtts, inputCustLocs, databases, groundTruthOutputs, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, teacherForcingProb=1.0):
         feedDict = {self._inputs: inputUtts, 
                     self._location_inputs: inputCustLocs, 
                     self._db_entries: databases, 
                     self._ground_truth_outputs: groundTruthOutputs,
                     self._ground_truth_location_outputs: groundTruthOutputShkpLocs,
                     self._gtDbCamIndices: gtDbCams, 
-                    self._gtDbAttIndices: gtDbAtts}
+                    self._gtDbAttIndices: gtDbAtts,
+                    self._teacher_forcing_prob: teacherForcingProb}
         
-        predUtts, predShkpLocs, copyScores, genScores, camMatchArgMax, attMatchArgMax, camMatch, attMatch = self._sess.run([self._pred_utt_op,
+        predUtts, predShkpLocs, copyScores, genScores, camMatchArgMax, attMatchArgMax, camMatch, attMatch, db_read_weights, copy_weights, gen_weights = self._sess.run([self._pred_utt_op,
                                                                                                                             self._pred_shkp_loc_op,
                                                                                                                             self._test_copy_scores, 
                                                                                                                             self._test_gen_scores,
                                                                                                                             self.camMatchIndex,
                                                                                                                             self.attMatchIndex,
                                                                                                                             self.camMatch,
-                                                                                                                            self.attMatch], feed_dict=feedDict)
+                                                                                                                            self.attMatch,
+                                                                                                                            self._test_db_read_weights, 
+                                                                                                                            self._test_copy_weights, 
+                                                                                                                            self._test_gen_weights], feed_dict=feedDict)
         
-        return predUtts, predShkpLocs, copyScores, genScores, camMatchArgMax, attMatchArgMax, camMatch, attMatch
+        return predUtts, predShkpLocs, copyScores, genScores, camMatchArgMax, attMatchArgMax, camMatch, attMatch, db_read_weights, copy_weights, gen_weights
     
     
     def save(self, filename):
