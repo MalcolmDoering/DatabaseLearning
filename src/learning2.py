@@ -176,7 +176,7 @@ class CustomNeuralNetwork(object):
             self.db_match_val_charindices = tf.argmax(self.db_match_val, axis=2)
             
             # bi-directional GRU
-            num_units = [self.embeddingSize, self.embeddingSize]
+            num_units = [self.embeddingSize]
             
             #cells_fw = [tf.nn.rnn_cell.LSTMCell(num_units=n, initializer=tf.initializers.glorot_normal()) for n in num_units]
             #cells_bw = [tf.nn.rnn_cell.LSTMCell(num_units=n, initializer=tf.initializers.glorot_normal()) for n in num_units]
@@ -185,10 +185,14 @@ class CustomNeuralNetwork(object):
             cells_bw = [tf.nn.rnn_cell.GRUCell(num_units=n, kernel_initializer=tf.initializers.glorot_normal()) for n in num_units]
             
             
-            self.db_match_val_encoding, _, _ = tf.contrib.rnn.stack_bidirectional_dynamic_rnn(cells_fw=cells_fw,
+            self.db_match_val_encoding, self.db_match_val_fw_encoding, self.db_match_val_bw_encoding = tf.contrib.rnn.stack_bidirectional_dynamic_rnn(cells_fw=cells_fw,
                                                                                             cells_bw=cells_bw,
                                                                                             inputs=self.db_match_val,
                                                                                             dtype=tf.float32)
+            
+            self.db_match_val_fwbw_encoding = self.db_match_val_fw_encoding[0] + self.db_match_val_bw_encoding[0]
+        
+        
         
         
         
@@ -208,37 +212,55 @@ class CustomNeuralNetwork(object):
             
         
         #
-        # setup the decoder
+        # setup the decoder - for generation
         #
         self._ground_truth_outputs = tf.placeholder(tf.int32, [self.batchSize, self.outputSeqLen], name='true_robot_outputs')
-        #self._ground_truth_outputs_one_hot = tf.one_hot(self._ground_truth_outputs, self.vocabSize)
-        
         self._ground_truth_location_outputs = tf.placeholder(tf.int32, [self.batchSize, self.locationVecLen])
         
         
-        
-        #num_units = [self.embeddingSize, self.vocabSize+2]
-        
-        cells = [tf.nn.rnn_cell.GRUCell(num_units=self.embeddingSize, kernel_initializer=tf.initializers.glorot_normal()),
-                 tf.nn.rnn_cell.GRUCell(num_units=self.vocabSize+2, activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.glorot_normal())]
-        
+        cells = [tf.nn.rnn_cell.GRUCell(num_units=self.embeddingSize*2, kernel_initializer=tf.initializers.glorot_normal()),
+                 tf.nn.rnn_cell.GRUCell(num_units=self.embeddingSize, kernel_initializer=tf.initializers.glorot_normal()),
+                 tf.nn.rnn_cell.GRUCell(num_units=self.vocabSize+1, activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.glorot_normal())]
             
         self.decoder_cell = tf.contrib.rnn.MultiRNNCell(cells)
         
-        #self.decoder_cell = tf.nn.rnn_cell.GRUCell(self.embeddingSize, kernel_initializer=tf.initializers.glorot_normal())
         
+        # the number of tensors in the tuple has to match the number of layers in the encoder
+        # add the input encoding to the initial state of the first layer RNN
         self.decoder_initial_state = self.decoder_cell.zero_state(self.batchSize, tf.float32)
-        self.decoder_initial_state = (self.decoder_initial_state[0] + self._loc_utt_combined_input_encoding, self.decoder_initial_state[1])
+        
+        self.decoder_initial_state = (self.decoder_initial_state[0] + tf.concat((self._loc_utt_combined_input_encoding, self.db_match_val_fwbw_encoding), axis=1),
+                                      self.decoder_initial_state[1], 
+                                      self.decoder_initial_state[2]
+                                      )
         
         
+        #
+        # setup the controller for mediating between generation and copying
+        #
+        """
+        num_units = [self.embeddingSize, self.embeddingSize]
+        cells = [tf.nn.rnn_cell.GRUCell(num_units=n, kernel_initializer=tf.initializers.glorot_normal()) for n in num_units]
+        self.controller_cell = tf.contrib.rnn.MultiRNNCell(cells)
         
         
+        # the number of tensors in the tuple has to match the number of layers in the encoder
+        # add the input encoding to the initial state of the first layer RNN
+        self.controller_initial_state = self.decoder_cell.zero_state(self.batchSize, tf.float32)
+        
+        self.controller_initial_state = (self.decoder_initial_state[0] + self._loc_utt_combined_input_encoding, 
+                                      self.decoder_initial_state[1], 
+                                      #self.decoder_initial_state[2]
+                                      )
+        """
         
         
+        self._db_read_weight_layer = tf.layers.Dense(1, activation=tf.nn.leaky_relu, use_bias=True, kernel_initializer=tf.initializers.he_normal())
+        self._gen_weight_layer = tf.layers.Dense(1, activation=tf.nn.sigmoid, use_bias=True, kernel_initializer=tf.initializers.he_normal())
         
         
 
-        # append start char on to beginning of outputs so they can be used for teacher forcing - i.e. as inputs to the coipynet decoder
+        # append start char on to beginning of outputs so they can be used for teacher forcing - i.e. as inputs to the copynet decoder
         after_slice = tf.strided_slice(self._ground_truth_outputs, [0, 0], [self.batchSize, -1], [1, 1]) # slice of the last char of each output sequence (is this necessary?)
         decoder_inputs = tf.concat( [tf.fill([self.batchSize, 1], charToIndex[goChar]), after_slice], 1) # concatenate on a go char onto the start of each output sequence
         
@@ -294,7 +316,7 @@ class CustomNeuralNetwork(object):
         self.saver = tf.train.Saver()
         
     
-    
+    """
     def build_decoder(self, teacherForcing=False, scopeName="decoder"):
         
         with tf.variable_scope(scopeName):
@@ -403,7 +425,7 @@ class CustomNeuralNetwork(object):
         
         
         return loss, predicted_output_sequences, copy_scores, gen_scores, db_read_weights, copy_weights, gen_weights
-    
+    """
     
     
     def build_decoder_2(self, teacherForcing=False, scopeName="decoder"):
@@ -417,7 +439,14 @@ class CustomNeuralNetwork(object):
             output = self.decoder_inputs_one_hot[:, 0, :] # each output sequence must have a 'start' char appended to the beginning
             
             
-            copy_scores_lists = [[]] * self.outputSeqLen
+            copy_scores_lists = [[tf.zeros((self.batchSize, 1, self.vocabSize), tf.float32)]] * self.outputSeqLen
+            
+            # try giving ground truth copy scores (for price)
+            #groundTruthCopyStartIndex = 15
+            #padding1 = tf.zeros((self.batchSize, groundTruthCopyStartIndex, self.vocabSize), tf.float32)
+            #temp = tf.concat((padding1, self.db_match_val), axis=1)
+            #gt_copy_scores, _ = tf.split(temp, [self.outputSeqLen, (groundTruthCopyStartIndex+self.dbSeqLen)-self.outputSeqLen], axis=1)
+            
             
             copy_scores = [] # scores for each char based on copy mechanism
             gen_scores = [] # scores for each char based on RNN decoder
@@ -430,26 +459,40 @@ class CustomNeuralNetwork(object):
             gen_weights = tf.zeros((self.batchSize, self.outputSeqLen), tf.float32)
             copy_weights = tf.zeros((self.batchSize, self.outputSeqLen), tf.float32)
             
+            db_read_weight = tf.zeros((self.batchSize, 1), tf.float32)
+            
             
             # get the outputs
             for i in range(self.outputSeqLen):
+                
                 if teacherForcing:
-                    # if using teacher forcing
-                    bernoulliSample = tf.to_float(tf.distributions.Bernoulli(probs=self._teacher_forcing_prob).sample())
-                    output = tf.math.scalar_mul(bernoulliSample, self.decoder_inputs_one_hot[:, i, :]) + tf.math.scalar_mul((1.0-bernoulliSample), output)
-                    output, state = self.decoder_cell(output, state)
-                
-                else:
-                    # if not using teacher forcing
-                    output, state = self.decoder_cell(output, state)
+                    # if using teacher forcing, set the previous output
+                    #bernoulliSample = tf.to_float(tf.distributions.Bernoulli(probs=self._teacher_forcing_prob).sample())
+                    #output = tf.math.scalar_mul(bernoulliSample, self.decoder_inputs_one_hot[:, i, :]) + tf.math.scalar_mul((1.0-bernoulliSample), output)
+                    
+                    output = self.decoder_inputs_one_hot[:, i, :] # previous output
                 
                 
-                output, db_read_weight, gen_vs_copy_weight = tf.split(output, [self.vocabSize, 1, 1], axis=1)
+                # input the copy score before the update into the decoder so it can tell if the db string has finished copying
+                copy_score_before_update = tf.reshape(tf.add_n(copy_scores_lists[i]), (self.batchSize, self.vocabSize))
+                output = tf.concat((output, copy_score_before_update), axis=1)
+                
+                
+                output, state = self.decoder_cell(output, state)
+                
+                output, _ = tf.split(output, [self.vocabSize, 1], axis=1)
                 
                 gen_score = tf.reshape(output, shape=(tf.shape(output)[0], 1, self.vocabSize))
                 
                 
+                db_read_weight = self._db_read_weight_layer(tf.concat((tf.concat(state, axis=1), db_read_weight), axis=1))
+                gen_weight = self._gen_weight_layer(tf.concat((tf.concat(state, axis=1), db_read_weight), axis=1))
                 
+                
+                
+                ################################################
+                # is there some problem here? it works when this part is replaced with the ground truth copy scores
+                ################################################
                 copy_scores_i = tf.expand_dims(db_read_weight, 2) * self.db_match_val
                 copy_scores_i = tf.split(copy_scores_i, self.dbSeqLen, axis=1)    
                 
@@ -458,8 +501,15 @@ class CustomNeuralNetwork(object):
                         break
                     else:
                         copy_scores_lists[i+j].append(copy_scores_i[j])
-            
+                
                 copy_score = tf.add_n(copy_scores_lists[i]) # the copy score for this step based on all copy scores previous to now
+                ################################################
+                
+                #copy_score = gt_copy_scores[:, i:i+1, :] * 50.0 # provide the GT copy scores
+                
+                
+                
+                gen_score = tf.expand_dims(gen_weight, 2) * gen_score
                 
                 
                 
@@ -472,7 +522,7 @@ class CustomNeuralNetwork(object):
                 
                 
                 db_read_weights.append(db_read_weight)
-                #gen_weights.append(gen_weight)
+                gen_weights.append(gen_weight)
                 #copy_weights.append(copy_weight)
                 
             
@@ -508,6 +558,9 @@ class CustomNeuralNetwork(object):
     
     
     
+    def compute_copy_score_from_grid(self):
+        
+        pass
     
     
     def initialize(self):

@@ -119,7 +119,7 @@ def compute_db_address_match(gtCamIndex, gtAttrIndex, predCamIndex, predAttIndex
 
 
 
-def vectorize_sentences(sentences, charToIndex, maxSentLen, padChar=None):
+def vectorize_sentences(sentences, charToIndex, maxSentLen, padChar=None, useEosChar=False):
     
     maxSentLen += 1 # for the EOS char
     
@@ -139,7 +139,7 @@ def vectorize_sentences(sentences, charToIndex, maxSentLen, padChar=None):
                 sentCharIndexList.append(charToIndex[sentences[i][j]])
             
             # add the EOS char
-            elif j == len(sentences[i]):
+            elif useEosChar and (j == len(sentences[i])):
                 sentVec[j, charToIndex[eosChar]] = 1.0
                 sentCharIndexList.append(charToIndex[eosChar])        
             
@@ -167,7 +167,7 @@ def vectorize_databases(dbStrings, charToIndex, maxDbValLen):
     dbIndexLists = []
     
     for row in dbStrings:
-        valVecs, valCharIndexLists = vectorize_sentences(row, charToIndex, maxDbValLen, padChar=None)
+        valVecs, valCharIndexLists = vectorize_sentences(row, charToIndex, maxDbValLen, padChar=None, useEosChar=False)
         
         dbVectors.append(valVecs)
         dbIndexLists.append(valCharIndexLists)
@@ -589,7 +589,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     inputIndexLists = []
     
     for inStrs in inputStrings:
-        _, inIndLst = vectorize_sentences(inStrs, charToIndex, maxInputLen, padChar=None)
+        _, inIndLst = vectorize_sentences(inStrs, charToIndex, maxInputLen, padChar=None, useEosChar=False)
         inputIndexLists.append(inIndLst)
     
     
@@ -597,7 +597,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     outputIndexLists = []
     
     for outStrs in outputStrings:
-        _, outIndLst = vectorize_sentences(outStrs, charToIndex, maxOutputLen, padChar=None)
+        _, outIndLst = vectorize_sentences(outStrs, charToIndex, maxOutputLen, padChar=None, useEosChar=True)
         outputIndexLists.append(outIndLst)
     
     
