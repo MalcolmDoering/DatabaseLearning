@@ -124,8 +124,8 @@ class CustomNeuralNetwork(object):
             # find the best matching camera and attribute from the database
             
             # use only softmax for addressing
-            cam1 = tf.layers.dense(self._loc_utt_combined_input_encoding_2, self.numUniqueCams, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
-            att1 = tf.layers.dense(self._loc_utt_combined_input_encoding_2, self.numUniqueAtts, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
+            #cam1 = tf.layers.dense(self._loc_utt_combined_input_encoding_2, self.numUniqueCams, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
+            #att1 = tf.layers.dense(self._loc_utt_combined_input_encoding_2, self.numUniqueAtts, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
             
             #self.camMatch = tf.nn.softmax(cam1)
             #self.attMatch = tf.nn.softmax(att1)
@@ -231,6 +231,12 @@ class CustomNeuralNetwork(object):
         self.decoder_initial_state = (self.decoder_initial_state[0] + self._loc_utt_combined_input_encoding, self.decoder_initial_state[1])
         
         
+        
+        
+        
+        
+        
+        
 
         # append start char on to beginning of outputs so they can be used for teacher forcing - i.e. as inputs to the coipynet decoder
         after_slice = tf.strided_slice(self._ground_truth_outputs, [0, 0], [self.batchSize, -1], [1, 1]) # slice of the last char of each output sequence (is this necessary?)
@@ -242,12 +248,11 @@ class CustomNeuralNetwork(object):
         self._teacher_forcing_prob = tf.placeholder(tf.float32, shape=(), name='teacher_forcing_prob')
         
         # for training
-        self._loss, self._train_predicted_output_sequences, self._train_copy_scores, self._train_gen_scores, self._train_db_read_weights, self._train_copy_weights, self._train_gen_weights = self.build_decoder(teacherForcing=True, scopeName="decoder_train")
+        self._loss, self._train_predicted_output_sequences, self._train_copy_scores, self._train_gen_scores, self._train_db_read_weights, self._train_copy_weights, self._train_gen_weights = self.build_decoder_2(teacherForcing=True, scopeName="decoder_train")
         
-        #self._loss = tf.check_numerics(self._loss, "_loss")
         
         # for testing
-        self._test_loss, self._test_predicted_output_sequences, self._test_copy_scores, self._test_gen_scores, self._test_db_read_weights, self._test_copy_weights, self._test_gen_weights = self.build_decoder(teacherForcing=True, scopeName="decoder_test")
+        self._test_loss, self._test_predicted_output_sequences, self._test_copy_scores, self._test_gen_scores, self._test_db_read_weights, self._test_copy_weights, self._test_gen_weights = self.build_decoder_2(teacherForcing=True, scopeName="decoder_test")
         
         
         # add the loss from the location predictions
@@ -398,6 +403,110 @@ class CustomNeuralNetwork(object):
         
         
         return loss, predicted_output_sequences, copy_scores, gen_scores, db_read_weights, copy_weights, gen_weights
+    
+    
+    
+    def build_decoder_2(self, teacherForcing=False, scopeName="decoder"):
+        """Try to do the same with a single neuron for DB entry copy"""
+        
+        with tf.variable_scope(scopeName):
+            
+            loss = 0
+            
+            state = self.decoder_initial_state
+            output = self.decoder_inputs_one_hot[:, 0, :] # each output sequence must have a 'start' char appended to the beginning
+            
+            
+            copy_scores_lists = [[]] * self.outputSeqLen
+            
+            copy_scores = [] # scores for each char based on copy mechanism
+            gen_scores = [] # scores for each char based on RNN decoder
+            predicted_output_sequences = [] # combined scores for each char
+            
+            
+            db_read_weights = []
+            #gen_weights = []
+            #copy_weights = []
+            gen_weights = tf.zeros((self.batchSize, self.outputSeqLen), tf.float32)
+            copy_weights = tf.zeros((self.batchSize, self.outputSeqLen), tf.float32)
+            
+            
+            # get the outputs
+            for i in range(self.outputSeqLen):
+                if teacherForcing:
+                    # if using teacher forcing
+                    bernoulliSample = tf.to_float(tf.distributions.Bernoulli(probs=self._teacher_forcing_prob).sample())
+                    output = tf.math.scalar_mul(bernoulliSample, self.decoder_inputs_one_hot[:, i, :]) + tf.math.scalar_mul((1.0-bernoulliSample), output)
+                    output, state = self.decoder_cell(output, state)
+                
+                else:
+                    # if not using teacher forcing
+                    output, state = self.decoder_cell(output, state)
+                
+                
+                output, db_read_weight, gen_vs_copy_weight = tf.split(output, [self.vocabSize, 1, 1], axis=1)
+                
+                gen_score = tf.reshape(output, shape=(tf.shape(output)[0], 1, self.vocabSize))
+                
+                
+                
+                copy_scores_i = tf.expand_dims(db_read_weight, 2) * self.db_match_val
+                copy_scores_i = tf.split(copy_scores_i, self.dbSeqLen, axis=1)    
+                
+                for j in range(self.dbSeqLen):
+                    if (i+j) >= self.outputSeqLen:
+                        break
+                    else:
+                        copy_scores_lists[i+j].append(copy_scores_i[j])
+            
+                copy_score = tf.add_n(copy_scores_lists[i]) # the copy score for this step based on all copy scores previous to now
+                
+                
+                
+                predicted_output_char = gen_score + copy_score
+                output = tf.nn.softmax(tf.reshape(predicted_output_char, (self.batchSize, self.vocabSize)))
+                
+                gen_scores.append(gen_score)
+                copy_scores.append(copy_score)
+                predicted_output_sequences.append(predicted_output_char)
+                
+                
+                db_read_weights.append(db_read_weight)
+                #gen_weights.append(gen_weight)
+                #copy_weights.append(copy_weight)
+                
+            
+            
+            # combine chars in lists into a single sequence
+            gen_scores = tf.concat(gen_scores, 1)
+            copy_scores = tf.concat(copy_scores, 1)
+            predicted_output_sequences = tf.concat(predicted_output_sequences, 1)
+            
+            db_read_weights = tf.concat(db_read_weights, 1)
+            #gen_weights = tf.concat(gen_weights, 1)
+            #copy_weights = tf.concat(copy_weights, 1)
+                
+            
+            
+            
+            # compute the loss
+            for i in range(self.outputSeqLen):
+                
+                # get the ground truth output
+                ground_truth_output = tf.one_hot(self._ground_truth_outputs[:, i], self.vocabSize) # these are one-hot char encodings at timestep i
+                
+                
+                # compute the loss
+                #cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=ground_truth_output, logits=output)
+                cross_entropy = tf.losses.softmax_cross_entropy(ground_truth_output, predicted_output_sequences[:, i, :], reduction=tf.losses.Reduction.SUM_OVER_BATCH_SIZE) # is this right for sequence eval?
+                #current_loss = tf.reduce_sum(cross_entropy)
+                loss = loss + cross_entropy
+        
+        
+        
+        return loss, predicted_output_sequences, copy_scores, gen_scores, db_read_weights, copy_weights, gen_weights
+    
+    
     
     
     
