@@ -1389,7 +1389,7 @@ if __name__ == "__main__":
         
         seed = gpu
                 
-        process = Process(target=run, args=[gpu, seed, camTemp, attTemp, sessionDir])
+        process = Process(target=run, args=[gpu, seed, camTemp, attTemp, 1.0, sessionDir])
         process.start()
     """
     

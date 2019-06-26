@@ -454,9 +454,9 @@ class CustomNeuralNetwork(object):
             
             
             db_read_weights = []
-            #gen_weights = []
+            gen_weights = []
             #copy_weights = []
-            gen_weights = tf.zeros((self.batchSize, self.outputSeqLen), tf.float32)
+            #gen_weights = tf.zeros((self.batchSize, self.outputSeqLen), tf.float32)
             copy_weights = tf.zeros((self.batchSize, self.outputSeqLen), tf.float32)
             
             db_read_weight = tf.zeros((self.batchSize, 1), tf.float32)
@@ -533,7 +533,7 @@ class CustomNeuralNetwork(object):
             predicted_output_sequences = tf.concat(predicted_output_sequences, 1)
             
             db_read_weights = tf.concat(db_read_weights, 1)
-            #gen_weights = tf.concat(gen_weights, 1)
+            gen_weights = tf.concat(gen_weights, 1)
             #copy_weights = tf.concat(copy_weights, 1)
                 
             
