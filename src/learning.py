@@ -15,7 +15,7 @@ print("tensorflow version", tf.__version__, flush=True)
 
 
 
-eosChar = "#"
+#eosChar = "#"
 goChar = "~"
 
 
@@ -87,7 +87,7 @@ class CustomNeuralNetwork(object):
             
             self._loc_utt_combined_input_encoding = tf.layers.dense(tf.concat([self._input_utt_encoding, self._location_inputs], axis=1),
                                                                     self.embeddingSize, 
-                                                                    activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
+                                                                    activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
             
             
             
@@ -114,7 +114,7 @@ class CustomNeuralNetwork(object):
             
             self._loc_utt_combined_input_encoding_2 = tf.layers.dense(tf.concat([self._input_utt_encoding_2, self._location_inputs], axis=1),
                                                                     self.embeddingSize, 
-                                                                    activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
+                                                                    activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
         
         
         
@@ -125,16 +125,16 @@ class CustomNeuralNetwork(object):
             # find the best matching camera and attribute from the database
             
             # use only softmax for addressing
-            cam1 = tf.layers.dense(self._loc_utt_combined_input_encoding_2, self.numUniqueCams, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
-            att1 = tf.layers.dense(self._loc_utt_combined_input_encoding_2, self.numUniqueAtts, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
+            #cam1 = tf.layers.dense(self._loc_utt_combined_input_encoding_2, self.numUniqueCams, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
+            #att1 = tf.layers.dense(self._loc_utt_combined_input_encoding_2, self.numUniqueAtts, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
             
-            self.camMatch = tf.nn.softmax(cam1)
-            self.attMatch = tf.nn.softmax(att1)
+            #self.camMatch = tf.nn.softmax(cam1)
+            #self.attMatch = tf.nn.softmax(att1)
             
             
             # gumbel softmax used till 20190525
-            #cam1 = tf.layers.dense(self._input_encoding_2, self.numUniqueCams, activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
-            #att1 = tf.layers.dense(self._input_encoding_2, self.numUniqueAtts, activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
+            #cam1 = tf.layers.dense(self._input_encoding_2, self.numUniqueCams, activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
+            #att1 = tf.layers.dense(self._input_encoding_2, self.numUniqueAtts, activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
             
             #cam3 = tf.nn.softmax(cam1)
             #att3 = tf.nn.softmax(att1)
@@ -152,8 +152,8 @@ class CustomNeuralNetwork(object):
             
             
             # provide the ground truth DB entries
-            #self.camMatch = self._gtDbCams
-            #self.attMatch = self._gtDbAtts
+            self.camMatch = self._gtDbCams
+            self.attMatch = self._gtDbAtts
             
             
             self.camMatchIndex = tf.argmax(self.camMatch, axis=1)
@@ -164,43 +164,64 @@ class CustomNeuralNetwork(object):
             # DB encoder
             self._db_entries = tf.placeholder(tf.float32, [self.batchSize, self.numUniqueCams, self.numUniqueAtts, self.dbSeqLen, self.vocabSize], name='DB_entries')
             
-            
             # multiply by the match vectors and sum so that only the matching value remains
             self.db_match_val = tf.einsum("bcalv,ba->bclv", self._db_entries, self.attMatch)
             self.db_match_val = tf.einsum("bclv,bc->blv", self.db_match_val, self.camMatch)
             
-            # TODO would it make sense to do softmax over the chars in db_match_val???
+                        # TODO would it make sense to do softmax over the chars in db_match_val???
             #self.db_match_val = tf.nn.softmax(self.db_match_val, axis=2)
-            
             
             self.db_match_val_charindices = tf.argmax(self.db_match_val, axis=2)
             
+            
             # bi-directional GRU
             num_units = [self.embeddingSize, self.embeddingSize]
-            
-            #cells_fw = [tf.nn.rnn_cell.LSTMCell(num_units=n, initializer=tf.initializers.glorot_normal()) for n in num_units]
-            #cells_bw = [tf.nn.rnn_cell.LSTMCell(num_units=n, initializer=tf.initializers.glorot_normal()) for n in num_units]
             
             cells_fw = [tf.nn.rnn_cell.GRUCell(num_units=n, kernel_initializer=tf.initializers.glorot_normal()) for n in num_units]
             cells_bw = [tf.nn.rnn_cell.GRUCell(num_units=n, kernel_initializer=tf.initializers.glorot_normal()) for n in num_units]
             
             
+                       
+            #
+            # try encoding after summing
+            #
+            
             self.db_match_val_encoding, _, _ = tf.contrib.rnn.stack_bidirectional_dynamic_rnn(cells_fw=cells_fw,
                                                                                             cells_bw=cells_bw,
                                                                                             inputs=self.db_match_val,
                                                                                             dtype=tf.float32)
-        
+            
+            
+            
+            #
+            # try encoding before summing
+            #
+            """
+            self._db_entries_flat = tf.reshape(self._db_entries, (self.batchSize*self.numUniqueCams*self.numUniqueAtts, self.dbSeqLen, self.vocabSize))
+            
+            db_entry_encodings_flat, _, _ = tf.contrib.rnn.stack_bidirectional_dynamic_rnn(cells_fw=cells_fw,
+                                                                                            cells_bw=cells_bw,
+                                                                                            inputs=self._db_entries_flat,
+                                                                                            dtype=tf.float32)
+            
+            db_entry_encodings = tf.reshape(db_entry_encodings_flat, (self.batchSize, self.numUniqueCams, self.numUniqueAtts, self.dbSeqLen, self.embeddingSize*2))
+            
+            
+            self.db_match_val_encoding = tf.einsum("bcalv,ba->bclv", db_entry_encodings, self.attMatch)
+            self.db_match_val_encoding = tf.einsum("bclv,bc->blv", self.db_match_val_encoding, self.camMatch)
+            """
+            
         
         with tf.variable_scope("location_layer"):
             # get the shopkeeper output location
             
             locHid = tf.layers.dense(self._loc_utt_combined_input_encoding,
                                      self.embeddingSize, 
-                                     activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
+                                     activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
             
             self.locationOut = tf.layers.dense(locHid,
                                                self.locationVecLen, 
-                                               activation=tf.nn.relu, kernel_initializer=tf.initializers.he_normal())
+                                               activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
             
             
             
@@ -298,10 +319,6 @@ class CustomNeuralNetwork(object):
             
             
             for i in range(self.outputSeqLen):
-                
-                #
-                # TODO: don't use teacher forcing for prediction
-                #
                 
                 if teacherForcing:
                     # if using teacher forcing

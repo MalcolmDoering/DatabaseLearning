@@ -29,7 +29,7 @@ import tools
 from collections import OrderedDict
 
 
-DEBUG = False
+DEBUG = True
 
 
 eosChar = "#"
@@ -44,7 +44,7 @@ batchSize = 50
 embeddingSize = 30
 numEpochs = 10000
 evalEvery = 50
-randomizeTrainingBatches = False
+randomizeTrainingBatches = True
 
 sessionDir = tools.create_session_dir("actionPrediction13_dbl")
 
@@ -119,7 +119,7 @@ def compute_db_address_match(gtCamIndex, gtAttrIndex, predCamIndex, predAttIndex
 
 
 
-def vectorize_sentences(sentences, charToIndex, maxSentLen, padChar=None):
+def vectorize_sentences(sentences, charToIndex, maxSentLen, padChar=None, useEosChar=False):
     
     maxSentLen += 1 # for the EOS char
     
@@ -133,16 +133,25 @@ def vectorize_sentences(sentences, charToIndex, maxSentLen, padChar=None):
         
         for j in range(maxSentLen):
             
+            # vectorize the chars in the sentence
             if j < len(sentences[i]):
                 sentVec[j, charToIndex[sentences[i][j]]] = 1.0
                 sentCharIndexList.append(charToIndex[sentences[i][j]])
+            
+            # add the EOS char
+            elif useEosChar and (j == len(sentences[i])):
+                sentVec[j, charToIndex[eosChar]] = 1.0
+                sentCharIndexList.append(charToIndex[eosChar])        
+            
+            # pad the rest of the sequence
             elif padChar != None:
-                sentVec[j, charToIndex[padChar]] = 1.0 # pad the end of sentences with spaces
+                sentVec[j, charToIndex[padChar]] = 1.0 # pad the end of sentences with spaces, etc.
                 sentCharIndexList.append(charToIndex[padChar])
+            
+            else:
+                sentCharIndexList.append(-1)
+            
         
-        
-        sentVec[-1, charToIndex[eosChar]] = 1
-        sentCharIndexList.append(charToIndex[eosChar])
         
         sentVecs.append(sentVec)
         sentCharIndexLists.append(sentCharIndexList)
@@ -158,7 +167,7 @@ def vectorize_databases(dbStrings, charToIndex, maxDbValLen):
     dbIndexLists = []
     
     for row in dbStrings:
-        valVecs, valCharIndexLists = vectorize_sentences(row, charToIndex, maxDbValLen, padChar=None)
+        valVecs, valCharIndexLists = vectorize_sentences(row, charToIndex, maxDbValLen, padChar=None, useEosChar=False)
         
         dbVectors.append(valVecs)
         dbIndexLists.append(valCharIndexLists)
@@ -580,7 +589,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     inputIndexLists = []
     
     for inStrs in inputStrings:
-        _, inIndLst = vectorize_sentences(inStrs, charToIndex, maxInputLen, padChar=" ")
+        _, inIndLst = vectorize_sentences(inStrs, charToIndex, maxInputLen, padChar=None, useEosChar=False)
         inputIndexLists.append(inIndLst)
     
     
@@ -588,7 +597,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     outputIndexLists = []
     
     for outStrs in outputStrings:
-        _, outIndLst = vectorize_sentences(outStrs, charToIndex, maxOutputLen, padChar=" ")
+        _, outIndLst = vectorize_sentences(outStrs, charToIndex, maxOutputLen, padChar=None, useEosChar=True)
         outputIndexLists.append(outIndLst)
     
     
@@ -663,8 +672,8 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     
     
     
-    inputLen = maxInputLen + 2
-    outputLen = maxOutputLen + 2
+    inputLen = maxInputLen + 1
+    outputLen = maxOutputLen + 1
     dbValLen = maxDbValueLen + 1
     
     locationVecLen = len(locationToIndex)
@@ -1329,7 +1338,7 @@ if __name__ == "__main__":
     attTemp = 0
     
     
-    #run(0, 0, camTemp, attTemp, sessionDir)
+    run(0, 0, camTemp, attTemp, 0.7, sessionDir)
     
     """
     for gpu in range(8):
@@ -1342,7 +1351,7 @@ if __name__ == "__main__":
     
     
     #gpu = 0
-    
+    """
     processes = []
     
     #for camTemp in [2, 2.5, 3]:    
@@ -1356,6 +1365,7 @@ if __name__ == "__main__":
         
         for process in processes:
             process.join()
+    """
      
     
     
