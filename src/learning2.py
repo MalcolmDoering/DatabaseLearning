@@ -173,8 +173,11 @@ class CustomNeuralNetwork(object):
             #self.db_match_val = tf.nn.softmax(self.db_match_val, axis=2)
             
             
+            self.db_match_sum = tf.reduce_sum(tf.reduce_sum(self.db_match_val, axis=2), axis=1, keepdims=True)
+            
             self.db_match_val_charindices = tf.argmax(self.db_match_val, axis=2)
             
+            """
             # bi-directional GRU
             num_units = [self.embeddingSize]
             
@@ -191,9 +194,7 @@ class CustomNeuralNetwork(object):
                                                                                             dtype=tf.float32)
             
             self.db_match_val_fwbw_encoding = self.db_match_val_fw_encoding[0] + self.db_match_val_bw_encoding[0]
-        
-        
-        
+            """
         
         
         with tf.variable_scope("location_layer"):
@@ -218,7 +219,7 @@ class CustomNeuralNetwork(object):
         self._ground_truth_location_outputs = tf.placeholder(tf.int32, [self.batchSize, self.locationVecLen])
         
         
-        cells = [tf.nn.rnn_cell.GRUCell(num_units=self.embeddingSize*2, kernel_initializer=tf.initializers.glorot_normal()),
+        cells = [tf.nn.rnn_cell.GRUCell(num_units=self.embeddingSize+1, kernel_initializer=tf.initializers.glorot_normal()),
                  tf.nn.rnn_cell.GRUCell(num_units=self.embeddingSize, kernel_initializer=tf.initializers.glorot_normal()),
                  tf.nn.rnn_cell.GRUCell(num_units=self.vocabSize+1, activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.glorot_normal())]
             
@@ -229,7 +230,7 @@ class CustomNeuralNetwork(object):
         # add the input encoding to the initial state of the first layer RNN
         self.decoder_initial_state = self.decoder_cell.zero_state(self.batchSize, tf.float32)
         
-        self.decoder_initial_state = (self.decoder_initial_state[0] + tf.concat((self._loc_utt_combined_input_encoding, self.db_match_val_fwbw_encoding), axis=1),
+        self.decoder_initial_state = (self.decoder_initial_state[0] + tf.concat((self._loc_utt_combined_input_encoding, self.db_match_sum), axis=1), #tf.concat((self._loc_utt_combined_input_encoding, self.db_match_val_fwbw_encoding), axis=1),
                                       self.decoder_initial_state[1], 
                                       self.decoder_initial_state[2]
                                       )
@@ -256,7 +257,7 @@ class CustomNeuralNetwork(object):
         
         
         self._db_read_weight_layer = tf.layers.Dense(1, activation=tf.nn.leaky_relu, use_bias=True, kernel_initializer=tf.initializers.he_normal())
-        self._gen_weight_layer = tf.layers.Dense(1, activation=tf.nn.sigmoid, use_bias=True, kernel_initializer=tf.initializers.he_normal())
+        #self._gen_weight_layer = tf.layers.Dense(1, activation=tf.nn.sigmoid, use_bias=True, kernel_initializer=tf.initializers.he_normal())
         
         
 
@@ -287,7 +288,7 @@ class CustomNeuralNetwork(object):
         #
         # setup the training function
         #
-        opt = tf.train.AdamOptimizer(learning_rate=1e-4)
+        opt = tf.train.AdamOptimizer(learning_rate=5e-4)
         #opt = tf.train.GradientDescentOptimizer(learning_rate=1e-2)
         
         
@@ -454,9 +455,9 @@ class CustomNeuralNetwork(object):
             
             
             db_read_weights = []
-            gen_weights = []
+            #gen_weights = []
             #copy_weights = []
-            #gen_weights = tf.zeros((self.batchSize, self.outputSeqLen), tf.float32)
+            gen_weights = tf.zeros((self.batchSize, self.outputSeqLen), tf.float32)
             copy_weights = tf.zeros((self.batchSize, self.outputSeqLen), tf.float32)
             
             db_read_weight = tf.zeros((self.batchSize, 1), tf.float32)
@@ -486,7 +487,7 @@ class CustomNeuralNetwork(object):
                 
                 
                 db_read_weight = self._db_read_weight_layer(tf.concat((tf.concat(state, axis=1), db_read_weight), axis=1))
-                gen_weight = self._gen_weight_layer(tf.concat((tf.concat(state, axis=1), db_read_weight), axis=1))
+                #gen_weight = self._gen_weight_layer(tf.concat((tf.concat(state, axis=1), db_read_weight), axis=1))
                 
                 
                 
@@ -509,7 +510,7 @@ class CustomNeuralNetwork(object):
                 
                 
                 
-                gen_score = tf.expand_dims(gen_weight, 2) * gen_score
+                #gen_score = tf.expand_dims(gen_weight, 2) * gen_score
                 
                 
                 
@@ -522,7 +523,7 @@ class CustomNeuralNetwork(object):
                 
                 
                 db_read_weights.append(db_read_weight)
-                gen_weights.append(gen_weight)
+                #gen_weights.append(gen_weight)
                 #copy_weights.append(copy_weight)
                 
             
@@ -533,7 +534,7 @@ class CustomNeuralNetwork(object):
             predicted_output_sequences = tf.concat(predicted_output_sequences, 1)
             
             db_read_weights = tf.concat(db_read_weights, 1)
-            gen_weights = tf.concat(gen_weights, 1)
+            #gen_weights = tf.concat(gen_weights, 1)
             #copy_weights = tf.concat(copy_weights, 1)
                 
             
