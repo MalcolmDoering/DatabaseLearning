@@ -164,6 +164,7 @@ class CustomNeuralNetwork(object):
             # DB encoder
             self._db_entries = tf.placeholder(tf.float32, [self.batchSize, self.numUniqueCams, self.numUniqueAtts, self.dbSeqLen, self.vocabSize], name='DB_entries')
             
+            
             # multiply by the match vectors and sum so that only the matching value remains
             self.db_match_val = tf.einsum("bcalv,ba->bclv", self._db_entries, self.attMatch)
             self.db_match_val = tf.einsum("bclv,bc->blv", self.db_match_val, self.camMatch)
@@ -258,10 +259,10 @@ class CustomNeuralNetwork(object):
         # for training
         self._loss, self._train_predicted_output_sequences, self._train_copy_scores, self._train_gen_scores = self.build_decoder(teacherForcing=True, scopeName="decoder_train")
         
-        #self._loss = tf.check_numerics(self._loss, "_loss")
+        #self._loss = tf.check_numerics(self._loss, "_loss")                                                                                                                                                                  
         
         # for testing
-        self._test_loss, self._test_predicted_output_sequences, self._test_copy_scores, self._test_gen_scores = self.build_decoder(teacherForcing=False, scopeName="decoder_test")
+        self._test_loss, self._test_predicted_output_sequences, self._test_copy_scores, self._test_gen_scores = self.build_decoder(teacherForcing=True, scopeName="decoder_test")
         
         
         # add the loss from the location predictions
@@ -322,12 +323,11 @@ class CustomNeuralNetwork(object):
                 
                 if teacherForcing:
                     # if using teacher forcing
+                    #bernoulliSample = tf.to_float(tf.distributions.Bernoulli(probs=self._teacher_forcing_prob).sample())
+                    #output = tf.math.scalar_mul(bernoulliSample, self.decoder_inputs_one_hot[:, i, :]) + tf.math.scalar_mul((1.0-bernoulliSample), output)
+                    #output, state, copy_score, gen_score = self.copynet_cell(output, state)
                     
-                    bernoulliSample = tf.to_float(tf.distributions.Bernoulli(probs=self._teacher_forcing_prob).sample())
-                    
-                    output = tf.math.scalar_mul(bernoulliSample, self.decoder_inputs_one_hot[:, i, :]) + tf.math.scalar_mul((1.0-bernoulliSample), output)
-                    
-                    output, state, copy_score, gen_score = self.copynet_cell(output, state)
+                    output, state, copy_score, gen_score = self.copynet_cell(self.decoder_inputs_one_hot[:, i, :], state)
                     
                 else:
                     # if not using teacher forcing
@@ -390,14 +390,15 @@ class CustomNeuralNetwork(object):
         return loss
     
     
-    def predict(self, inputUtts, inputCustLocs, databases, groundTruthOutputs, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts):
+    def predict(self, inputUtts, inputCustLocs, databases, groundTruthOutputs, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, teacherForcingProb=1.0):
         feedDict = {self._inputs: inputUtts, 
                     self._location_inputs: inputCustLocs, 
                     self._db_entries: databases, 
                     self._ground_truth_outputs: groundTruthOutputs,
                     self._ground_truth_location_outputs: groundTruthOutputShkpLocs,
                     self._gtDbCamIndices: gtDbCams, 
-                    self._gtDbAttIndices: gtDbAtts}
+                    self._gtDbAttIndices: gtDbAtts,
+                    self._teacher_forcing_prob: teacherForcingProb}
         
         predUtts, predShkpLocs, copyScores, genScores, camMatchArgMax, attMatchArgMax, camMatch, attMatch = self._sess.run([self._pred_utt_op,
                                                                                                                             self._pred_shkp_loc_op,

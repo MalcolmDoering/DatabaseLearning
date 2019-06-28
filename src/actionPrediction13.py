@@ -29,7 +29,7 @@ import tools
 from collections import OrderedDict
 
 
-DEBUG = True
+DEBUG = False
 
 
 eosChar = "#"
@@ -44,7 +44,7 @@ batchSize = 50
 embeddingSize = 30
 numEpochs = 10000
 evalEvery = 50
-randomizeTrainingBatches = True
+randomizeTrainingBatches = False
 
 sessionDir = tools.create_session_dir("actionPrediction13_dbl")
 
@@ -1338,16 +1338,16 @@ if __name__ == "__main__":
     attTemp = 0
     
     
-    run(0, 0, camTemp, attTemp, 0.7, sessionDir)
+    #run(0, 0, camTemp, attTemp, 1.0, sessionDir)
     
-    """
+    
     for gpu in range(8):
         
         seed = gpu
                 
-        process = Process(target=run, args=[gpu, seed, camTemp, attTemp, sessionDir])
+        process = Process(target=run, args=[gpu, seed, camTemp, attTemp, 1.0, sessionDir])
         process.start()
-    """
+    
     
     
     #gpu = 0
