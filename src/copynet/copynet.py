@@ -242,6 +242,8 @@ class CopyNetWrapper3(tf.nn.rnn_cell.RNNCell):
         rou = mask * prob_c
         selective_read = tf.einsum("ijk,ij->ik", self._encoder_states, rou)
         
+        
+        
         # setup inputs
         #selective_read = tf.zeros(selective_read.shape) # for testing without copy score
         inputs = tf.concat([inputs, selective_read], 1)
@@ -259,6 +261,10 @@ class CopyNetWrapper3(tf.nn.rnn_cell.RNNCell):
         #encoder_input_mask = tf.one_hot(self._encoder_input_ids, self._vocab_size)
         #expanded_copy_score = tf.einsum("ijn,ij->ij", encoder_input_mask, copy_score)
         expanded_copy_score = tf.einsum("ijn,ij->ij", self._encoder_input_ids, copy_score)
+        
+        
+        #self._normalized_encoder_input_ids = 
+        
         
         
         prob_g = generate_score

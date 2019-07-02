@@ -29,7 +29,7 @@ import tools
 from collections import OrderedDict
 
 
-DEBUG = False
+DEBUG = True
 
 
 eosChar = "#"
@@ -1337,35 +1337,38 @@ if __name__ == "__main__":
     camTemp = 0
     attTemp = 0
     
+    tfp = 0.3
     
-    #run(0, 0, camTemp, attTemp, 1.0, sessionDir)
+    run(0, 0, camTemp, attTemp, tfp, sessionDir)
     
-    
+    """
     for gpu in range(8):
         
         seed = gpu
                 
-        process = Process(target=run, args=[gpu, seed, camTemp, attTemp, 1.0, sessionDir])
+        process = Process(target=run, args=[gpu, seed, camTemp, attTemp, tfp, sessionDir])
         process.start()
-    
+    """
     
     
     #gpu = 0
-    """
+    
     processes = []
     
-    #for camTemp in [2, 2.5, 3]:    
-    #    for attTemp in [2, 3, 4, 5, 6]:
-     
-    for tfp in [0.7, 0.8, 0.9, 0.3]:
-        for gpu in range(8):
-            process = Process(target=run, args=[gpu, gpu, camTemp, attTemp, tfp, sessionDir])
-            process.start()
-            processes.append(process)
+    #for tfp in [0.7, 0.8, 0.9, 0.3]:
+    
+    for camTemp in [2, 2.5, 3]:    
+        for attTemp in [2, 3, 4, 5, 6]:
+         
+            for gpu in range(8):
+                process = Process(target=run, args=[gpu, gpu, camTemp, attTemp, tfp, sessionDir])
+                process.start()
+                processes.append(process)
+            
+            for process in processes:
+                process.join()
         
-        for process in processes:
-            process.join()
-    """
+    
      
     
     

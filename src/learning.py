@@ -125,11 +125,11 @@ class CustomNeuralNetwork(object):
             # find the best matching camera and attribute from the database
             
             # use only softmax for addressing
-            #cam1 = tf.layers.dense(self._loc_utt_combined_input_encoding_2, self.numUniqueCams, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
-            #att1 = tf.layers.dense(self._loc_utt_combined_input_encoding_2, self.numUniqueAtts, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
+            cam1 = tf.layers.dense(self._loc_utt_combined_input_encoding_2, self.numUniqueCams, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
+            att1 = tf.layers.dense(self._loc_utt_combined_input_encoding_2, self.numUniqueAtts, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
             
-            #self.camMatch = tf.nn.softmax(cam1)
-            #self.attMatch = tf.nn.softmax(att1)
+            self.camMatch = tf.nn.softmax(cam1)
+            self.attMatch = tf.nn.softmax(att1)
             
             
             # gumbel softmax used till 20190525
@@ -152,8 +152,8 @@ class CustomNeuralNetwork(object):
             
             
             # provide the ground truth DB entries
-            self.camMatch = self._gtDbCams
-            self.attMatch = self._gtDbAtts
+            #self.camMatch = self._gtDbCams
+            #self.attMatch = self._gtDbAtts
             
             
             self.camMatchIndex = tf.argmax(self.camMatch, axis=1)
@@ -262,7 +262,7 @@ class CustomNeuralNetwork(object):
         #self._loss = tf.check_numerics(self._loss, "_loss")                                                                                                                                                                  
         
         # for testing
-        self._test_loss, self._test_predicted_output_sequences, self._test_copy_scores, self._test_gen_scores = self.build_decoder(teacherForcing=True, scopeName="decoder_test")
+        self._test_loss, self._test_predicted_output_sequences, self._test_copy_scores, self._test_gen_scores = self.build_decoder(teacherForcing=False, scopeName="decoder_test")
         
         
         # add the loss from the location predictions
@@ -323,11 +323,11 @@ class CustomNeuralNetwork(object):
                 
                 if teacherForcing:
                     # if using teacher forcing
-                    #bernoulliSample = tf.to_float(tf.distributions.Bernoulli(probs=self._teacher_forcing_prob).sample())
-                    #output = tf.math.scalar_mul(bernoulliSample, self.decoder_inputs_one_hot[:, i, :]) + tf.math.scalar_mul((1.0-bernoulliSample), output)
-                    #output, state, copy_score, gen_score = self.copynet_cell(output, state)
+                    bernoulliSample = tf.to_float(tf.distributions.Bernoulli(probs=self._teacher_forcing_prob).sample())
+                    output = tf.math.scalar_mul(bernoulliSample, self.decoder_inputs_one_hot[:, i, :]) + tf.math.scalar_mul((1.0-bernoulliSample), output)
+                    output, state, copy_score, gen_score = self.copynet_cell(output, state)
                     
-                    output, state, copy_score, gen_score = self.copynet_cell(self.decoder_inputs_one_hot[:, i, :], state)
+                    #output, state, copy_score, gen_score = self.copynet_cell(self.decoder_inputs_one_hot[:, i, :], state)
                     
                 else:
                     # if not using teacher forcing
