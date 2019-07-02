@@ -210,7 +210,7 @@ class CopyNetWrapper3(tf.nn.rnn_cell.RNNCell):
         
     
         
-    def __call__(self, inputs, state, scope=None):
+    def __call_old__(self, inputs, state, scope=None):
         
         if not isinstance(state, CopyNetWrapperState):
             raise TypeError("Expected state to be instance of CopyNetWrapperState. "
@@ -291,6 +291,82 @@ class CopyNetWrapper3(tf.nn.rnn_cell.RNNCell):
         state = CopyNetWrapperState(cell_state=cell_state, last_ids=last_ids, prob_c=prob_c)
         
         return outputs, state, prob_c_one_hot, prob_g_total
+    
+    
+    
+    def __call__(self, inputs, state, scope=None):
+        
+        if not isinstance(state, CopyNetWrapperState):
+            raise TypeError("Expected state to be instance of CopyNetWrapperState. "
+                      "Received type %s instead."  % type(state))
+        
+        last_ids = state.last_ids # why not replace this with argmax of the current input??? This would be necessary for teacher forcing
+        prob_c = state.prob_c
+        cell_state = state.cell_state
+        
+        
+        #
+        # compute selective read
+        #
+        
+        # find places in the input where the previous char is the same as the char previously output by copynet
+        last_ids_one_hot = tf.one_hot(last_ids, self._vocab_size)
+        
+        mask1 = tf.expand_dims(last_ids_one_hot, 1) * self._encoder_input_ids
+        mask2 = tf.reduce_mean(mask1, axis=2)
+        
+        rou = mask2 * prob_c
+        selective_read = tf.einsum("ijk,ij->ik", self._encoder_states, rou)
+        
+        
+        #
+        # get the next decoder RNN state and output
+        #
+        inputs = tf.concat([inputs, selective_read], 1)
+        outputs, cell_state = self._cell(inputs, cell_state, scope)
+        
+        
+        #
+        # compute the generate score
+        #
+        generate_score = self._projection(outputs)
+        prob_g = generate_score
+        
+        
+        #        
+        # compute the copy score
+        #
+        
+        # multiply copy weights by the hidden state in M (DB entry)
+        hWc = tf.einsum("ijk,km->ijm", self._encoder_states, self._copy_weight)
+        
+        # tanh
+        tanh_hWc = tf.nn.tanh(hWc)
+        
+        # multiply by the current state of the decoder RNN
+        # this give the copy score for each step in M (DB entry)
+        copy_score = tf.einsum("ijm,im->ij", tanh_hWc, outputs)
+        
+        copy_score_per_char_per_DB_step = tf.expand_dims(copy_score, axis=2) * self._encoder_input_ids
+        
+        prob_c = tf.reduce_sum(copy_score_per_char_per_DB_step, axis=1)
+        
+        char_counts = tf.reduce_sum(self._encoder_input_ids, axis=1) # count how many times each char occurs in M (DB entry)
+        prob_c = prob_c / (char_counts + 1e-8) # optional step, divide the copy scores for each char by the char count so that chars don't get a higher copy score just because they occur more frequently
+        
+        
+        
+        #
+        # combine the copy and generate scores to compute the final output
+        #
+        outputs = prob_c + prob_g
+        
+        last_ids = tf.argmax(outputs, axis=-1, output_type=tf.int32)
+        
+        state = CopyNetWrapperState(cell_state=cell_state, last_ids=last_ids, prob_c=copy_score)
+        
+        
+        return outputs, state, prob_c, prob_g
     
     
     

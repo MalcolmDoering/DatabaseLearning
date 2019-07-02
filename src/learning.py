@@ -169,8 +169,10 @@ class CustomNeuralNetwork(object):
             self.db_match_val = tf.einsum("bcalv,ba->bclv", self._db_entries, self.attMatch)
             self.db_match_val = tf.einsum("bclv,bc->blv", self.db_match_val, self.camMatch)
             
-                        # TODO would it make sense to do softmax over the chars in db_match_val???
-            #self.db_match_val = tf.nn.softmax(self.db_match_val, axis=2)
+            # normalize each char vec so that it sums to 1
+            # problem: with 0 padding we get NaNs
+            #self.db_match_val = self.db_match_val / tf.reduce_sum(self.db_match_val, axis=2, keepdims=True)
+            
             
             self.db_match_val_charindices = tf.argmax(self.db_match_val, axis=2)
             
@@ -275,7 +277,7 @@ class CustomNeuralNetwork(object):
         #
         # setup the training function
         #
-        opt = tf.train.AdamOptimizer(learning_rate=1e-4)
+        opt = tf.train.AdamOptimizer(learning_rate=1e-3)
         #opt = tf.train.GradientDescentOptimizer(learning_rate=1e-2)
         
         
@@ -356,7 +358,10 @@ class CustomNeuralNetwork(object):
     
     
     def initialize(self):
-        self._sess = tf.Session()
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
+        
+        self._sess = tf.Session(config=config)
         self._sess.run(self._init_op)
         
     

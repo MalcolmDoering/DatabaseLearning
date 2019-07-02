@@ -40,7 +40,7 @@ cameras = ["CAMERA_1", "CAMERA_2", "CAMERA_3"]
 
 
 numTrainDbs = 10
-batchSize = 50
+batchSize = 32
 embeddingSize = 30
 numEpochs = 10000
 evalEvery = 50
@@ -410,6 +410,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     
     
     dataDirectory = tools.dataDir+"/2019-05-21_14-11-57_advancedSimulator8"
+    #dataDirectory = tools.dataDir+"/handmade_0"
     
     filenames = os.listdir(dataDirectory)
     filenames.sort()
@@ -730,7 +731,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     
     
     camerasOfInterest = ["CAMERA_1", "CAMERA_2", "CAMERA_3"]
-    featuresOfInterest = ["price"] #, "camera_type"]
+    featuresOfInterest = ["price"]#, "camera_type", "color", "weight", "preset_modes", "effects", "resolution", "optical_zoom", "settings", "autofocus_points", "sensor_size", "ISO", "long_exposure"]
     
     #
     interestingTrainInstances = []
@@ -1339,7 +1340,7 @@ if __name__ == "__main__":
     
     tfp = 0.3
     
-    run(0, 0, camTemp, attTemp, tfp, sessionDir)
+    run(0, 4, camTemp, attTemp, tfp, sessionDir)
     
     """
     for gpu in range(8):
@@ -1352,7 +1353,7 @@ if __name__ == "__main__":
     
     
     #gpu = 0
-    
+    """
     processes = []
     
     #for tfp in [0.7, 0.8, 0.9, 0.3]:
@@ -1367,7 +1368,7 @@ if __name__ == "__main__":
             
             for process in processes:
                 process.join()
-        
+    """ 
     
      
     
