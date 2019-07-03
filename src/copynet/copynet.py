@@ -351,8 +351,8 @@ class CopyNetWrapper3(tf.nn.rnn_cell.RNNCell):
         
         prob_c = tf.reduce_sum(copy_score_per_char_per_DB_step, axis=1)
         
-        char_counts = tf.reduce_sum(self._encoder_input_ids, axis=1) # count how many times each char occurs in M (DB entry)
-        prob_c = prob_c / (char_counts + 1e-8) # optional step, divide the copy scores for each char by the char count so that chars don't get a higher copy score just because they occur more frequently
+        #char_counts = tf.reduce_sum(self._encoder_input_ids, axis=1) # count how many times each char occurs in M (DB entry)
+        #prob_c = prob_c / (char_counts + 1e-8) # optional step, divide the copy scores for each char by the char count so that chars don't get a higher copy score just because they occur more frequently
         
         
         

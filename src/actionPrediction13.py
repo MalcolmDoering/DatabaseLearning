@@ -29,7 +29,7 @@ import tools
 from collections import OrderedDict
 
 
-DEBUG = True
+DEBUG = False
 
 
 eosChar = "#"
@@ -1340,16 +1340,16 @@ if __name__ == "__main__":
     
     tfp = 0.3
     
-    run(0, 4, camTemp, attTemp, tfp, sessionDir)
+    #run(0, 4, camTemp, attTemp, tfp, sessionDir)
     
-    """
+    
     for gpu in range(8):
         
         seed = gpu
                 
         process = Process(target=run, args=[gpu, seed, camTemp, attTemp, tfp, sessionDir])
         process.start()
-    """
+    
     
     
     #gpu = 0
