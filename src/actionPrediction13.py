@@ -119,7 +119,7 @@ def compute_db_address_match(gtCamIndex, gtAttrIndex, predCamIndex, predAttIndex
 
 
 
-def vectorize_sentences(sentences, charToIndex, maxSentLen, padChar=None, useEosChar=False):
+def vectorize_sentences(sentences, charToIndex, maxSentLen, padChar=None, useEosChar=False, padPre=False):
     
     maxSentLen += 1 # for the EOS char
     
@@ -128,29 +128,57 @@ def vectorize_sentences(sentences, charToIndex, maxSentLen, padChar=None, useEos
     
     for i in range(len(sentences)):
         
-        sentVec = np.zeros(shape=(maxSentLen, len(charToIndex)))
-        sentCharIndexList = []
+        # vectorize the main portion of the sentence
+        sentCharVecs = []
+        sentCharIndexList = []           
         
-        for j in range(maxSentLen):
+        for j in range(len(sentences[i])):
             
-            # vectorize the chars in the sentence
-            if j < len(sentences[i]):
-                sentVec[j, charToIndex[sentences[i][j]]] = 1.0
-                sentCharIndexList.append(charToIndex[sentences[i][j]])
+            charVec = np.zeros(len(charToIndex))
+            charVec[charToIndex[sentences[i][j]]] = 1.0
+            charIndex = charToIndex[sentences[i][j]]
             
-            # add the EOS char
-            elif useEosChar and (j == len(sentences[i])):
-                sentVec[j, charToIndex[eosChar]] = 1.0
-                sentCharIndexList.append(charToIndex[eosChar])        
+            sentCharVecs.append(charVec)
+            sentCharIndexList.append(charIndex)
+        
+        
+        # add EoS char
+        if useEosChar:
             
-            # pad the rest of the sequence
-            elif padChar != None:
-                sentVec[j, charToIndex[padChar]] = 1.0 # pad the end of sentences with spaces, etc.
-                sentCharIndexList.append(charToIndex[padChar])
+            charVec = np.zeros(len(charToIndex))
+            charVec[charToIndex[eosChar]] = 1.0
+            charIndex = charToIndex[eosChar]
             
-            else:
-                sentCharIndexList.append(-1)
-            
+            sentCharVecs.append(charVec)
+            sentCharIndexList.append(charIndex)
+        
+        
+        # add padding
+        padLen = maxSentLen - len(sentCharVecs)
+        
+        if padChar == None:
+            padCharVec = np.zeros(len(charToIndex))
+            padCharIndex = -1
+        
+        else:
+            padCharVec = np.zeros(len(charToIndex))
+            padCharVec[charToIndex[padChar]] = 1.0
+            padCharIndex = charToIndex[padChar]
+        
+        padCharVecs = [padCharVec] * padLen
+        padCharIndexList = [padCharIndex] * padLen
+        
+        
+        if padPre:
+            sentCharVecs = padCharVecs + sentCharVecs
+            sentCharIndexList = padCharIndexList + sentCharIndexList
+        
+        else:
+            sentCharVecs = sentCharVecs + padCharVecs
+            sentCharIndexList = sentCharIndexList + padCharIndexList
+        
+        
+        sentVec = np.vstack(sentCharVecs)
         
         
         sentVecs.append(sentVec)
@@ -167,7 +195,7 @@ def vectorize_databases(dbStrings, charToIndex, maxDbValLen):
     dbIndexLists = []
     
     for row in dbStrings:
-        valVecs, valCharIndexLists = vectorize_sentences(row, charToIndex, maxDbValLen, padChar=None, useEosChar=False)
+        valVecs, valCharIndexLists = vectorize_sentences(row, charToIndex, maxDbValLen, padChar=None, useEosChar=False, padPre=True)
         
         dbVectors.append(valVecs)
         dbIndexLists.append(valCharIndexLists)
@@ -592,7 +620,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     inputIndexLists = []
     
     for inStrs in inputStrings:
-        _, inIndLst = vectorize_sentences(inStrs, charToIndex, maxInputLen, padChar=None, useEosChar=False)
+        _, inIndLst = vectorize_sentences(inStrs, charToIndex, maxInputLen, padChar=None, useEosChar=False, padPre=False)
         inputIndexLists.append(inIndLst)
     
     
@@ -600,7 +628,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     outputIndexLists = []
     
     for outStrs in outputStrings:
-        _, outIndLst = vectorize_sentences(outStrs, charToIndex, maxOutputLen, padChar=None, useEosChar=True)
+        _, outIndLst = vectorize_sentences(outStrs, charToIndex, maxOutputLen, padChar=None, useEosChar=True, padPre=True)
         outputIndexLists.append(outIndLst)
     
     
@@ -1289,14 +1317,14 @@ if __name__ == "__main__":
     
     run(0, 4, camTemp, attTemp, tfp, sessionDir)
     
-    """
+    
     for gpu in range(8):
         
         seed = gpu
                 
         process = Process(target=run, args=[gpu, seed, camTemp, attTemp, tfp, sessionDir])
         process.start()
-    """
+    
     
     
     #gpu = 0
