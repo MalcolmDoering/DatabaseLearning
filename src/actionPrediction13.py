@@ -195,7 +195,7 @@ def vectorize_databases(dbStrings, charToIndex, maxDbValLen):
     dbIndexLists = []
     
     for row in dbStrings:
-        valVecs, valCharIndexLists = vectorize_sentences(row, charToIndex, maxDbValLen, padChar=None, useEosChar=False, padPre=True)
+        valVecs, valCharIndexLists = vectorize_sentences(row, charToIndex, maxDbValLen, padChar=None, useEosChar=False, padPre=False)
         
         dbVectors.append(valVecs)
         dbIndexLists.append(valCharIndexLists)
@@ -620,7 +620,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     inputIndexLists = []
     
     for inStrs in inputStrings:
-        _, inIndLst = vectorize_sentences(inStrs, charToIndex, maxInputLen, padChar=None, useEosChar=False, padPre=False)
+        _, inIndLst = vectorize_sentences(inStrs, charToIndex, maxInputLen, padChar=None, useEosChar=False, padPre=True)
         inputIndexLists.append(inIndLst)
     
     
@@ -628,7 +628,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     outputIndexLists = []
     
     for outStrs in outputStrings:
-        _, outIndLst = vectorize_sentences(outStrs, charToIndex, maxOutputLen, padChar=None, useEosChar=True, padPre=True)
+        _, outIndLst = vectorize_sentences(outStrs, charToIndex, maxOutputLen, padChar=None, useEosChar=True, padPre=False)
         outputIndexLists.append(outIndLst)
     
     
