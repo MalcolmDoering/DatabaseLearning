@@ -65,6 +65,9 @@ class CustomNeuralNetwork(object):
         
         
         
+        self._input_one_hot = tf.random.normal(tf.shape(self._input_one_hot), mean=0, stddev=0.01)
+        
+        
         with tf.variable_scope("input_encoder_1"):
             # input encoder for the initial state of the copynet
             
@@ -164,6 +167,8 @@ class CustomNeuralNetwork(object):
             # DB encoder
             self._db_entries = tf.placeholder(tf.float32, [self.batchSize, self.numUniqueCams, self.numUniqueAtts, self.dbSeqLen, self.vocabSize], name='DB_entries')
             
+            self._db_entries = tf.random.normal(tf.shape(self._db_entries), mean=0, stddev=0.01)
+            
             
             # multiply by the match vectors and sum so that only the matching value remains
             self.db_match_val = tf.einsum("bcalv,ba->bclv", self._db_entries, self.attMatch)
@@ -220,7 +225,7 @@ class CustomNeuralNetwork(object):
         
         
         cells = [tf.nn.rnn_cell.GRUCell(num_units=self.embeddingSize+1, kernel_initializer=tf.initializers.glorot_normal()),
-                 tf.nn.rnn_cell.GRUCell(num_units=self.embeddingSize, kernel_initializer=tf.initializers.glorot_normal()),
+        #         tf.nn.rnn_cell.GRUCell(num_units=self.embeddingSize, kernel_initializer=tf.initializers.glorot_normal()),
                  tf.nn.rnn_cell.GRUCell(num_units=self.vocabSize+1, activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.glorot_normal())]
             
         self.decoder_cell = tf.contrib.rnn.MultiRNNCell(cells)
@@ -232,7 +237,7 @@ class CustomNeuralNetwork(object):
         
         self.decoder_initial_state = (self.decoder_initial_state[0] + tf.concat((self._loc_utt_combined_input_encoding, self.db_match_sum), axis=1), #tf.concat((self._loc_utt_combined_input_encoding, self.db_match_val_fwbw_encoding), axis=1),
                                       self.decoder_initial_state[1], 
-                                      self.decoder_initial_state[2]
+        #                              self.decoder_initial_state[2]
                                       )
         
         
@@ -262,10 +267,15 @@ class CustomNeuralNetwork(object):
         
 
         # append start char on to beginning of outputs so they can be used for teacher forcing - i.e. as inputs to the copynet decoder
-        after_slice = tf.strided_slice(self._ground_truth_outputs, [0, 0], [self.batchSize, -1], [1, 1]) # slice of the last char of each output sequence (is this necessary?)
+        #after_slice = tf.strided_slice(self._ground_truth_outputs, [0, 0], [self.batchSize, -1], [1, 1]) # slice of the last char of each output sequence (is this necessary?)
+        after_slice, _ = tf.split(self._ground_truth_outputs, [self.outputSeqLen-1, 1], axis=1) # slice of the last char of each output sequence
+
         decoder_inputs = tf.concat( [tf.fill([self.batchSize, 1], charToIndex[goChar]), after_slice], 1) # concatenate on a go char onto the start of each output sequence
         
         self.decoder_inputs_one_hot = tf.one_hot(decoder_inputs, self.vocabSize)
+        
+        self.decoder_inputs_one_hot = tf.random.normal(tf.shape(self.decoder_inputs_one_hot), mean=0, stddev=0.01)
+        
         
         # rollout the decoder two times - once for use with teacher forcing (training) and once without (testing)
         self._teacher_forcing_prob = tf.placeholder(tf.float32, shape=(), name='teacher_forcing_prob')
@@ -288,8 +298,8 @@ class CustomNeuralNetwork(object):
         #
         # setup the training function
         #
-        opt = tf.train.AdamOptimizer(learning_rate=5e-4)
-        #opt = tf.train.GradientDescentOptimizer(learning_rate=1e-2)
+        opt = tf.train.AdamOptimizer(learning_rate=1e-3)
+        #opt = tf.train.GradientDescentOptimizer(learning_rate=1e-3)
         
         
         gradients = opt.compute_gradients(self._loss)
@@ -565,7 +575,10 @@ class CustomNeuralNetwork(object):
     
     
     def initialize(self):
-        self._sess = tf.Session()
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
+        
+        self._sess = tf.Session(config=config)
         self._sess.run(self._init_op)
         
     
