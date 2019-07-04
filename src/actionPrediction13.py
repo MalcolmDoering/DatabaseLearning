@@ -29,7 +29,7 @@ import tools
 from collections import OrderedDict
 
 
-DEBUG = False
+DEBUG = True
 
 
 eosChar = "#"
@@ -409,8 +409,10 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     print("loading data...", flush=True, file=sessionTerminalOutputStream)
     
     
-    dataDirectory = tools.dataDir+"/2019-05-21_14-11-57_advancedSimulator8"
+    #dataDirectory = tools.dataDir+"/2019-05-21_14-11-57_advancedSimulator8" # only one possible sentence per customer and shopkeeper action
     #dataDirectory = tools.dataDir+"/handmade_0"
+    dataDirectory = tools.dataDir+"/2019-07-03_15-16-05_advancedSimulator8" # many possible sentences for customer actions (from h-h dataset)
+    
     
     filenames = os.listdir(dataDirectory)
     filenames.sort()
@@ -614,7 +616,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     # split into training and testing sets
     #
     
-    def prepare_split(startDbIndex, stopDbIndex):
+    def prepare_split(startDbIndex, stopDbIndex, splitName):
         """input the which DB to start with and which DB to end with + 1"""
         
         splitInputIndexLists = []
@@ -624,6 +626,10 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
         splitGtDatabasebCameras = []
         splitGtDatabaseAttributes = []
         
+        splitInteractions = []
+        
+        uniqueId = 0
+        
         
         for i in range(startDbIndex, stopDbIndex):
             splitInputIndexLists += inputIndexLists[i]
@@ -632,8 +638,13 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
             
             splitGtDatabasebCameras += gtDatabaseCameras[i]
             splitGtDatabaseAttributes += gtDatabaseAttributes[i]
-        
             
+            for j in range(len(interactions[i])):
+                interactions[i][j]["SET"] = splitName 
+                interactions[i][j]["ID"] = uniqueId
+                uniqueId += 1
+            
+            splitInteractions += interactions[i]
         
         
         splitInputCustomerLocations = np.concatenate(inputCustomerLocationVectors[startDbIndex:stopDbIndex])
@@ -645,15 +656,20 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
             for j in range(datasetSizes[i]):
                 splitDbVectors.append(dbVectors[i])
         
-        return splitInputIndexLists, splitOutputIndexLists, splitOutputStrings, splitInputCustomerLocations, splitOutputShopkeeperLocations, splitDbVectors, splitGtDatabasebCameras, splitGtDatabaseAttributes
+        
+        
+        
+        
+        
+        return splitInteractions, splitInputIndexLists, splitOutputIndexLists, splitOutputStrings, splitInputCustomerLocations, splitOutputShopkeeperLocations, splitDbVectors, splitGtDatabasebCameras, splitGtDatabaseAttributes
         
     
     
     # training
-    trainInputIndexLists, trainOutputIndexLists, trainOutputStrings, trainInputCustomerLocations, trainOutputShopkeeperLocations, trainDbVectors, trainGtDatabasebCameras, trainGtDatabaseAttributes = prepare_split(0, numTrainDbs)
+    trainInteractions, trainInputIndexLists, trainOutputIndexLists, trainOutputStrings, trainInputCustomerLocations, trainOutputShopkeeperLocations, trainDbVectors, trainGtDatabasebCameras, trainGtDatabaseAttributes = prepare_split(0, numTrainDbs, "Train")
     
     # testing
-    testInputIndexLists, testOutputIndexLists, testOutputStrings, testInputCustomerLocations, testOutputShopkeeperLocations, testDbVectors, testGtDatabasebCameras, testGtDatabaseAttributes = prepare_split(numTrainDbs, numDatabases)
+    testInteractions, testInputIndexLists, testOutputIndexLists, testOutputStrings, testInputCustomerLocations, testOutputShopkeeperLocations, testDbVectors, testGtDatabasebCameras, testGtDatabaseAttributes = prepare_split(numTrainDbs, numDatabases, "Test")
     
     
     
@@ -734,7 +750,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     featuresOfInterest = ["price"]#, "camera_type", "color", "weight", "preset_modes", "effects", "resolution", "optical_zoom", "settings", "autofocus_points", "sensor_size", "ISO", "long_exposure"]
     
     #
-    interestingTrainInstances = []
+    trainInterestingInstances = []
     
     for f in featuresOfInterest:
         for c in camerasOfInterest:
@@ -745,11 +761,11 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                         
                         # the training data that doesn't fit into one of the batches will not be included, so skip interesting instance that fall in this range
                         if index < trainBatchEndIndices[-1]: 
-                            interestingTrainInstances.append((index, "DB{} {} {} {}".format(databaseIds[i], c, f, databases[i][cameras.index(c)][f])))
+                            trainInterestingInstances.append((index, "DB{} {} {} {}".format(databaseIds[i], c, f, databases[i][cameras.index(c)][f])))
                         break
         
     #
-    interestingTestInstances = []
+    testInterestingInstances = []
     
     for f in featuresOfInterest:
         for c in camerasOfInterest:
@@ -760,7 +776,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                         
                         # same as above
                         if index < testBatchEndIndices[-1]: 
-                            interestingTestInstances.append((index, "DB{} {} {} {}".format(databaseIds[i], c, f, databases[i][cameras.index(c)][f])))
+                            testInterestingInstances.append((index, "DB{} {} {} {}".format(databaseIds[i], c, f, databases[i][cameras.index(c)][f])))
                         break
     
     
@@ -885,6 +901,253 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                          ])
     
     
+    interactionsFieldnames = ["SET",
+                      "ID",
+                      "TRIAL",
+                      "TURN_COUNT",
+                      
+                      "CURRENT_CAMERA_OF_CONVERSATION",
+                      "PREVIOUS_CAMERAS_OF_CONVERSATION",
+                      "PREVIOUS_FEATURES_OF_CONVERSATION",
+                      
+                      "CUSTOMER_ACTION",
+                      "CUSTOMER_LOCATION",
+                      "CUSTOMER_TOPIC",
+                      "CUSTOMER_SPEECH",
+                      
+                      "OUTPUT_SHOPKEEPER_ACTION",
+                      "OUTPUT_SHOPKEEPER_LOCATION",
+                      "SHOPKEEPER_TOPIC",
+                      "SHOPKEEPER_SPEECH",
+                      "SHOPKEEPER_SPEECH_DB_ENTRY_RANGE",
+                      
+                      "PRED_OUTPUT_SHOPKEEPER_LOCATION",
+                      "PRED_SHOPKEEPER_SPEECH",
+                      "PRED_CAM_MATCH",
+                      "PRED_ATT_MATCH"]
+        
+    for c in range(len(cameras)):
+        interactionsFieldnames.append("PRED_CAM_MATCH_SCORE_{}".format(cameras[c]))
+        
+    for a in range(len(dbFieldnames)):
+        interactionsFieldnames.append("PRED_ATT_MATCH_SCORE_{}".format(dbFieldnames[a]))
+    
+    
+    def evaluate_split(splitName, splitBatchEndIndices, indexToChar, splitInterestingInstances,
+                       splitInteractions,
+                       splitInputIndexLists,
+                       splitInputCustomerLocations, 
+                       splitDbVectors, 
+                       splitOutputIndexLists,
+                       splitOutputShopkeeperLocations,
+                       splitGtDatabasebCameras,
+                       splitGtDatabaseAttributes,
+                       splitOutputStrings,
+                       
+                       splitCostAve=None,
+                       splitCostStd=None):
+        
+        
+        
+        
+        if splitCostAve == None:
+            splitCosts = []
+            
+            for i in splitBatchEndIndices:
+                
+                batchSplitCost = learner.train_loss(splitInputIndexLists[i-batchSize:i], 
+                                             splitInputCustomerLocations[i-batchSize:i], 
+                                             splitDbVectors[i-batchSize:i], 
+                                             splitOutputIndexLists[i-batchSize:i],
+                                             splitOutputShopkeeperLocations[i-batchSize:i],
+                                             splitGtDatabasebCameras[i-batchSize:i],
+                                             splitGtDatabaseAttributes[i-batchSize:i],
+                                             0.0)
+                
+                splitCosts.append(batchSplitCost)
+            
+            splitCostAve = np.mean(splitCosts)
+            splitCostStd = np.mean(splitCosts)
+        
+        
+        splitUttPreds = []
+        splitLocPreds = []
+        splitCopyScores = []
+        splitGenScores = []
+        splitCamMatchArgMax = []
+        splitAttMatchArgMax = []
+        splitCamMatch = []
+        splitAttMatch  = []
+        splitGtSents = []
+        splitGtCamIndx = []
+        splitGtAttIndx = []
+        
+        
+        for i in splitBatchEndIndices:
+            
+            batchSplitUttPreds, batchSplitLocPreds, batchSplitCopyScores, batchSplitGenScores, batchSplitCamMatchArgMax, batchSplitAttMatchArgMax, batchSplitCamMatch, batchSplitAttMatch = learner.predict(splitInputIndexLists[i-batchSize:i], 
+                                                                                                                                                                                     splitInputCustomerLocations[i-batchSize:i],
+                                                                                                                                                                                     splitDbVectors[i-batchSize:i], 
+                                                                                                                                                                                     splitOutputIndexLists[i-batchSize:i],
+                                                                                                                                                                                     splitOutputShopkeeperLocations[i-batchSize:i],
+                                                                                                                                                                                     splitGtDatabasebCameras[i-batchSize:i],
+                                                                                                                                                                                     splitGtDatabaseAttributes[i-batchSize:i])
+            
+            splitUttPreds.append(batchSplitUttPreds)
+            splitLocPreds.append(batchSplitLocPreds)
+            splitCopyScores.append(batchSplitCopyScores)
+            splitGenScores.append(batchSplitGenScores)
+            splitCamMatchArgMax.append(batchSplitCamMatchArgMax)
+            splitAttMatchArgMax.append(batchSplitAttMatchArgMax)
+            splitCamMatch.append(batchSplitCamMatch)
+            splitAttMatch.append(batchSplitAttMatch)
+            splitGtSents += splitOutputStrings[i-batchSize:i]
+            splitGtCamIndx += splitGtDatabasebCameras[i-batchSize:i]
+            splitGtAttIndx += splitGtDatabaseAttributes[i-batchSize:i]
+            
+        splitUttPreds = np.concatenate(splitUttPreds)
+        splitLocPreds = np.concatenate(splitLocPreds)
+        splitCopyScores = np.concatenate(splitCopyScores)
+        splitGenScores = np.concatenate(splitGenScores)
+        splitCamMatchArgMax = np.concatenate(splitCamMatchArgMax)
+        splitAttMatchArgMax = np.concatenate(splitAttMatchArgMax)
+        splitCamMatch = np.concatenate(splitCamMatch)
+        splitAttMatch  = np.concatenate(splitAttMatch)
+        
+        splitPredSents = unvectorize_sentences(splitUttPreds, indexToChar)
+        
+        
+        # compute how much of the substring that should be copied from the DB is correct
+        splitSubstrCharMatchAccs = compute_db_substring_match(splitGtSents, splitPredSents, shkpUttToDbEntryRange)
+        
+        # how many 100% correct substrings
+        splitSubstrAllCorr = splitSubstrCharMatchAccs.count(1.0) / len(splitSubstrCharMatchAccs)
+        
+        # average substring correctness
+        splitSubstrAveCorr = np.mean(splitSubstrCharMatchAccs)
+        splitSubstrSdCorr = np.std(splitSubstrCharMatchAccs)
+        
+        print("{} substr all correct {}, ave correctness {} ({})".format(splitName, splitSubstrAllCorr, splitSubstrAveCorr, splitSubstrSdCorr), flush=True, file=sessionTerminalOutputStream)
+        
+        
+        
+        splitCamCorr, splitAttrCorr, splitBothCorr = compute_db_address_match(splitGtCamIndx, splitGtAttIndx, splitCamMatchArgMax, splitAttMatchArgMax)
+        
+        splitCamCorrAve = np.mean(splitCamCorr)
+        splitAttrCorrAve = np.mean(splitAttrCorr)
+        splitBothCorrAve = np.mean(splitBothCorr)
+        
+        print("{} DB addressing correctness: cam. {}, attr. {}, both {}".format(splitName, splitCamCorrAve, splitAttrCorrAve, splitBothCorrAve), flush=True, file=sessionTerminalOutputStream)
+        
+            
+        
+        splitPredSentsColored, splitCopyScoresPred, splitGenScoresPred, splitCopyScoresTrue, splitGenScoresTrue = color_results(splitPredSents, 
+                                                                                                                                splitOutputIndexLists,
+                                                                                                                                splitCopyScores, 
+                                                                                                                                splitGenScores, 
+                                                                                                                                charToIndex)
+        
+        
+        #
+        # output to terminal
+        #
+        print(splitName, e, round(splitCostAve, 3), round(splitCostStd, 3), flush=True, file=sessionTerminalOutputStream)
+            
+        for i in range(len(splitInterestingInstances)):
+            index = splitInterestingInstances[i][0]
+            info = splitInterestingInstances[i][1]
+            
+            print("TRUE:", indexToLocation[np.argmax(splitOutputShopkeeperLocations[index])], splitOutputStrings[index], flush=True, file=sessionTerminalOutputStream)
+            print("PRED:", indexToLocation[splitLocPreds[index]], splitPredSents[index], flush=True, file=sessionTerminalOutputStream)
+            
+            print(np.round(splitCamMatch[index], 4), flush=True, file=sessionTerminalOutputStream)
+            print(np.round(splitAttMatch[index], 4), flush=True, file=sessionTerminalOutputStream)
+            print("best match:", cameras[splitCamMatchArgMax[index]], dbFieldnames[splitAttMatchArgMax[index]], flush=True, file=sessionTerminalOutputStream)
+            print("true match:", info, flush=True, file=sessionTerminalOutputStream)
+            
+            print("", flush=True, file=sessionTerminalOutputStream) 
+            
+        print("", flush=True, file=sessionTerminalOutputStream)
+        
+        
+        
+        #
+        # save all predictions to file
+        #
+        with open(sessionDir+"/{:}_all_outputs.csv".format(e), "a", newline="") as csvfile:
+            
+            writer = csv.DictWriter(csvfile, interactionsFieldnames)
+            writer.writeheader()
+            
+            for i in range(splitBatchEndIndices[-1]):
+                row = splitInteractions[i]
+                
+                # add the important prediction information to the row
+                row["PRED_OUTPUT_SHOPKEEPER_LOCATION"] = indexToLocation[splitLocPreds[i]]
+                row["PRED_SHOPKEEPER_SPEECH"] = splitPredSents[i]
+                
+                
+                row["PRED_CAM_MATCH"] = cameras[splitCamMatchArgMax[i]]
+                row["PRED_ATT_MATCH"] = dbFieldnames[splitAttMatchArgMax[i]]
+                
+                
+                for c in range(len(cameras)):
+                    row["PRED_CAM_MATCH_SCORE_{}".format(cameras[c])] = splitCamMatch[i][c]
+                
+                for a in range(len(dbFieldnames)):
+                    row["PRED_ATT_MATCH_SCORE_{}".format(dbFieldnames[a])] = splitAttMatch[i][a]
+                
+                
+                writer.writerow(row)
+        
+        
+        #
+        # save interesting instances to file
+        #
+        with open(sessionDir+"/{:}_outputs.csv".format(e), "w", newline="") as csvfile:
+            
+            writer = csv.writer(csvfile)
+            
+            
+            writer.writerow([splitName, round(splitCostAve, 3), round(splitCostStd, 3)])
+            
+            for i in range(len(splitInterestingInstances)):
+                index = splitInterestingInstances[i][0]
+                info = splitInterestingInstances[i][1]
+                
+                
+                writer.writerow(["TRUE:"] + 
+                                [indexToLocation[np.argmax(splitOutputShopkeeperLocations[index])]] +
+                                [c for c in splitOutputStrings[index]])
+                
+                writer.writerow(["PRED:"] + 
+                                [indexToLocation[splitLocPreds[index]]] +
+                                [c for c in splitPredSents[index]])
+                
+                writer.writerow(["PRED COPY:"] + [""] + [c for c in splitCopyScoresPred[index]])
+                writer.writerow(["PRED GEN:"] + [""] + [c for c in splitGenScoresPred[index]])
+                
+                writer.writerow(["TRUE COPY:"] + [""] + [c for c in splitCopyScoresTrue[index]])
+                writer.writerow(["TRUE GEN:"] + [""] + [c for c in splitGenScoresTrue[index]])
+                
+                writer.writerow(["CAM MATCH:"] + [np.round(p, 3) for p in splitCamMatch[index]])
+                writer.writerow(["ATT MATCH:"] + [np.round(p, 3) for p in splitAttMatch[index]])
+                
+                writer.writerow(["TOP MATCH:", cameras[splitCamMatchArgMax[index]]+" "+dbFieldnames[splitAttMatchArgMax[index]]])
+                writer.writerow(["TRUE MATCH:", info])
+                
+                writer.writerow([])
+        
+        
+        
+        return splitSubstrAllCorr, splitSubstrAveCorr, splitSubstrSdCorr, splitCamCorrAve, splitAttrCorrAve, splitBothCorrAve
+    
+    
+    
+    
+    
+    
+    
     for e in range(numEpochs):
         
         startTime = time.time()
@@ -933,142 +1196,25 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
             #
             
             # TRAIN
-            
-            trainUttPreds = []
-            trainLocPreds = []
-            trainCopyScores = []
-            trainGenScores = []
-            trainCamMatchArgMax = []
-            trainAttMatchArgMax = []
-            trainCamMatch = []
-            trainAttMatch  = []
-            trainGtSents = []
-            trainGtCamIndx = []
-            trainGtAttIndx = []
-            
-            
-            for i in trainBatchEndIndices:
-                
-                batchTrainUttPreds, batchTrainLocPreds, batchTrainCopyScores, batchTrainGenScores, batchTrainCamMatchArgMax, batchTrainAttMatchArgMax, batchTrainCamMatch, batchTrainAttMatch = learner.predict(trainInputIndexLists[i-batchSize:i], 
-                                                                                                                                                                                         trainInputCustomerLocations[i-batchSize:i],
-                                                                                                                                                                                         trainDbVectors[i-batchSize:i], 
-                                                                                                                                                                                         trainOutputIndexLists[i-batchSize:i],
-                                                                                                                                                                                         trainOutputShopkeeperLocations[i-batchSize:i],
-                                                                                                                                                                                         trainGtDatabasebCameras[i-batchSize:i],
-                                                                                                                                                                                         trainGtDatabaseAttributes[i-batchSize:i])
-                
-                trainUttPreds.append(batchTrainUttPreds)
-                trainLocPreds.append(batchTrainLocPreds)
-                trainCopyScores.append(batchTrainCopyScores)
-                trainGenScores.append(batchTrainGenScores)
-                trainCamMatchArgMax.append(batchTrainCamMatchArgMax)
-                trainAttMatchArgMax.append(batchTrainAttMatchArgMax)
-                trainCamMatch.append(batchTrainCamMatch)
-                trainAttMatch.append(batchTrainAttMatch)
-                trainGtSents += trainOutputStrings[i-batchSize:i]
-                trainGtCamIndx += trainGtDatabasebCameras[i-batchSize:i]
-                trainGtAttIndx += trainGtDatabaseAttributes[i-batchSize:i]
-                
-            trainUttPreds = np.concatenate(trainUttPreds)
-            trainLocPreds = np.concatenate(trainLocPreds)
-            trainCopyScores = np.concatenate(trainCopyScores)
-            trainGenScores = np.concatenate(trainGenScores)
-            trainCamMatchArgMax = np.concatenate(trainCamMatchArgMax)
-            trainAttMatchArgMax = np.concatenate(trainAttMatchArgMax)
-            trainCamMatch = np.concatenate(trainCamMatch)
-            trainAttMatch  = np.concatenate(trainAttMatch)
-            
-            trainPredSents = unvectorize_sentences(trainUttPreds, indexToChar)
-            
-            
-            # compute how much of the substring that should be copied from the DB is correct
-            trainSubstrCharMatchAccs = compute_db_substring_match(trainGtSents, trainPredSents, shkpUttToDbEntryRange)
-            
-            # how many 100% correct substrings
-            trainSubstrAllCorr = trainSubstrCharMatchAccs.count(1.0) / len(trainSubstrCharMatchAccs)
-            
-            # average substring correctness
-            trainSubstrAveCorr = np.mean(trainSubstrCharMatchAccs)
-            trainSubstrSdCorr = np.std(trainSubstrCharMatchAccs)
-            
-            print("train substr all correct {}, ave correctness {} ({})".format(trainSubstrAllCorr, trainSubstrAveCorr, trainSubstrSdCorr), flush=True, file=sessionTerminalOutputStream)
+            trainSubstrAllCorr, trainSubstrAveCorr, trainSubstrSdCorr, trainCamCorrAve, trainAttrCorrAve, trainBothCorrAve = evaluate_split("TRAIN", trainBatchEndIndices, indexToChar, trainInterestingInstances,
+                                                                                                                                            trainInteractions,
+                                                                                                                                            trainInputIndexLists, 
+                                                                                                                                            trainInputCustomerLocations, 
+                                                                                                                                            trainDbVectors, 
+                                                                                                                                            trainOutputIndexLists,
+                                                                                                                                            trainOutputShopkeeperLocations,
+                                                                                                                                            trainGtDatabasebCameras,
+                                                                                                                                            trainGtDatabaseAttributes,
+                                                                                                                                            trainOutputStrings,
+                                                                                                                                            trainCostAve,
+                                                                                                                                            trainCostStd)
             
             
             
-            trainCamCorr, trainAttrCorr, trainBothCorr = compute_db_address_match(trainGtCamIndx, trainGtAttIndx, trainCamMatchArgMax, trainAttMatchArgMax)
-            
-            trainCamCorrAve = np.mean(trainCamCorr)
-            trainAttrCorrAve = np.mean(trainAttrCorr)
-            trainBothCorrAve = np.mean(trainBothCorr)
-            
-            print("train DB addressing correctness: cam. {}, attr. {}, both {}".format(trainCamCorrAve, trainAttrCorrAve, trainBothCorrAve), flush=True, file=sessionTerminalOutputStream)
-            
-            
-            
-            
-            
-            #trainAcc = 0.0
-            #for i in range(len(trainUttPreds)):
-            #    trainAcc += normalized_edit_distance(trainOutputIndexLists[i], trainUttPreds[i])
-            #trainAcc /= len(trainOutputIndexLists)
-            
-            #trainPredsFlat = np.array(trainUttPreds).flatten()
-            #trainAcc = metrics.accuracy_score(trainPredsFlat, trainGroundTruthFlat)
-            
-            trainUttPreds_ = []
-            trainLocPreds_ = []
-            trainCopyScores_ = []
-            trainGenScores_ = []
-            trainCamMatchArgMax_ = []
-            trainAttMatchArgMax_ = []
-            trainCamMatch_ = []
-            trainAttMatch_  = []
-            
-            trainOutputIndexLists_ = []
-            trainPredSents_ = []
-            
-            for tup in interestingTrainInstances:
-                i = tup[0]
-                info = tup[1]
-                
-                trainUttPreds_.append(trainUttPreds[i])
-                trainLocPreds_.append(trainLocPreds[i])
-                trainCopyScores_.append(trainCopyScores[i])
-                trainGenScores_.append(trainGenScores[i])
-                trainCamMatchArgMax_.append(trainCamMatchArgMax[i])
-                trainAttMatchArgMax_.append(trainAttMatchArgMax[i])
-                trainCamMatch_.append(trainCamMatch[i])
-                trainAttMatch_.append(trainAttMatch[i])
-                
-                trainOutputIndexLists_.append(trainOutputIndexLists[i])
-                trainPredSents_.append(trainPredSents[i])
-                
-            
-            trainPredSentsColored, trainCopyScoresPred, trainGenScoresPred, trainCopyScoresTrue, trainGenScoresTrue = color_results(trainPredSents_, 
-                                                                                                                                    trainOutputIndexLists_,
-                                                                                                                                    trainCopyScores_, 
-                                                                                                                                    trainGenScores_, 
-                                                                                                                                    charToIndex)
-            
-            
-            # TEST
-            testUttPreds = []
-            testLocPreds = []
-            testCopyScores = []
-            testGenScores = []
-            testCamMatchArgMax = []
-            testAttMatchArgMax = []
-            testCamMatch = []
-            testAttMatch  = []
-            testGtSents = []
-            testGtCamIndx = []
-            testGtAttIndx = []
-            
+            # TEST            
             testCosts = []
             
             for i in testBatchEndIndices:
-                
-                #print(i-batchSize, i, flush=True, file=sessionTerminalOutputStream)
                 
                 batchTestCost = learner.train_loss(testInputIndexLists[i-batchSize:i], 
                                              testInputCustomerLocations[i-batchSize:i], 
@@ -1080,228 +1226,29 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                                              0.0)
                 
                 testCosts.append(batchTestCost)
-                #print("\t", batchTestCost, flush=True, file=sessionTerminalOutputStream)
-                
-                
-                batchTestUttPreds, batchTestLocPreds, batchTestCopyScores, batchTestGenScores, batchTestCamMatchArgMax, batchTestAttMatchArgMax, batchTestCamMatch, batchTestAttMatch = learner.predict(testInputIndexLists[i-batchSize:i], 
-                                                                                                                                                                                  testInputCustomerLocations[i-batchSize:i],
-                                                                                                                                                                                  testDbVectors[i-batchSize:i], 
-                                                                                                                                                                                  testOutputIndexLists[i-batchSize:i],
-                                                                                                                                                                                  testOutputShopkeeperLocations[i-batchSize:i],
-                                                                                                                                                                                  testGtDatabasebCameras[i-batchSize:i],
-                                                                                                                                                                                  testGtDatabaseAttributes[i-batchSize:i])
-                
-                testUttPreds.append(batchTestUttPreds)
-                testLocPreds.append(batchTestLocPreds)
-                testCopyScores.append(batchTestCopyScores)
-                testGenScores.append(batchTestGenScores)
-                testCamMatchArgMax.append(batchTestCamMatchArgMax)
-                testAttMatchArgMax.append(batchTestAttMatchArgMax)
-                testCamMatch.append(batchTestCamMatch)
-                testAttMatch.append(batchTestAttMatch)
-                testGtSents += testOutputStrings[i-batchSize:i]
-                testGtCamIndx += testGtDatabasebCameras[i-batchSize:i]
-                testGtAttIndx += testGtDatabaseAttributes[i-batchSize:i]
-                
-                
-            testUttPreds = np.concatenate(testUttPreds)
-            testLocPreds = np.concatenate(testLocPreds)
-            testCopyScores = np.concatenate(testCopyScores)
-            testGenScores = np.concatenate(testGenScores)
-            testCamMatchArgMax = np.concatenate(testCamMatchArgMax)
-            testAttMatchArgMax = np.concatenate(testAttMatchArgMax)
-            testCamMatch = np.concatenate(testCamMatch)
-            testAttMatch  = np.concatenate(testAttMatch)
             
             
             testCostAve = np.mean(testCosts)
             testCostStd = np.std(testCosts)
-            print("test cost", testCostAve, testCostStd, flush=True, file=sessionTerminalOutputStream)
             
             
-            testPredSents = unvectorize_sentences(testUttPreds, indexToChar)
-            
-            
-            # compute how much of the substring that should be copied from the DB is correct
-            testSubstrCharMatchAccs = compute_db_substring_match(testGtSents, testPredSents, shkpUttToDbEntryRange)
-            
-            # how many 100% correct substrings
-            testSubstrAllCorr = testSubstrCharMatchAccs.count(1.0) / len(testSubstrCharMatchAccs)
-            
-            # average substring correctness
-            testSubstrAveCorr = np.mean(testSubstrCharMatchAccs)
-            testSubstrSdCorr = np.std(testSubstrCharMatchAccs)
-            
-            print("test substr all correct {}, ave correctness {} ({})".format(testSubstrAllCorr, testSubstrAveCorr, testSubstrSdCorr), flush=True, file=sessionTerminalOutputStream)
-            
-            
-            
-            testCamCorr, testAttrCorr, testBothCorr = compute_db_address_match(testGtCamIndx, testGtAttIndx, testCamMatchArgMax, testAttMatchArgMax)
-            
-            testCamCorrAve = np.mean(testCamCorr)
-            testAttrCorrAve = np.mean(testAttrCorr)
-            testBothCorrAve = np.mean(testBothCorr)
-            
-            print("test DB addressing correctness: cam. {}, attr. {}, both {}".format(testCamCorrAve, testAttrCorrAve, testBothCorrAve), flush=True, file=sessionTerminalOutputStream)
+            testSubstrAllCorr, testSubstrAveCorr, testSubstrSdCorr, testCamCorrAve, testAttrCorrAve, testBothCorrAve = evaluate_split("TEST", testBatchEndIndices, indexToChar, testInterestingInstances,
+                                                                                                                                      testInteractions,
+                                                                                                                                      testInputIndexLists, 
+                                                                                                                                      testInputCustomerLocations, 
+                                                                                                                                      testDbVectors, 
+                                                                                                                                      testOutputIndexLists,
+                                                                                                                                      testOutputShopkeeperLocations,
+                                                                                                                                      testGtDatabasebCameras,
+                                                                                                                                      testGtDatabaseAttributes,
+                                                                                                                                      testOutputStrings,
+                                                                                                                                      testCostAve,
+                                                                                                                                      testCostStd)
             
             
             
             
-            #testAcc = 0.0
-            #for i in range(len(testUttPreds)):
-            #    testAcc += normalized_edit_distance(testOutputIndexLists[i], testUttPreds[i])
-            #testAcc /= len(testOutputIndexLists)
             
-            #testPredsFlat = np.array(testUttPreds).flatten()
-            #testAcc = metrics.accuracy_score(testPredsFlat, testGroundTruthFlat)
-            
-            testUttPreds_ = []
-            testLocPreds_ = []
-            testCopyScores_ = []
-            testGenScores_ = []
-            testCamMatchArgMax_ = []
-            testAttMatchArgMax_ = []
-            testCamMatch_ = []
-            testAttMatch_  = []
-            
-            testOutputIndexLists_ = []
-            testPredSents_ = []
-            
-            for tup in interestingTestInstances:
-                i = tup[0]
-                info = tup[1]
-                
-                testUttPreds_.append(testUttPreds[i])
-                testLocPreds_.append(testLocPreds[i])
-                testCopyScores_.append(testCopyScores[i])
-                testGenScores_.append(testGenScores[i])
-                testCamMatchArgMax_.append(testCamMatchArgMax[i])
-                testAttMatchArgMax_.append(testAttMatchArgMax[i])
-                testCamMatch_.append(testCamMatch[i])
-                testAttMatch_.append(testAttMatch[i])
-                
-                testOutputIndexLists_.append(testOutputIndexLists[i])
-                testPredSents_.append(testPredSents[i])
-                
-            
-            testPredSentsColored, testCopyScoresPred, testGenScoresPred, testCopyScoresTrue, testGenScoresTrue = color_results(testPredSents_, 
-                                                                                                                               testOutputIndexLists_,
-                                                                                                                               testCopyScores_, 
-                                                                                                                               testGenScores_, 
-                                                                                                                               charToIndex)
-            
-            
-            print("****************************************************************", flush=True, file=sessionTerminalOutputStream)
-            print("TRAIN", e, round(trainCostAve, 3), round(trainCostStd, 3), flush=True, file=sessionTerminalOutputStream)
-            
-            for i in range(len(interestingTrainInstances)):
-                index = interestingTrainInstances[i][0]
-                info = interestingTrainInstances[i][1]
-                
-                print("TRUE:", indexToLocation[np.argmax(trainOutputShopkeeperLocations[index])], trainOutputStrings[index], flush=True, file=sessionTerminalOutputStream)
-                print("PRED:", indexToLocation[trainLocPreds_[i]], trainPredSents_[i], flush=True, file=sessionTerminalOutputStream)
-                
-                print(np.round(trainCamMatch_[i], 4), flush=True, file=sessionTerminalOutputStream)
-                print(np.round(trainAttMatch_[i], 4), flush=True, file=sessionTerminalOutputStream)
-                print("best match:", cameras[trainCamMatchArgMax_[i]], dbFieldnames[trainAttMatchArgMax_[i]], flush=True, file=sessionTerminalOutputStream)
-                print("true match:", info, flush=True, file=sessionTerminalOutputStream)
-                
-                #print("\x1b[31m"+ indexToCam[trainCamMatchArgMax[i]] +" "+ indexToAtt[trainAttMatchArgMax[i]] +" "+ databases[i][indexToCam[trainCamMatchArgMax[i]]][indexToAtt[trainAttMatchArgMax[i]]] +"\x1b[0m", trainCamMatch[i], trainAttMatch[i])
-                print("", flush=True, file=sessionTerminalOutputStream) 
-                
-            print("", flush=True, file=sessionTerminalOutputStream)
-            
-            
-            print("TEST", e, round(testCostAve, 3), round(testCostStd, 3), flush=True, file=sessionTerminalOutputStream)
-            
-            for i in range(len(interestingTestInstances)):
-                index = interestingTestInstances[i][0]
-                info = interestingTestInstances[i][1]
-                
-                print("TRUE:", indexToLocation[np.argmax(testOutputShopkeeperLocations[index])], testOutputStrings[index], flush=True, file=sessionTerminalOutputStream)
-                print("PRED:", indexToLocation[testLocPreds_[i]], testPredSents_[i], flush=True, file=sessionTerminalOutputStream)
-                
-                print(np.round(testCamMatch_[i], 4), flush=True, file=sessionTerminalOutputStream)
-                print(np.round(testAttMatch_[i], 4), flush=True, file=sessionTerminalOutputStream)
-                print("best match:", cameras[testCamMatchArgMax_[i]], dbFieldnames[testAttMatchArgMax_[i]], flush=True, file=sessionTerminalOutputStream)
-                print("true match:", info, flush=True, file=sessionTerminalOutputStream)
-                
-                #print("\x1b[31m"+ indexToCam[testCamMatchArgMax[i]] +" "+ indexToAtt[testAttMatchArgMax[i]] +" "+ databases[i+4][indexToCam[testCamMatchArgMax[i]]][indexToAtt[testAttMatchArgMax[i]]] +"\x1b[0m", testCamMatch[i], testAttMatch[i])
-                print("", flush=True, file=sessionTerminalOutputStream)
-            
-            print("****************************************************************", flush=True, file=sessionTerminalOutputStream)
-            
-            
-            
-            #
-            # save to file
-            #
-            with open(sessionDir+"/{:}_outputs.csv".format(e), "w", newline="") as csvfile:
-                
-                writer = csv.writer(csvfile)
-                
-                
-                writer.writerow(["TRAIN", round(trainCostAve, 3), round(trainCostStd, 3)])
-                
-                for i in range(len(interestingTrainInstances)):
-                    index = interestingTrainInstances[i][0]
-                    info = interestingTrainInstances[i][1]
-                    
-                    
-                    writer.writerow(["TRUE:"] + 
-                                    [indexToLocation[np.argmax(trainOutputShopkeeperLocations[index])]] +
-                                    [c for c in trainOutputStrings[index]])
-                    
-                    writer.writerow(["PRED:"] + 
-                                    [indexToLocation[trainLocPreds_[i]]] +
-                                    [c for c in trainPredSents_[i]])
-                    
-                    writer.writerow(["PRED COPY:"] + [""] + [c for c in trainCopyScoresPred[i]])
-                    writer.writerow(["PRED GEN:"] + [""] + [c for c in trainGenScoresPred[i]])
-                    
-                    writer.writerow(["TRUE COPY:"] + [""] + [c for c in trainCopyScoresTrue[i]])
-                    writer.writerow(["TRUE GEN:"] + [""] + [c for c in trainGenScoresTrue[i]])
-                    
-                    writer.writerow(["CAM MATCH:"] + [np.round(p, 3) for p in trainCamMatch_[i]])
-                    writer.writerow(["ATT MATCH:"] + [np.round(p, 3) for p in trainAttMatch_[i]])
-                    
-                    writer.writerow(["TOP MATCH:", cameras[trainCamMatchArgMax_[i]]+" "+dbFieldnames[trainAttMatchArgMax_[i]]])
-                    writer.writerow(["TRUE MATCH:", info])
-                    
-                    writer.writerow([])
-                
-                
-                writer.writerow(["TEST", round(testCostAve, 3), round(testCostStd, 3)])
-                
-                for i in range(len(interestingTestInstances)):
-                    index = interestingTestInstances[i][0]
-                    info = interestingTestInstances[i][1]
-                    
-                    
-                    writer.writerow(["TRUE:"] + 
-                                    [indexToLocation[np.argmax(testOutputShopkeeperLocations[index])]] +
-                                    [c for c in testOutputStrings[index]])
-                    
-                    writer.writerow(["PRED:"] + 
-                                    [indexToLocation[testLocPreds_[i]]] +
-                                    [c for c in testPredSents_[i]])
-                    
-                    
-                    writer.writerow(["PRED COPY:"] + [""] +[c for c in testCopyScoresPred[i]])
-                    writer.writerow(["PRED GEN:"] + [""] +[c for c in testGenScoresPred[i]])
-                    
-                    writer.writerow(["TRUE COPY:"] + [""] +[c for c in testCopyScoresTrue[i]])
-                    writer.writerow(["TRUE GEN:"] + [""] +[c for c in testGenScoresTrue[i]])
-                    
-                    writer.writerow(["CAM MATCH:"] + [np.round(p, 3) for p in testCamMatch_[i]])
-                    writer.writerow(["ATT MATCH:"] + [np.round(p, 3) for p in testAttMatch_[i]])
-                    
-                    writer.writerow(["TOP MATCH:", cameras[testCamMatchArgMax_[i]]+" "+dbFieldnames[testAttMatchArgMax_[i]]])
-                    writer.writerow(["TRUE MATCH:", info])
-                    
-                    writer.writerow([])
-        
-        
             # append to session log   
             with open(sessionLogFile, "a", newline="") as csvfile:
                 writer = csv.writer(csvfile)
@@ -1340,16 +1287,16 @@ if __name__ == "__main__":
     
     tfp = 0.3
     
-    #run(0, 4, camTemp, attTemp, tfp, sessionDir)
+    run(0, 4, camTemp, attTemp, tfp, sessionDir)
     
-    
+    """
     for gpu in range(8):
         
         seed = gpu
                 
         process = Process(target=run, args=[gpu, seed, camTemp, attTemp, tfp, sessionDir])
         process.start()
-    
+    """
     
     
     #gpu = 0

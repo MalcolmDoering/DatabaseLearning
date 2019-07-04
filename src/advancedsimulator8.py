@@ -1168,9 +1168,10 @@ if __name__ == "__main__":
     print("started")
     databaseFilename = tools.dataDir+"database_0.csv"
     shopkeeperUtteranceFilename = tools.modelDir+"2019-04-04_shopkeeper_utterance_data.csv"
-    customerUtteranceFilename = tools.modelDir+"2019-04-04_customer_utterance_data.csv"
+    #customerUtteranceFilename = tools.modelDir+"2019-04-04_customer_utterance_data.csv"
+    customerUtteranceFilename = tools.modelDir+"2019-07-03_customer_utterance_data.csv"
     
-    newDatabaseFilenames = generate_databases(databaseFilename, 100)
+    newDatabaseFilenames = generate_databases(databaseFilename, 11)
     
     
     for i in range(len(newDatabaseFilenames)):
