@@ -24,9 +24,13 @@ import random
 from sklearn import preprocessing
 from multiprocessing import Process
 import sys
+import string
+from collections import OrderedDict
+
 
 import tools
-from collections import OrderedDict
+from utterancevectorizer import UtteranceVectorizer
+
 
 
 DEBUG = True
@@ -331,6 +335,10 @@ def read_simulated_interactions(filename, dbFieldnames, keepActions=None):
         for row in reader:
             
             if (keepActions == None) or (row["OUTPUT_SHOPKEEPER_ACTION"] in keepActions and row["SHOPKEEPER_TOPIC"] == "price"):
+                
+                row["CUSTOMER_SPEECH"] = row["CUSTOMER_SPEECH"].lower().translate(str.maketrans('', '', string.punctuation))
+                row["SHOPKEEPER_SPEECH"] = row["SHOPKEEPER_SPEECH"].lower()
+                
                 interactions.append(row)
                 
                 try:
@@ -617,12 +625,32 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     
     
     # vectorize the inputs
+    allInputStrings = sum(inputStrings, [])
+    
+    inputUttVectorizer = UtteranceVectorizer(allInputStrings,
+                                        minCount=2, 
+                                        keywordWeight=1.0, 
+                                        keywordSet=[], 
+                                        unigramsAndKeywordsOnly=False, 
+                                        tfidf=False,
+                                        useStopwords=False,
+                                        lsa=False)
+    
+    inputUttVectors = []
+    
+    for inStrs in inputStrings:
+        inUttVecs = inputUttVectorizer.get_utterance_vectors(inStrs, asArray=False)
+        inputUttVectors.append(inUttVecs)
+    
+    inputUttVecDim = inputUttVectors[0][0].size
+    
+    """
     inputIndexLists = []
     
     for inStrs in inputStrings:
         _, inIndLst = vectorize_sentences(inStrs, charToIndex, maxInputLen, padChar=None, useEosChar=False, padPre=True)
         inputIndexLists.append(inIndLst)
-    
+    """
     
     # vectorize the outputs
     outputIndexLists = []
@@ -645,9 +673,9 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     #
     
     def prepare_split(startDbIndex, stopDbIndex, splitName):
-        """input the which DB to start with and which DB to end with + 1"""
+        """input which DB to start with and which DB to end with + 1"""
         
-        splitInputIndexLists = []
+        splitInputUttVectors = []
         splitOutputIndexLists = []
         splitOutputStrings = []
         
@@ -660,7 +688,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
         
         
         for i in range(startDbIndex, stopDbIndex):
-            splitInputIndexLists += inputIndexLists[i]
+            splitInputUttVectors += inputUttVectors[i]
             splitOutputIndexLists += outputIndexLists[i]
             splitOutputStrings += outputStrings[i]
             
@@ -689,20 +717,21 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
         
         
         
-        return splitInteractions, splitInputIndexLists, splitOutputIndexLists, splitOutputStrings, splitInputCustomerLocations, splitOutputShopkeeperLocations, splitDbVectors, splitGtDatabasebCameras, splitGtDatabaseAttributes
+        return splitInteractions, splitInputUttVectors, splitOutputIndexLists, splitOutputStrings, splitInputCustomerLocations, splitOutputShopkeeperLocations, splitDbVectors, splitGtDatabasebCameras, splitGtDatabaseAttributes
         
     
     
     # training
-    trainInteractions, trainInputIndexLists, trainOutputIndexLists, trainOutputStrings, trainInputCustomerLocations, trainOutputShopkeeperLocations, trainDbVectors, trainGtDatabasebCameras, trainGtDatabaseAttributes = prepare_split(0, numTrainDbs, "Train")
+    trainInteractions, trainInputUttVectors, trainOutputIndexLists, trainOutputStrings, trainInputCustomerLocations, trainOutputShopkeeperLocations, trainDbVectors, trainGtDatabasebCameras, trainGtDatabaseAttributes = prepare_split(0, numTrainDbs, "Train")
     
     # testing
-    testInteractions, testInputIndexLists, testOutputIndexLists, testOutputStrings, testInputCustomerLocations, testOutputShopkeeperLocations, testDbVectors, testGtDatabasebCameras, testGtDatabaseAttributes = prepare_split(numTrainDbs, numDatabases, "Test")
+    testInteractions, testInputUttVectors, testOutputIndexLists, testOutputStrings, testInputCustomerLocations, testOutputShopkeeperLocations, testDbVectors, testGtDatabasebCameras, testGtDatabaseAttributes = prepare_split(numTrainDbs, numDatabases, "Test")
     
     
     
-    print(len(trainInputIndexLists), "training examples", flush=True, file=sessionTerminalOutputStream)
-    print(len(testInputIndexLists), "testing examples", flush=True, file=sessionTerminalOutputStream)
+    print(len(trainInputUttVectors), "training examples", flush=True, file=sessionTerminalOutputStream)
+    print(len(testInputUttVectors), "testing examples", flush=True, file=sessionTerminalOutputStream)
+    print(inputUttVecDim, "input utterance vector size", flush=True, file=sessionTerminalOutputStream)
     print(maxInputLen, "input sequence length", flush=True, file=sessionTerminalOutputStream)
     print(maxOutputLen, "output sequence length", flush=True, file=sessionTerminalOutputStream)
     print(maxDbValueLen, "DB value sequence length", flush=True, file=sessionTerminalOutputStream)
@@ -713,9 +742,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     # setup the model
     #
     print("setting up the model...", flush=True, file=sessionTerminalOutputStream)
-    
-    
-    
+        
     
     inputLen = maxInputLen + 1
     outputLen = maxOutputLen + 1
@@ -738,7 +765,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
             testGroundTruthFlat += groundTruthFlat
     """
     
-    learner = learning.CustomNeuralNetwork(inputSeqLen=inputLen, 
+    learner = learning.CustomNeuralNetwork(inputUttVecDim=inputUttVecDim, 
                                   dbSeqLen=dbValLen, 
                                   outputSeqLen=outputLen,
                                   locationVecLen=locationVecLen,
@@ -760,22 +787,22 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     
     # for faster testing...
     """
-    trainInputIndexLists = trainInputIndexLists[:1500]
+    trainInputUttVectors = trainInputUttVectors[:1500]
     trainOutputIndexLists = trainOutputIndexLists[:1500]
     trainDbVectors = trainDbVectors[:1500]
     
-    testInputIndexLists = testInputIndexLists[:1500]
+    testInputUttVectors = testInputUttVectors[:1500]
     testOutputIndexLists = testOutputIndexLists[:1500]
     testDbVectors = testDbVectors[:1500]
     """
     
     
-    trainBatchEndIndices = list(range(batchSize, len(trainInputIndexLists), batchSize))
-    testBatchEndIndices = list(range(batchSize, len(testInputIndexLists), batchSize))
+    trainBatchEndIndices = list(range(batchSize, len(trainInputUttVectors), batchSize))
+    testBatchEndIndices = list(range(batchSize, len(testInputUttVectors), batchSize))
     
     
     camerasOfInterest = ["CAMERA_1", "CAMERA_2", "CAMERA_3"]
-    featuresOfInterest = ["price"]#, "camera_type", "color", "weight", "preset_modes", "effects", "resolution", "optical_zoom", "settings", "autofocus_points", "sensor_size", "ISO", "long_exposure"]
+    featuresOfInterest = ["price", "camera_type", "color", "weight", "preset_modes", "effects", "resolution", "optical_zoom", "settings", "autofocus_points", "sensor_size", "ISO", "long_exposure"]
     
     #
     trainInterestingInstances = []
@@ -963,7 +990,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     
     def evaluate_split(splitName, splitBatchEndIndices, indexToChar, splitInterestingInstances,
                        splitInteractions,
-                       splitInputIndexLists,
+                       splitInputUttVectors,
                        splitInputCustomerLocations, 
                        splitDbVectors, 
                        splitOutputIndexLists,
@@ -983,7 +1010,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
             
             for i in splitBatchEndIndices:
                 
-                batchSplitCost = learner.train_loss(splitInputIndexLists[i-batchSize:i], 
+                batchSplitCost = learner.train_loss(splitInputUttVectors[i-batchSize:i], 
                                              splitInputCustomerLocations[i-batchSize:i], 
                                              splitDbVectors[i-batchSize:i], 
                                              splitOutputIndexLists[i-batchSize:i],
@@ -1013,7 +1040,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
         
         for i in splitBatchEndIndices:
             
-            batchSplitUttPreds, batchSplitLocPreds, batchSplitCopyScores, batchSplitGenScores, batchSplitCamMatchArgMax, batchSplitAttMatchArgMax, batchSplitCamMatch, batchSplitAttMatch = learner.predict(splitInputIndexLists[i-batchSize:i], 
+            batchSplitUttPreds, batchSplitLocPreds, batchSplitCopyScores, batchSplitGenScores, batchSplitCamMatchArgMax, batchSplitAttMatchArgMax, batchSplitCamMatch, batchSplitAttMatch = learner.predict(splitInputUttVectors[i-batchSize:i], 
                                                                                                                                                                                      splitInputCustomerLocations[i-batchSize:i],
                                                                                                                                                                                      splitDbVectors[i-batchSize:i], 
                                                                                                                                                                                      splitOutputIndexLists[i-batchSize:i],
@@ -1189,7 +1216,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
         
         # shuffle the training data
         
-        temp = list(zip(trainInputIndexLists, trainDbVectors, trainOutputIndexLists, trainInputCustomerLocations, trainOutputShopkeeperLocations))
+        temp = list(zip(trainInputUttVectors, trainDbVectors, trainOutputIndexLists, trainInputCustomerLocations, trainOutputShopkeeperLocations))
         if randomizeTrainingBatches:
             random.shuffle(temp)
         trainInputIndexLists_shuf, trainDbVectors_shuf, trainOutputIndexLists_shuf, trainInputCustomerLocations_shuf, trainOutputShopkeeperLocations_shuf = zip(*temp)
@@ -1226,7 +1253,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
             # TRAIN
             trainSubstrAllCorr, trainSubstrAveCorr, trainSubstrSdCorr, trainCamCorrAve, trainAttrCorrAve, trainBothCorrAve = evaluate_split("TRAIN", trainBatchEndIndices, indexToChar, trainInterestingInstances,
                                                                                                                                             trainInteractions,
-                                                                                                                                            trainInputIndexLists, 
+                                                                                                                                            trainInputUttVectors, 
                                                                                                                                             trainInputCustomerLocations, 
                                                                                                                                             trainDbVectors, 
                                                                                                                                             trainOutputIndexLists,
@@ -1244,7 +1271,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
             
             for i in testBatchEndIndices:
                 
-                batchTestCost = learner.train_loss(testInputIndexLists[i-batchSize:i], 
+                batchTestCost = learner.train_loss(testInputUttVectors[i-batchSize:i], 
                                              testInputCustomerLocations[i-batchSize:i], 
                                              testDbVectors[i-batchSize:i], 
                                              testOutputIndexLists[i-batchSize:i],
@@ -1262,7 +1289,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
             
             testSubstrAllCorr, testSubstrAveCorr, testSubstrSdCorr, testCamCorrAve, testAttrCorrAve, testBothCorrAve = evaluate_split("TEST", testBatchEndIndices, indexToChar, testInterestingInstances,
                                                                                                                                       testInteractions,
-                                                                                                                                      testInputIndexLists, 
+                                                                                                                                      testInputUttVectors, 
                                                                                                                                       testInputCustomerLocations, 
                                                                                                                                       testDbVectors, 
                                                                                                                                       testOutputIndexLists,
@@ -1317,14 +1344,14 @@ if __name__ == "__main__":
     
     run(0, 4, camTemp, attTemp, tfp, sessionDir)
     
-    
+    """
     for gpu in range(8):
         
         seed = gpu
                 
         process = Process(target=run, args=[gpu, seed, camTemp, attTemp, tfp, sessionDir])
         process.start()
-    
+    """
     
     
     #gpu = 0

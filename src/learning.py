@@ -21,12 +21,12 @@ goChar = "~"
 
 class CustomNeuralNetwork(object):
     
-    def __init__(self, inputSeqLen, dbSeqLen, outputSeqLen, locationVecLen, 
+    def __init__(self, inputUttVecDim, dbSeqLen, outputSeqLen, locationVecLen, 
                  batchSize, numUniqueCams, numUniqueAtts, vocabSize, 
                  embeddingSize, charToIndex, camTemp, attTemp,
                  seed):
         
-        self.inputSeqLen = inputSeqLen
+        self.inputUttVecDim = inputUttVecDim
         self.dbSeqLen = dbSeqLen
         self.outputSeqLen = outputSeqLen
         self.locationVecLen = locationVecLen
@@ -50,10 +50,14 @@ class CustomNeuralNetwork(object):
         #
         
         #with tf.name_scope("input encoder"):
-        self._inputs = tf.placeholder(tf.int32, [self.batchSize, self.inputSeqLen, ], name='customer_inputs')
         
+        # for sequence
+        #self._inputs = tf.placeholder(tf.int32, [self.batchSize, self.inputSeqLen, ], name='customer_inputs')
+        #self._input_one_hot = tf.one_hot(self._inputs, self.vocabSize)
         
-        self._input_one_hot = tf.one_hot(self._inputs, self.vocabSize)
+        # for BoW
+        self._inputs = tf.placeholder(tf.float32, [self.batchSize, self.inputUttVecDim, ], name='customer_inputs')
+        
         
         self._location_inputs = tf.placeholder(tf.float32, [self.batchSize, self.locationVecLen])
         
@@ -69,6 +73,7 @@ class CustomNeuralNetwork(object):
         with tf.variable_scope("input_encoder_1"):
             # input encoder for the initial state of the copynet
             
+            """
             num_units = [self.embeddingSize, self.embeddingSize]
             #cells = [tf.nn.rnn_cell.LSTMCell(num_units=n, initializer=tf.initializers.glorot_normal()) for n in num_units]
             cells = [tf.nn.rnn_cell.GRUCell(num_units=n, kernel_initializer=tf.initializers.glorot_normal()) for n in num_units]
@@ -88,16 +93,24 @@ class CustomNeuralNetwork(object):
             self._loc_utt_combined_input_encoding = tf.layers.dense(tf.concat([self._input_utt_encoding, self._location_inputs], axis=1),
                                                                     self.embeddingSize, 
                                                                     activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
+            """
             
+            self._loc_utt_combined_input_encoding = tf.concat([self._inputs, self._location_inputs], axis=1)
             
+            self._loc_utt_combined_input_encoding = tf.layers.dense(self._loc_utt_combined_input_encoding,
+                                                                    1900, 
+                                                                    activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
             
+            self._loc_utt_combined_input_encoding = tf.layers.dense(self._loc_utt_combined_input_encoding,
+                                                                    self.embeddingSize, 
+                                                                    activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
             
-            
-            
+        
         
         with tf.variable_scope("input_encoder_2"):
             # input encoder for finding the most relevant camera and attribute
             
+            """
             num_units = [self.embeddingSize, self.embeddingSize]
             #cells = [tf.nn.rnn_cell.LSTMCell(num_units=n, initializer=tf.initializers.glorot_normal()) for n in num_units]
             cells = [tf.nn.rnn_cell.GRUCell(num_units=n, kernel_initializer=tf.initializers.glorot_normal()) for n in num_units]
@@ -115,9 +128,17 @@ class CustomNeuralNetwork(object):
             self._loc_utt_combined_input_encoding_2 = tf.layers.dense(tf.concat([self._input_utt_encoding_2, self._location_inputs], axis=1),
                                                                     self.embeddingSize, 
                                                                     activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
-        
-        
-        
+            """
+            
+            self._loc_utt_combined_input_encoding_2 = tf.concat([self._inputs, self._location_inputs], axis=1)
+            
+            self._loc_utt_combined_input_encoding_2 = tf.layers.dense(self._loc_utt_combined_input_encoding_2,
+                                                                    1900, 
+                                                                    activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
+            
+            self._loc_utt_combined_input_encoding_2 = tf.layers.dense(self._loc_utt_combined_input_encoding_2,
+                                                                    self.embeddingSize, 
+                                                                    activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
         
         
         

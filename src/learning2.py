@@ -20,12 +20,12 @@ goChar = "~"
 
 class CustomNeuralNetwork(object):
     
-    def __init__(self, inputSeqLen, dbSeqLen, outputSeqLen, locationVecLen, 
+    def __init__(self, inputUttVecDim, dbSeqLen, outputSeqLen, locationVecLen, 
                  batchSize, numUniqueCams, numUniqueAtts, vocabSize, 
                  embeddingSize, charToIndex, camTemp, attTemp,
                  seed):
         
-        self.inputSeqLen = inputSeqLen
+        self.inputUttVecDim = inputUttVecDim
         self.dbSeqLen = dbSeqLen
         self.outputSeqLen = outputSeqLen
         self.locationVecLen = locationVecLen
@@ -49,10 +49,14 @@ class CustomNeuralNetwork(object):
         #
         
         #with tf.name_scope("input encoder"):
-        self._inputs = tf.placeholder(tf.int32, [self.batchSize, self.inputSeqLen, ], name='customer_inputs')
         
+        # for sequence
+        #self._inputs = tf.placeholder(tf.int32, [self.batchSize, self.inputSeqLen, ], name='customer_inputs')
+        #self._input_one_hot = tf.one_hot(self._inputs, self.vocabSize)
         
-        self._input_one_hot = tf.one_hot(self._inputs, self.vocabSize)
+        # for BoW
+        self._inputs = tf.placeholder(tf.float32, [self.batchSize, self.inputUttVecDim, ], name='customer_inputs')
+        
         
         self._location_inputs = tf.placeholder(tf.float32, [self.batchSize, self.locationVecLen])
         
@@ -65,12 +69,10 @@ class CustomNeuralNetwork(object):
         
         
         
-        self._input_one_hot = tf.random.normal(tf.shape(self._input_one_hot), mean=0, stddev=0.01)
-        
-        
         with tf.variable_scope("input_encoder_1"):
             # input encoder for the initial state of the copynet
             
+            """
             num_units = [self.embeddingSize, self.embeddingSize]
             #cells = [tf.nn.rnn_cell.LSTMCell(num_units=n, initializer=tf.initializers.glorot_normal()) for n in num_units]
             cells = [tf.nn.rnn_cell.GRUCell(num_units=n, kernel_initializer=tf.initializers.glorot_normal()) for n in num_units]
@@ -90,16 +92,24 @@ class CustomNeuralNetwork(object):
             self._loc_utt_combined_input_encoding = tf.layers.dense(tf.concat([self._input_utt_encoding, self._location_inputs], axis=1),
                                                                     self.embeddingSize, 
                                                                     activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
+            """
             
+            self._loc_utt_combined_input_encoding = tf.concat([self._inputs, self._location_inputs], axis=1)
             
+            self._loc_utt_combined_input_encoding = tf.layers.dense(self._loc_utt_combined_input_encoding,
+                                                                    1900, 
+                                                                    activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
             
+            self._loc_utt_combined_input_encoding = tf.layers.dense(self._loc_utt_combined_input_encoding,
+                                                                    self.embeddingSize, 
+                                                                    activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
             
-            
-            
+        
         
         with tf.variable_scope("input_encoder_2"):
             # input encoder for finding the most relevant camera and attribute
             
+            """
             num_units = [self.embeddingSize, self.embeddingSize]
             #cells = [tf.nn.rnn_cell.LSTMCell(num_units=n, initializer=tf.initializers.glorot_normal()) for n in num_units]
             cells = [tf.nn.rnn_cell.GRUCell(num_units=n, kernel_initializer=tf.initializers.glorot_normal()) for n in num_units]
@@ -117,7 +127,17 @@ class CustomNeuralNetwork(object):
             self._loc_utt_combined_input_encoding_2 = tf.layers.dense(tf.concat([self._input_utt_encoding_2, self._location_inputs], axis=1),
                                                                     self.embeddingSize, 
                                                                     activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
-        
+            """
+            
+            self._loc_utt_combined_input_encoding_2 = tf.concat([self._inputs, self._location_inputs], axis=1)
+            
+            self._loc_utt_combined_input_encoding_2 = tf.layers.dense(self._loc_utt_combined_input_encoding_2,
+                                                                    1900, 
+                                                                    activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
+            
+            self._loc_utt_combined_input_encoding_2 = tf.layers.dense(self._loc_utt_combined_input_encoding_2,
+                                                                    self.embeddingSize, 
+                                                                    activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
         
         
         
@@ -178,7 +198,7 @@ class CustomNeuralNetwork(object):
             #self.db_match_val = tf.nn.softmax(self.db_match_val, axis=2)
             
             
-            self.db_match_sum = tf.reduce_sum(tf.reduce_sum(self.db_match_val, axis=2), axis=1, keepdims=True)
+            #self.db_match_sum = tf.reduce_sum(tf.reduce_sum(self.db_match_val, axis=2), axis=1, keepdims=True)
             
             self.db_match_val_charindices = tf.argmax(self.db_match_val, axis=2)
             
@@ -235,30 +255,10 @@ class CustomNeuralNetwork(object):
         # add the input encoding to the initial state of the first layer RNN
         self.decoder_initial_state = self.decoder_cell.zero_state(self.batchSize, tf.float32)
         
-        self.decoder_initial_state = (self.decoder_initial_state[0] + tf.concat((self._loc_utt_combined_input_encoding, self.db_match_sum), axis=1), #tf.concat((self._loc_utt_combined_input_encoding, self.db_match_val_fwbw_encoding), axis=1),
-                                      self.decoder_initial_state[1], 
-        #                              self.decoder_initial_state[2]
-                                      )
+        self.decoder_initial_state = (self.decoder_initial_state[0] + tf.concat((self._loc_utt_combined_input_encoding, tf.ones((self.batchSize, 1))), axis=1),
+                                      self.decoder_initial_state[1])
         
-        
-        #
-        # setup the controller for mediating between generation and copying
-        #
-        """
-        num_units = [self.embeddingSize, self.embeddingSize]
-        cells = [tf.nn.rnn_cell.GRUCell(num_units=n, kernel_initializer=tf.initializers.glorot_normal()) for n in num_units]
-        self.controller_cell = tf.contrib.rnn.MultiRNNCell(cells)
-        
-        
-        # the number of tensors in the tuple has to match the number of layers in the encoder
-        # add the input encoding to the initial state of the first layer RNN
-        self.controller_initial_state = self.decoder_cell.zero_state(self.batchSize, tf.float32)
-        
-        self.controller_initial_state = (self.decoder_initial_state[0] + self._loc_utt_combined_input_encoding, 
-                                      self.decoder_initial_state[1], 
-                                      #self.decoder_initial_state[2]
-                                      )
-        """
+
         
         
         self._db_read_weight_layer = tf.layers.Dense(1, activation=tf.nn.leaky_relu, use_bias=True, kernel_initializer=tf.initializers.he_normal())

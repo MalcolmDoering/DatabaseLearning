@@ -18,10 +18,9 @@ import copy
 import csv
 #import editdistance
 from sklearn.manifold import TSNE
-from sets import Set
 #from gensim import corpora, matutils, models
 from scipy import sparse
-import cPickle as pkl
+import pickle as pkl
 
 import tools
 
@@ -187,22 +186,22 @@ class UtteranceVectorizer(object):
             self.unigramToIndex[self.backchannelPlaceholder] = 0
             self.indexToWord[self.unigramToIndex[self.backchannelPlaceholder]] = self.backchannelPlaceholder
         
-        for unigram, count in self.unigrams.items():
+        for unigram, count in list(self.unigrams.items()):
             if count >= minCount:
                 self.unigramToIndex[unigram] = len(self.unigramToIndex)
                 self.indexToWord[self.unigramToIndex[unigram]] = unigram
         
-        for bigram, count in self.bigrams.items():
+        for bigram, count in list(self.bigrams.items()):
             if count >= minCount:
                 self.bigramToIndex[bigram] = len(self.unigramToIndex) + len(self.bigramToIndex)
                 self.indexToWord[self.bigramToIndex[bigram]] = bigram
         
-        for trigram, count in self.trigrams.items():
+        for trigram, count in list(self.trigrams.items()):
             if count >= minCount:
                 self.trigramToIndex[trigram] = len(self.unigramToIndex) + len(self.bigramToIndex) + len(self.trigramToIndex)
                 self.indexToWord[self.trigramToIndex[trigram]] = trigram
                 
-        
+        """
         for kw in self.processedKeywordSet:
             self.keywordToIndex[kw] = len(self.unigramToIndex) + len(self.bigramToIndex) + len(self.trigramToIndex) + len(self.keywordToIndex)
             self.indexToWord[self.keywordToIndex[kw]] = kw
@@ -212,7 +211,7 @@ class UtteranceVectorizer(object):
             #print num
             self.numberToIndex[num] = len(self.unigramToIndex) + len(self.bigramToIndex) + len(self.trigramToIndex) + len(self.keywordToIndex) + len(self.numberToIndex)
             self.indexToWord[self.numberToIndex[num]] = num
-        
+        """
         
         self.numIndices = len(self.unigramToIndex) + len(self.bigramToIndex) + len(self.trigramToIndex) + len(self.keywordToIndex)
         
@@ -391,7 +390,7 @@ def vectorize1():
     #
     # read in the condition info
     #
-    print "reading in the condition info..."
+    print("reading in the condition info...")
     
     """
     conditions = {}
@@ -411,7 +410,7 @@ def vectorize1():
     # read in the customer utterance data
     # read in the cluster sequence data that was used for training
     #
-    print "reading in the cluster sequence data..."
+    print("reading in the cluster sequence data...")
     
     clusterSequenceData = []
     #with open(tools.dataDir+"ClusterSequence.csv", "rb") as csvfile: # 2013 dataset
@@ -426,7 +425,7 @@ def vectorize1():
     #
     # find the customer speech that triggered each robot action
     #
-    print "finding the customer speech that triggered each robot action..."
+    print("finding the customer speech that triggered each robot action...")
     
     utteranceIds = []
     trialIds = []
@@ -455,9 +454,9 @@ def vectorize1():
     #
     # vectorize the customer utterance
     #
-    print "vectorizing customer utterances..."
+    print("vectorizing customer utterances...")
     
-    keywordsSet = sorted(list(Set(keywords)))
+    keywordsSet = sorted(list(set(keywords)))
     keywordsSet.remove("NO_KEYWORD")
     
     uttVectorizer = UtteranceVectorizer(utterances,
@@ -472,7 +471,7 @@ def vectorize1():
     vectors = uttVectorizer.get_utterance_vectors(utterances)
     lsaVectors = uttVectorizer.get_lsa_vectors(utterances)
     
-    print "lsa vectors shape", lsaVectors.shape
+    print("lsa vectors shape", lsaVectors.shape)
     
     vectorsNoNan = []
     utteranceIdsNoNan = []
@@ -484,7 +483,7 @@ def vectorize1():
     for i in range(len(utterances)):
         
         if not vectors[i,:].any():
-            print "removing:", utterances[i]
+            print("removing:", utterances[i])
         
         else:
             vectorsNoNan.append(vectors[i,:])
@@ -498,7 +497,7 @@ def vectorize1():
     #
     # compute distances
     #
-    print "computing distances..."
+    print("computing distances...")
     vectorsNoNan = np.asarray(vectorsNoNan)
     distMatrix = squareform(pdist(vectorsNoNan, "cosine"))
     
@@ -506,10 +505,10 @@ def vectorize1():
     #
     # save vectorizations, etc. to file
     #
-    print "saving..."
+    print("saving...")
     
-    print "num no nan utts:", len(utterancesNoNan)
-    print "dimensionality:", vectorsNoNan.shape[1]
+    print("num no nan utts:", len(utterancesNoNan))
+    print("dimensionality:", vectorsNoNan.shape[1])
     
     condition = "passive proactive camera shopkeeper - lsa test - tri stm - 1 wgt kw - mc2 - stopwords 1"
     
@@ -548,7 +547,7 @@ if __name__ == '__main__':
     #
     # read in the utterance data
     #
-    print "loading interaction data..."
+    print("loading interaction data...")
     
     participant = "shopkeeper" 
     
@@ -588,8 +587,8 @@ if __name__ == '__main__':
                     uniqueUtteranceToCount[utt] += 1
                     
     
-    print "loaded", len(utterances), "utterances."
-    print len(uniqueUtteranceToCount), "unique utterances"
+    print("loaded", len(utterances), "utterances.")
+    print(len(uniqueUtteranceToCount), "unique utterances")
     
     
     
@@ -605,7 +604,7 @@ if __name__ == '__main__':
     sampledUtterances = []
     
     # make sure each utterance appears at least once
-    sampledUtterances += uniqueUtteranceToCount.keys()
+    sampledUtterances += list(uniqueUtteranceToCount.keys())
     
     # make sure that less common utterances are well represented (because these include mem-dep utterances)
     #for utt, count in uniqueUtteranceToCount.items():
@@ -622,9 +621,9 @@ if __name__ == '__main__':
     #
     # vectorize the utterances
     #
-    print "vectorizing utterances..."
+    print("vectorizing utterances...")
     
-    keywords = sorted(list(Set(keywords)))
+    keywords = sorted(list(set(keywords)))
     
     uttVectorizer = UtteranceVectorizer(utterances,
                                         minCount=2, 
@@ -636,7 +635,7 @@ if __name__ == '__main__':
                                         lsa=False)
     
     
-    print "pickling the utterance vectorizer..."
+    print("pickling the utterance vectorizer...")
     pkl.dump(uttVectorizer, open(sessionDir+"/{}_utterance_vectorizer.pkl".format(participant) ,"w"))
     
     
@@ -649,7 +648,7 @@ if __name__ == '__main__':
     for i in range(len(utterances)):
         
         if not vectors[i,:].any():
-            print "removing:", utterances[i]
+            print("removing:", utterances[i])
         
         else:
             vectorsNoNan.append(vectors[i,:])
@@ -659,17 +658,17 @@ if __name__ == '__main__':
     #
     # compute distances
     #
-    print "computing distances..."
+    print("computing distances...")
     
     # compute distances between each unique pair of utterances
     uttToUttToDist = {}
     
-    for utt1 in uniqueUtteranceToCount.keys():
-        uttToUttToDist[utt1] = dict.fromkeys(uniqueUtteranceToCount.keys())
+    for utt1 in list(uniqueUtteranceToCount.keys()):
+        uttToUttToDist[utt1] = dict.fromkeys(list(uniqueUtteranceToCount.keys()))
         
         uttVec1 = uttVectorizer.get_utterance_vector(utt1)
         
-        for utt2 in uniqueUtteranceToCount.keys():
+        for utt2 in list(uniqueUtteranceToCount.keys()):
             
             uttVec2 = uttVectorizer.get_utterance_vector(utt2)
             
@@ -690,10 +689,10 @@ if __name__ == '__main__':
     #
     # save vectorizations, etc. to file
     #
-    print "saving..."
+    print("saving...")
     
-    print "num no nan utts:", len(utterancesNoNan)
-    print "dimensionality:", vectorsNoNan.shape[1]
+    print("num no nan utts:", len(utterancesNoNan))
+    print("dimensionality:", vectorsNoNan.shape[1])
     
     condition = "50000_simulated_interactions_2018-4-26 {} - tri stm - 1 wgt kw - mc2 - stopwords 1".format(participant)
     
