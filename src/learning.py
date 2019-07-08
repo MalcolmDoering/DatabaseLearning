@@ -48,6 +48,9 @@ class CustomNeuralNetwork(object):
         #
         # build the model
         #
+        self._gumbel_softmax_temp = tf.placeholder(tf.float32, shape=(), name='gumbel_softmax_temp')
+        self.gumbel_softmax_temp_cams = self._gumbel_softmax_temp
+        self.gumbel_softmax_temp_atts = self._gumbel_softmax_temp
         
         #with tf.name_scope("input encoder"):
         
@@ -386,7 +389,7 @@ class CustomNeuralNetwork(object):
         self._sess.run(self._init_op)
         
     
-    def train(self, inputUtts, inputCustLocs, databases, groundTruthUttOutputs, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, teacherForcingProb=1.0):
+    def train(self, inputUtts, inputCustLocs, databases, groundTruthUttOutputs, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, gumbelSoftmaxTemp, teacherForcingProb=1.0):
         feedDict = {self._inputs: inputUtts, 
                     self._location_inputs: inputCustLocs, 
                     self._db_entries: databases, 
@@ -394,14 +397,15 @@ class CustomNeuralNetwork(object):
                     self._ground_truth_location_outputs: groundTruthOutputShkpLocs,
                     self._gtDbCamIndices: gtDbCams, 
                     self._gtDbAttIndices: gtDbAtts,
-                    self._teacher_forcing_prob: teacherForcingProb}
+                    self._teacher_forcing_prob: teacherForcingProb,
+                    self._gumbel_softmax_temp: gumbelSoftmaxTemp}
         
         trainingLoss, _ = self._sess.run([self._loss, self._train_op], feed_dict=feedDict)
         
         return trainingLoss
     
     
-    def train_loss(self, inputUtts, inputCustLocs, databases, groundTruthOutputs, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, teacherForcingProb=1.0):
+    def train_loss(self, inputUtts, inputCustLocs, databases, groundTruthOutputs, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, gumbelSoftmaxTemp, teacherForcingProb=1.0):
         feedDict = {self._inputs: inputUtts, 
                     self._location_inputs: inputCustLocs, 
                     self._db_entries: databases, 
@@ -409,14 +413,15 @@ class CustomNeuralNetwork(object):
                     self._ground_truth_location_outputs: groundTruthOutputShkpLocs,
                     self._gtDbCamIndices: gtDbCams, 
                     self._gtDbAttIndices: gtDbAtts,
-                    self._teacher_forcing_prob: teacherForcingProb}
+                    self._teacher_forcing_prob: teacherForcingProb,
+                    self._gumbel_softmax_temp: gumbelSoftmaxTemp}
         
         loss = self._sess.run(self._loss, feed_dict=feedDict)
         
         return loss
     
     
-    def predict(self, inputUtts, inputCustLocs, databases, groundTruthOutputs, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, teacherForcingProb=1.0):
+    def predict(self, inputUtts, inputCustLocs, databases, groundTruthOutputs, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, gumbelSoftmaxTemp, teacherForcingProb=1.0):
         feedDict = {self._inputs: inputUtts, 
                     self._location_inputs: inputCustLocs, 
                     self._db_entries: databases, 
@@ -424,7 +429,8 @@ class CustomNeuralNetwork(object):
                     self._ground_truth_location_outputs: groundTruthOutputShkpLocs,
                     self._gtDbCamIndices: gtDbCams, 
                     self._gtDbAttIndices: gtDbAtts,
-                    self._teacher_forcing_prob: teacherForcingProb}
+                    self._teacher_forcing_prob: teacherForcingProb,
+                    self._gumbel_softmax_temp: gumbelSoftmaxTemp}
         
         predUtts, predShkpLocs, copyScores, genScores, camMatchArgMax, attMatchArgMax, camMatch, attMatch = self._sess.run([self._pred_utt_op,
                                                                                                                             self._pred_shkp_loc_op,

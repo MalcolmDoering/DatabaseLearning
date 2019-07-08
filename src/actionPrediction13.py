@@ -934,6 +934,8 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
         writer = csv.writer(csvfile)
         writer.writerow(["Epoch",
                          "Teacher Forcing Probability",
+                         "Camera GS Temp.",
+                         "Attribute GS Temp.",
                          "Train Cost Ave ({})".format(sessionIdentifier), 
                          "Train Cost SD ({})".format(sessionIdentifier), 
                          "Train DB Substring Correct All ({})".format(sessionIdentifier), 
@@ -998,6 +1000,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                        splitGtDatabasebCameras,
                        splitGtDatabaseAttributes,
                        splitOutputStrings,
+                       gumbelSoftmaxTemp,
                        
                        splitCostAve=None,
                        splitCostStd=None):
@@ -1017,6 +1020,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                                              splitOutputShopkeeperLocations[i-batchSize:i],
                                              splitGtDatabasebCameras[i-batchSize:i],
                                              splitGtDatabaseAttributes[i-batchSize:i],
+                                             gumbelSoftmaxTemp,
                                              0.0)
                 
                 splitCosts.append(batchSplitCost)
@@ -1046,7 +1050,8 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                                                                                                                                                                                      splitOutputIndexLists[i-batchSize:i],
                                                                                                                                                                                      splitOutputShopkeeperLocations[i-batchSize:i],
                                                                                                                                                                                      splitGtDatabasebCameras[i-batchSize:i],
-                                                                                                                                                                                     splitGtDatabaseAttributes[i-batchSize:i])
+                                                                                                                                                                                     splitGtDatabaseAttributes[i-batchSize:i],
+                                                                                                                                                                                     gumbelSoftmaxTemp)
             
             splitUttPreds.append(batchSplitUttPreds)
             splitLocPreds.append(batchSplitLocPreds)
@@ -1208,6 +1213,8 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
         startTime = time.time()
         
         #teacherForcingProb = 0.6 #1.0 - 1.0 / (1.0 + np.exp( - (e-200.0)/10.0))
+        gumbelSoftmaxTemp = 6.0 * np.exp(-0.0003 * e) + 0.01
+        
         
         #
         # train
@@ -1231,7 +1238,8 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                                            trainOutputShopkeeperLocations_shuf[i-batchSize:i],
                                            trainGtDatabasebCameras[i-batchSize:i],
                                            trainGtDatabaseAttributes[i-batchSize:i],
-                                           teacherForcingProb)
+                                           teacherForcingProb,
+                                           gumbelSoftmaxTemp)
             
             trainCosts.append(batchTrainCost)
             #print("\t", batchTrainCost, flush=True, file=sessionTerminalOutputStream)
@@ -1261,6 +1269,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                                                                                                                                             trainGtDatabasebCameras,
                                                                                                                                             trainGtDatabaseAttributes,
                                                                                                                                             trainOutputStrings,
+                                                                                                                                            gumbelSoftmaxTemp,
                                                                                                                                             trainCostAve,
                                                                                                                                             trainCostStd)
             
@@ -1278,6 +1287,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                                              testOutputShopkeeperLocations[i-batchSize:i],
                                              testGtDatabasebCameras[i-batchSize:i],
                                              testGtDatabaseAttributes[i-batchSize:i],
+                                             gumbelSoftmaxTemp,
                                              0.0)
                 
                 testCosts.append(batchTestCost)
@@ -1297,6 +1307,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                                                                                                                                       testGtDatabasebCameras,
                                                                                                                                       testGtDatabaseAttributes,
                                                                                                                                       testOutputStrings,
+                                                                                                                                      gumbelSoftmaxTemp,
                                                                                                                                       testCostAve,
                                                                                                                                       testCostStd)
             
@@ -1309,6 +1320,8 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                 writer = csv.writer(csvfile)
                 writer.writerow([e,                 #"Epoch", 
                                  teacherForcingProb,
+                                 gumbelSoftmaxTemp,
+                                 gumbelSoftmaxTemp,
                                  trainCostAve,      #"Train Cost Ave ({})".format(seed), 
                                  trainCostStd,      #"Train Cost SD ({})".format(seed), 
                                  trainSubstrAllCorr,    #"Train DB Substring Correct All ({})".format(seed), 
