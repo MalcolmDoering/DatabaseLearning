@@ -11,7 +11,7 @@ from scipy.stats import entropy
 
 
 
-projectDir = "C:/Users/robovie/eclipse-workspace/DatabaseLearning/"
+projectDir = "/home/malcolm/eclipse-workspace/DatabaseLearning/"
 
 dataDir = projectDir + "data/"
 
@@ -19,7 +19,7 @@ modelDir = projectDir + "models/"
 
 #logDir = "/home/erica/malcolmlog"
 #logDir = "/home/malcolm/eclipse-log"
-logDir = "C:/Users/robovie/eclipse-log"
+logDir = "/home/malcolm/eclipse-log"
 
 
 def time_now():

@@ -33,7 +33,7 @@ from utterancevectorizer import UtteranceVectorizer
 
 
 
-DEBUG = True
+DEBUG = False
 
 
 eosChar = "#"
@@ -1213,7 +1213,8 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
         startTime = time.time()
         
         #teacherForcingProb = 0.6 #1.0 - 1.0 / (1.0 + np.exp( - (e-200.0)/10.0))
-        gumbelSoftmaxTemp = 6.0 * np.exp(-0.0003 * e) + 0.01
+        #gumbelSoftmaxTemp = 6.0 * np.exp(-0.0003 * e) + 0.01
+        gumbelSoftmaxTemp = max((-1.0/2000) * e + 3, 0.05)
         
         
         #
@@ -1238,8 +1239,8 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                                            trainOutputShopkeeperLocations_shuf[i-batchSize:i],
                                            trainGtDatabasebCameras[i-batchSize:i],
                                            trainGtDatabaseAttributes[i-batchSize:i],
-                                           teacherForcingProb,
-                                           gumbelSoftmaxTemp)
+                                           gumbelSoftmaxTemp,
+                                           teacherForcingProb)
             
             trainCosts.append(batchTrainCost)
             #print("\t", batchTrainCost, flush=True, file=sessionTerminalOutputStream)
@@ -1355,16 +1356,16 @@ if __name__ == "__main__":
     
     tfp = 0.3
     
-    run(0, 4, camTemp, attTemp, tfp, sessionDir)
+    #run(0, 4, camTemp, attTemp, tfp, sessionDir)
     
-    """
+    
     for gpu in range(8):
         
         seed = gpu
                 
         process = Process(target=run, args=[gpu, seed, camTemp, attTemp, tfp, sessionDir])
         process.start()
-    """
+    
     
     
     #gpu = 0
