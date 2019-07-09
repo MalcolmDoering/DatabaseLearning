@@ -1206,7 +1206,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     
     
     
-    
+    gumbelSoftmaxTemp = 0.0
     
     for e in range(numEpochs):
         
@@ -1214,7 +1214,15 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
         
         #teacherForcingProb = 0.6 #1.0 - 1.0 / (1.0 + np.exp( - (e-200.0)/10.0))
         #gumbelSoftmaxTemp = 6.0 * np.exp(-0.0003 * e) + 0.01
-        gumbelSoftmaxTemp = max((-1.0/2000) * e + 3, 0.05)
+        #gumbelSoftmaxTemp = max((-1.0/2000) * e + 3, 0.05)
+        
+        
+        
+        if e == 3000:
+            print("setting to use the GS", flush=True, file=sessionTerminalOutputStream)
+            gumbelSoftmaxTemp = 1.0
+            #print("resetting the optimizer", flush=True, file=sessionTerminalOutputStream)
+            #learner.reset_optimizer()
         
         
         #
@@ -1351,21 +1359,21 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
 if __name__ == "__main__":
     
     
-    camTemp = 0
-    attTemp = 0
+    camTemp = 0.01
+    attTemp = 0.01
     
     tfp = 0.3
     
-    #run(0, 4, camTemp, attTemp, tfp, sessionDir)
+    run(0, 6, camTemp, attTemp, tfp, sessionDir)
     
-    
+    """
     for gpu in range(8):
         
         seed = gpu
                 
         process = Process(target=run, args=[gpu, seed, camTemp, attTemp, tfp, sessionDir])
         process.start()
-    
+    """
     
     
     #gpu = 0

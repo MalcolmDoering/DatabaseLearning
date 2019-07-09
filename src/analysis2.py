@@ -21,39 +21,39 @@ import copy
 #plt.style.use('seaborn-white')
 
 
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-05-17_11-30-24_actionPrediction12_dbl - save" # 2 training databases, presented in 20190524 meeting
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-05-21_14-54-06_actionPrediction13_dbl - save" # 10 training databases, presented in 20190524 meeting
+#expLogDir = "E:/eclipse-log/2019-05-17_11-30-24_actionPrediction12_dbl - save" # 2 training databases, presented in 20190524 meeting
+#expLogDir = "E:/eclipse-log/2019-05-21_14-54-06_actionPrediction13_dbl - save" # 10 training databases, presented in 20190524 meeting
 
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-05-24_19-00-07_actionPrediction13_dbl - GT DB entries" # 10 databases, GT database entries given
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-05-31_11-34-31_actionPrediction13_dbl" # 10 databases, GT database entries given, and the new metrics, only shopkeeper responses to question about price included in data
+#expLogDir = "E:/eclipse-log/2019-05-24_19-00-07_actionPrediction13_dbl - GT DB entries" # 10 databases, GT database entries given
+#expLogDir = "E:/eclipse-log/2019-05-31_11-34-31_actionPrediction13_dbl" # 10 databases, GT database entries given, and the new metrics, only shopkeeper responses to question about price included in data
 
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-03_18-17-08_actionPrediction13_dbl" # 10 databases, GT database entries given, DB entries padded with 0 vecs
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-05_13-47-27_actionPrediction13_dbl" # 10 databases, GT database entries given, DB entries padded with 0 vecs
+#expLogDir = "E:/eclipse-log/2019-06-03_18-17-08_actionPrediction13_dbl" # 10 databases, GT database entries given, DB entries padded with 0 vecs
+#expLogDir = "E:/eclipse-log/2019-06-05_13-47-27_actionPrediction13_dbl" # 10 databases, GT database entries given, DB entries padded with 0 vecs
 
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-06_16-33-38_actionPrediction13_dbl" # 10 databases, GT database entries given, DB entries padded with 0 vecs, reduced batch size and unrandomized training instance order
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-06_16-55-22_actionPrediction13_dbl" # 10 databases, GT database entries given, DB entries padded with 0 vecs, reduced batch size and randomized training instance order
+#expLogDir = "E:/eclipse-log/2019-06-06_16-33-38_actionPrediction13_dbl" # 10 databases, GT database entries given, DB entries padded with 0 vecs, reduced batch size and unrandomized training instance order
+#expLogDir = "E:/eclipse-log/2019-06-06_16-55-22_actionPrediction13_dbl" # 10 databases, GT database entries given, DB entries padded with 0 vecs, reduced batch size and randomized training instance order
 
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-07_15-05-37_actionPrediction13_dbl" # 10 databases all data, GT database entries given, DB entries padded with 0 vecs, reduced batch size and unrandomized training instance order
-
-
-
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-10_14-30-33_actionPrediction13_dbl" # 10 databases, relu and softmax addressing, DB entries padded with 0 vecs, reduced batch size and unrandomized training instance order, softmaxed over weighted DB entry sums
+#expLogDir = "E:/eclipse-log/2019-06-07_15-05-37_actionPrediction13_dbl" # 10 databases all data, GT database entries given, DB entries padded with 0 vecs, reduced batch size and unrandomized training instance order
 
 
 
-
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-05-31_15-35-15_actionPrediction13_dbl" # 2 databases, GT database entries given, and the new metrics, only shopkeeper responses to question about price included in data
-
+#expLogDir = "E:/eclipse-log/2019-06-10_14-30-33_actionPrediction13_dbl" # 10 databases, relu and softmax addressing, DB entries padded with 0 vecs, reduced batch size and unrandomized training instance order, softmaxed over weighted DB entry sums
 
 
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-05-31_17-54-56_actionPrediction13_dbl" # 2 databases, temp grid search, and the new metrics, only shopkeeper responses to question about price included in data
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-03_13-03-18_actionPrediction13_dbl" # 10 databases, temp grid search, and the new metrics, only shopkeeper responses to question about price included in data
-
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-07_11-47-14_actionPrediction13_dbl" # 10 databases, temp grid search, and the new metrics, only shopkeeper responses to question about price included in data, 50 batch unrandomized
 
 
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-05-27_12-29-06_actionPrediction13_dbl" # 10 databases, sharpening used for addressing
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-05-28_14-34-02_actionPrediction13_dbl" # 10 databases, sharpening used for addressing, and the new metrics
+#expLogDir = "E:/eclipse-log/2019-05-31_15-35-15_actionPrediction13_dbl" # 2 databases, GT database entries given, and the new metrics, only shopkeeper responses to question about price included in data
+
+
+
+#expLogDir = "E:/eclipse-log/2019-05-31_17-54-56_actionPrediction13_dbl" # 2 databases, temp grid search, and the new metrics, only shopkeeper responses to question about price included in data
+#expLogDir = "E:/eclipse-log/2019-06-03_13-03-18_actionPrediction13_dbl" # 10 databases, temp grid search, and the new metrics, only shopkeeper responses to question about price included in data
+
+#expLogDir = "E:/eclipse-log/2019-06-07_11-47-14_actionPrediction13_dbl" # 10 databases, temp grid search, and the new metrics, only shopkeeper responses to question about price included in data, 50 batch unrandomized
+
+
+#expLogDir = "E:/eclipse-log/2019-05-27_12-29-06_actionPrediction13_dbl" # 10 databases, sharpening used for addressing
+#expLogDir = "E:/eclipse-log/2019-05-28_14-34-02_actionPrediction13_dbl" # 10 databases, sharpening used for addressing, and the new metrics
 
 
 
@@ -66,7 +66,7 @@ import copy
 # 50 reduced batch size and unrandomized training instance order
 # only utt input to addressing layer and decoder initialization
 # result: attr addresses learned but not camera addresses (because loc was not input to addressing layer)
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-06_17-30-06_actionPrediction13_dbl" 
+#expLogDir = "E:/eclipse-log/2019-06-06_17-30-06_actionPrediction13_dbl" 
 
 # 10 databases
 # only S_ANSWERS_QUESTION_ABOUT_FEATURE price included
@@ -81,7 +81,7 @@ import copy
 # 1) inputs to the addressing layer and decoder init
 # 2) learning rate
 # 3) removed the dedicated utterance encoder that was used for input to the addressing layer
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-12_18-48-35_actionPrediction13_dbl" 
+#expLogDir = "E:/eclipse-log/2019-06-12_18-48-35_actionPrediction13_dbl" 
 
 # 10 databases
 # only S_ANSWERS_QUESTION_ABOUT_FEATURE price included
@@ -91,7 +91,7 @@ import copy
 # 50 reduced batch size and unrandomized training instance order
 # combined loc and utt input to addressing layer, loc layer, and decoder initialization
 # result:
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-13_12-00-52_actionPrediction13_dbl" 
+#expLogDir = "E:/eclipse-log/2019-06-13_12-00-52_actionPrediction13_dbl" 
 
 
 # 10 databases
@@ -103,7 +103,7 @@ import copy
 # combined loc and utt input to addressing layer, loc layer, and decoder initialization
 # separate input encoding for the addressing layer
 # result: it works!
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-13_17-59-54_actionPrediction13_dbl" 
+#expLogDir = "E:/eclipse-log/2019-06-13_17-59-54_actionPrediction13_dbl" 
 
 
 # 10 databases
@@ -118,7 +118,7 @@ import copy
 # result: the correct addresses are being learned, but the copynet is not working
 # try training without teacher forcing
 # how will doing the weighted sum of the DB entry effect the decoding? 
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-14_11-14-59_actionPrediction13_dbl" 
+#expLogDir = "E:/eclipse-log/2019-06-14_11-14-59_actionPrediction13_dbl" 
 
 
 # 10 databases
@@ -133,7 +133,7 @@ import copy
 # result: 
 # mixed results, the addresses are learned but it takes a longer time than with teacher forcing
 # generalization does not seem stable - train DB substring all correct goes to 100 but then falls back down
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-14_16-55-45_actionPrediction13_dbl" 
+#expLogDir = "E:/eclipse-log/2019-06-14_16-55-45_actionPrediction13_dbl" 
 
 
 
@@ -148,7 +148,7 @@ import copy
 # curriculum learning used for training, nothing for testing
 # 
 # result: 
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-17_17-10-31_actionPrediction13_dbl"
+#expLogDir = "E:/eclipse-log/2019-06-17_17-10-31_actionPrediction13_dbl"
 
 
 # 10 databases
@@ -162,7 +162,7 @@ import copy
 # curriculum learning used for training, nothing for testing
 # 1.0 - 1.0 / (1.0 + np.exp( - (e-500.0)/100.0))
 # result: 
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-18_12-40-37_actionPrediction13_dbl"
+#expLogDir = "E:/eclipse-log/2019-06-18_12-40-37_actionPrediction13_dbl"
 
 
 # 10 databases
@@ -176,7 +176,7 @@ import copy
 # curriculum learning used for training, nothing for testing
 # 1.0 - 1.0 / (1.0 + np.exp( - (e-200.0)/10.0))
 # result: 
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-19_17-08-11_actionPrediction13_dbl"
+#expLogDir = "E:/eclipse-log/2019-06-19_17-08-11_actionPrediction13_dbl"
 
 
 # 10 databases
@@ -189,7 +189,7 @@ import copy
 # separate input encoding for the addressing layer
 # 0.3 prob of teacher forcing
 # result: 
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-20_11-22-07_actionPrediction13_dbl"
+#expLogDir = "E:/eclipse-log/2019-06-20_11-22-07_actionPrediction13_dbl"
 
 
 # 10 databases
@@ -202,7 +202,7 @@ import copy
 # separate input encoding for the addressing layer
 # 0.6 prob of teacher forcing
 # result: 
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-21_11-59-10_actionPrediction13_dbl"
+#expLogDir = "E:/eclipse-log/2019-06-21_11-59-10_actionPrediction13_dbl"
 
 
 # 10 databases
@@ -215,7 +215,7 @@ import copy
 # separate input encoding for the addressing layer
 # 0.3, 0.7, 0.8, 0.9 prob of teacher forcing
 # result: 
-expLogDir = "C:/Users/robovie/eclipse-log/2019-06-24_11-46-31_actionPrediction13_dbl"
+expLogDir = "E:/eclipse-log/2019-06-24_11-46-31_actionPrediction13_dbl"
 
 
 # 10 databases
@@ -229,7 +229,7 @@ expLogDir = "C:/Users/robovie/eclipse-log/2019-06-24_11-46-31_actionPrediction13
 # 0.3, 0.7, 0.8, 0.9 prob of teacher forcing
 # tried modifying the copynet so it could use teacher forcing
 # result: not good
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-21_18-34-39_actionPrediction13_dbl"
+#expLogDir = "E:/eclipse-log/2019-06-21_18-34-39_actionPrediction13_dbl"
 
 
 # 10 databases
@@ -243,14 +243,14 @@ expLogDir = "C:/Users/robovie/eclipse-log/2019-06-24_11-46-31_actionPrediction13
 # 0.3, 0.7, 0.8, 0.9 prob of teacher forcing
 # does not use copynet, instead tries to copy entire DB entry at once
 # result: 
-expLogDir = "C:/Users/robovie/eclipse-log/2019-06-24_18-05-48_actionPrediction14_dbl"
+expLogDir = "E:/eclipse-log/2019-06-24_18-05-48_actionPrediction14_dbl"
 
 
 
-expLogDir = "C:/Users/robovie/eclipse-log/2019-06-25_17-58-50_actionPrediction14_dbl"
+expLogDir = "E:/eclipse-log/2019-06-25_17-58-50_actionPrediction14_dbl"
 
 
-expLogDir = "C:/Users/robovie/eclipse-log/2019-06-26_11-34-59_actionPrediction14_dbl"
+expLogDir = "E:/eclipse-log/2019-06-26_11-34-59_actionPrediction14_dbl"
 
 
 
@@ -265,7 +265,7 @@ expLogDir = "C:/Users/robovie/eclipse-log/2019-06-26_11-34-59_actionPrediction14
 # db match entry encoding and input encoding used to initialize decoder
 # gen weight and db_read_weight, and copy weight used
 # result: reaches 100% in the training but lots of up and down spikes. does not generalize at all to the testing set
-expLogDir = "C:/Users/robovie/eclipse-log/2019-06-26_18-06-16_actionPrediction14_dbl"
+expLogDir = "E:/eclipse-log/2019-06-26_18-06-16_actionPrediction14_dbl"
 
 
 # 10 databases
@@ -279,7 +279,7 @@ expLogDir = "C:/Users/robovie/eclipse-log/2019-06-26_18-06-16_actionPrediction14
 # db match entry len and input encoding used to initialize decoder
 # only db_read_weight used
 # result: reaches 100% in the training but lots of up and down spikes. does not generalize at all to the testing set
-expLogDir = "C:/Users/robovie/eclipse-log/2019-06-27_14-22-39_actionPrediction14_dbl"
+expLogDir = "E:/eclipse-log/2019-06-27_14-22-39_actionPrediction14_dbl"
 
 
 
@@ -295,7 +295,7 @@ expLogDir = "C:/Users/robovie/eclipse-log/2019-06-27_14-22-39_actionPrediction14
 # learning rate, 0 padding of inputs and outputs
 # removal of eos char from DB entries and inputs
 # something else...?
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-27_16-16-40_actionPrediction13_dbl"
+#expLogDir = "E:/eclipse-log/2019-06-27_16-16-40_actionPrediction13_dbl"
 
 
 # 10 databases
@@ -307,7 +307,7 @@ expLogDir = "C:/Users/robovie/eclipse-log/2019-06-27_14-22-39_actionPrediction14
 # 1.0 teacher forcing
 # copy net used
 # result: 
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-27_18-23-44_actionPrediction13_dbl"
+#expLogDir = "E:/eclipse-log/2019-06-27_18-23-44_actionPrediction13_dbl"
 
 
 # 10 databases
@@ -320,7 +320,7 @@ expLogDir = "C:/Users/robovie/eclipse-log/2019-06-27_14-22-39_actionPrediction14
 # result: training works, but does not generalize at all to the test set
 # what has happened since last time when it worked?!
 # it seems that the randomizeTrainingBatches flag was accidentally set to True... Maybe that was the problem
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-27_18-54-45_actionPrediction13_dbl"
+#expLogDir = "E:/eclipse-log/2019-06-27_18-54-45_actionPrediction13_dbl"
 
 
 # try same as above but without randomization of the training batches
@@ -333,7 +333,7 @@ expLogDir = "C:/Users/robovie/eclipse-log/2019-06-27_14-22-39_actionPrediction14
 # 1.0 teacher forcing on training and inference
 # result: it works. the training instance randomization was causing the problem
 # 
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-28_10-55-05_actionPrediction13_dbl"
+#expLogDir = "E:/eclipse-log/2019-06-28_10-55-05_actionPrediction13_dbl"
 
 
 # try the same as above but with 0 padding on all strings and eos chars on only the outputs
@@ -346,20 +346,20 @@ expLogDir = "C:/Users/robovie/eclipse-log/2019-06-27_14-22-39_actionPrediction14
 # 1.0 teacher forcing on training and inference
 # result: it works. the training instance randomization was causing the problem
 # 
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-28_11-23-06_actionPrediction13_dbl"
+#expLogDir = "E:/eclipse-log/2019-06-28_11-23-06_actionPrediction13_dbl"
 
 
 # same as above but with TF set to .3 and no TF used on inference
-#expLogDir = "C:/Users/robovie/eclipse-log/2019-06-28_11-57-25_actionPrediction13_dbl"
+#expLogDir = "E:/eclipse-log/2019-06-28_11-57-25_actionPrediction13_dbl"
 
 
 # same as above but with tanh softmax used for addressing
-expLogDir = "C:/Users/robovie/eclipse-log/2019-06-28_13-58-36_actionPrediction13_dbl"
+expLogDir = "E:/eclipse-log/2019-06-28_13-58-36_actionPrediction13_dbl"
 
 
 
 # same as above but with GS for addressing, grid search over temps
-expLogDir = "C:/Users/robovie/eclipse-log/2019-06-28_19-31-28_actionPrediction13_dbl"
+expLogDir = "E:/eclipse-log/2019-06-28_19-31-28_actionPrediction13_dbl"
 
 
 
@@ -374,7 +374,7 @@ expLogDir = "C:/Users/robovie/eclipse-log/2019-06-28_19-31-28_actionPrediction13
 # 0.3 teacher forcing on training and no teacher forcing on inference
 # result: 
 #
-expLogDir = "C:/Users/robovie/eclipse-log/2019-07-02_17-51-46_actionPrediction13_dbl"
+expLogDir = "E:/eclipse-log/2019-07-02_17-51-46_actionPrediction13_dbl"
 
 # same as above but with a lower learning rate
 # divide copy scores by num char occurrences
@@ -387,17 +387,50 @@ expLogDir = "C:/Users/robovie/eclipse-log/2019-07-02_17-51-46_actionPrediction13
 # 0.3 teacher forcing on training and no teacher forcing on inference
 # result: 
 #
-expLogDir = "C:/Users/robovie/eclipse-log/2019-07-02_18-21-39_actionPrediction13_dbl"
+expLogDir = "E:/eclipse-log/2019-07-02_18-21-39_actionPrediction13_dbl"
 
 
-expLogDir = "C:/Users/robovie/eclipse-log/2019-07-03_12-06-43_actionPrediction13_dbl"
+expLogDir = "E:/eclipse-log/2019-07-03_12-06-43_actionPrediction13_dbl"
 
 # price only, uniform initialization
-expLogDir = "C:/Users/robovie/eclipse-log/2019-07-03_16-42-14_actionPrediction13_dbl"
+expLogDir = "E:/eclipse-log/2019-07-03_16-42-14_actionPrediction13_dbl"
 
 
 # price only, customer utterance variety, normal initialization
-expLogDir = "C:/Users/robovie/eclipse-log/2019-07-03_17-29-23_actionPrediction13_dbl"
+expLogDir = "E:/eclipse-log/2019-07-03_17-29-23_actionPrediction13_dbl"
+
+# price only, customer utterance variety, uniform initialization
+expLogDir = "E:/eclipse-log/2019-07-04_13-10-38_actionPrediction13_dbl"
+
+
+
+# actionPrediction14
+# GT addresses
+# handmade databases, 2 training
+# only S_A_Q_A_F, all features
+# bias unit (1.0) added to decoder initialization instead of the DB match sum
+# Adam 0.001 learning rate
+# teacher forcing for training and inference
+# result: did not work, seemed to be learning until epoch ~250, then performance spiked
+# overflow encountered in multiply around 10 minuts after sessionDir was generated
+# 
+expLogDir = "E:/eclipse-log/2019-07-05_17-31-56_actionPrediction14_dbl"
+
+
+
+# copynet
+# 10 train
+# price only
+# gumbelSoftmaxTemp = 6.0 * np.exp(-0.0003 * e) + 0.01
+expLogDir = "E:/eclipse-log/"
+
+# copynet
+# 10 train
+# price only
+# gumbelSoftmaxTemp = max((-1.0/2000) * e + 3, 0.05)
+expLogDir = "E:/eclipse-log/2019-07-08_16-34-31_actionPrediction13_dbl"
+
+
 
 
 

@@ -48,9 +48,10 @@ class CustomNeuralNetwork(object):
         #
         # build the model
         #
+        
         self._gumbel_softmax_temp = tf.placeholder(tf.float32, shape=(), name='gumbel_softmax_temp')
-        self.gumbel_softmax_temp_cams = self._gumbel_softmax_temp
-        self.gumbel_softmax_temp_atts = self._gumbel_softmax_temp
+        #self.gumbel_softmax_temp_cams = self._gumbel_softmax_temp
+        #self.gumbel_softmax_temp_atts = self._gumbel_softmax_temp
         
         #with tf.name_scope("input encoder"):
         
@@ -149,11 +150,25 @@ class CustomNeuralNetwork(object):
             # find the best matching camera and attribute from the database
             
             # use only softmax for addressing
+            #cam1 = tf.layers.dense(self._loc_utt_combined_input_encoding_2, self.numUniqueCams, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
+            #att1 = tf.layers.dense(self._loc_utt_combined_input_encoding_2, self.numUniqueAtts, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
+            
+            #self.camMatch = tf.nn.softmax(cam1)
+            #self.attMatch = tf.nn.softmax(att1)
+            
+            
+            # combined softmax and GS
             cam1 = tf.layers.dense(self._loc_utt_combined_input_encoding_2, self.numUniqueCams, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
             att1 = tf.layers.dense(self._loc_utt_combined_input_encoding_2, self.numUniqueAtts, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
             
-            self.camMatch = tf.nn.softmax(cam1)
-            self.attMatch = tf.nn.softmax(att1)
+            smCamMatch = tf.nn.softmax(cam1)
+            smAttMatch = tf.nn.softmax(att1)
+            
+            gsCamMatch = tf.contrib.distributions.RelaxedOneHotCategorical(self.gumbel_softmax_temp_cams, probs=smCamMatch).sample()
+            gsAttMatch = tf.contrib.distributions.RelaxedOneHotCategorical(self.gumbel_softmax_temp_atts, probs=smAttMatch).sample()
+            
+            self.camMatch = self._gumbel_softmax_temp * gsCamMatch + (1.0-self._gumbel_softmax_temp) * smCamMatch
+            self.attMatch = self._gumbel_softmax_temp * gsAttMatch + (1.0-self._gumbel_softmax_temp) * smAttMatch
             
             
             # gumbel softmax used till 20190525
@@ -304,6 +319,7 @@ class CustomNeuralNetwork(object):
         opt = tf.train.AdamOptimizer(learning_rate=1e-4)
         #opt = tf.train.GradientDescentOptimizer(learning_rate=1e-2)
         
+        self.reset_optimizer_op = tf.variables_initializer(opt.variables())
         
         gradients = opt.compute_gradients(self._loss)
         
@@ -446,3 +462,11 @@ class CustomNeuralNetwork(object):
     
     def save(self, filename):
         self.saver.save(self._sess, filename)
+    
+    
+    def reset_optimizer(self):
+        
+        self._sess.run(self.reset_optimizer_op)
+        
+    
+    
