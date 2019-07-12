@@ -431,6 +431,80 @@ expLogDir = "E:/eclipse-log/"
 expLogDir = "E:/eclipse-log/2019-07-08_16-34-31_actionPrediction13_dbl"
 
 
+# copynet
+# 10 train 
+# price only
+# swicth to GS 0.01 and reset optimizer at 3000
+# result: performance dropped at 3000 and addressing stopped working
+expLogDir = "E:/eclipse-log/2019-07-08_18-33-50_actionPrediction13_dbl"
+
+# copynet
+# 10 train 
+# price only
+# switch to GS 0.01 at 3000
+# result: performance dropped at 3000 and addressing stopped working
+expLogDir = "E:/eclipse-log/2019-07-09_12-26-09_actionPrediction13_dbl"
+
+
+
+# copynet
+# 10 train 
+# price only
+# use softmax till 3000, apply GS with temp 0.01 from 3000
+# train whole network till 3000, only train decoding part (not addressing) from 3000
+# result: performance dropped at 3000 and addressing stopped working
+expLogDir = "E:/eclipse-log/2019-07-09_13-23-24_actionPrediction13_dbl"
+
+
+
+# copynet
+# 10 train 
+# price only
+# use softmax till 3000, apply sharpening with ^10 from 3000
+# train whole network till 3000, only train decoding part (not addressing) from 3000
+# result: there was a bug in the code. did not swith to train_op_2 as expected
+expLogDir = "E:/eclipse-log/2019-07-09_17-51-05_actionPrediction13_dbl"
+
+
+# copynet
+# 10 train 
+# price only
+# use softmax till 3000, apply sharpening with ^10 from 3000
+# train whole network till 3000, only train decoding part (not addressing) from 3000
+# result: 
+# successfully stopped the addressing mechanism from being trained further
+# there is a decrease in performance when sharpening begins to be used
+# the training seems to recover in performance
+# but the testing does not seem to recover...
+# in the testing (and probably the training too) the correct substrings are being copied/generated. Spaces do not have high copy scores.
+# but, some of the test DB substrings are not entirely copied. Ie. they end early...
+# perhaps the optimizer should be reset at that point in time too to prevent getting stuck in local minimum, or reinitialize the decoding weights too
+expLogDir = "E:/eclipse-log/2019-07-10_12-51-05_actionPrediction13_dbl"
+
+
+expLogDir = "E:/eclipse-log/2019-07-10_16-50-46_actionPrediction13_dbl"
+
+
+# copynet
+# 10 train 
+# price only
+# use softmax till 3000, apply sharpening with ^10 from 3000
+# train whole network till 3000, only train decoding part (not addressing) from 3000
+# reinitialize the decoding weights at 3000
+# uses dataset with variety of customer utterances
+# result: 
+#expLogDir = "E:/eclipse-log/2019-07-11_12-29-27_actionPrediction13_dbl"
+
+
+# copynet
+# 10 train 
+# price only
+# use softmax till 3000, apply sharpening with ^10 from 3000
+# train whole network till 3000, only train decoding part (not addressing) from 3000
+# reinitialize the decoding weights at 3000
+# uses dataset without a variety of customer utterances
+# result: 
+#expLogDir = "E:/eclipse-log/2019-07-11_17-49-44_actionPrediction13_dbl"
 
 
 
