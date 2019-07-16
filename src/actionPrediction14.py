@@ -33,7 +33,7 @@ from utterancevectorizer import UtteranceVectorizer
 
 
 
-DEBUG = True
+DEBUG = False
 
 
 eosChar = "#"
@@ -44,7 +44,7 @@ cameras = ["CAMERA_1", "CAMERA_2", "CAMERA_3"]
 
 
 numTrainDbs = 2
-batchSize = 128
+batchSize = 64
 embeddingSize = 30
 numEpochs = 10000
 evalEvery = 50
@@ -1171,7 +1171,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
         #
         # save interesting instances to file
         #
-        with open(sessionDir+"/{:}_outputs.csv".format(e), "w", newline="") as csvfile:
+        with open(sessionDir+"/{:}_outputs.csv".format(e), "a", newline="") as csvfile:
             
             writer = csv.writer(csvfile)
             
@@ -1354,16 +1354,16 @@ if __name__ == "__main__":
     attTemp = 0
     
     
-    run(0, 0, camTemp, attTemp, 1.0, sessionDir)
+    #run(0, 0, camTemp, attTemp, 1.0, sessionDir)
     
-    """
+    
     for gpu in range(8):
         
         seed = gpu
                 
         process = Process(target=run, args=[gpu, seed, camTemp, attTemp, 1.0, sessionDir])
         process.start()
-    """
+    
     
     
     #gpu = 0
