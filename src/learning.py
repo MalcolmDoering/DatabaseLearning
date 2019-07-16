@@ -74,7 +74,7 @@ class CustomNeuralNetwork(object):
         
         
         
-        with tf.variable_scope("input_encoder_1"):
+        with tf.variable_scope("decoding/input_encoder_1"):
             # input encoder for the initial state of the copynet
             
             """
@@ -156,7 +156,7 @@ class CustomNeuralNetwork(object):
             #self.camMatch = tf.nn.softmax(cam1)
             #self.attMatch = tf.nn.softmax(att1)
             
-            
+            """
             # combined softmax and GS
             cam1 = tf.layers.dense(self._loc_utt_combined_input_encoding_2, self.numUniqueCams, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
             att1 = tf.layers.dense(self._loc_utt_combined_input_encoding_2, self.numUniqueAtts, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
@@ -164,12 +164,24 @@ class CustomNeuralNetwork(object):
             smCamMatch = tf.nn.softmax(cam1)
             smAttMatch = tf.nn.softmax(att1)
             
-            gsCamMatch = tf.contrib.distributions.RelaxedOneHotCategorical(self.gumbel_softmax_temp_cams, probs=smCamMatch).sample()
-            gsAttMatch = tf.contrib.distributions.RelaxedOneHotCategorical(self.gumbel_softmax_temp_atts, probs=smAttMatch).sample()
+            #gsCamMatch = tf.contrib.distributions.RelaxedOneHotCategorical(self.gumbel_softmax_temp_cams, probs=smCamMatch).sample()
+            #gsAttMatch = tf.contrib.distributions.RelaxedOneHotCategorical(self.gumbel_softmax_temp_atts, probs=smAttMatch).sample()
             
-            self.camMatch = self._gumbel_softmax_temp * gsCamMatch + (1.0-self._gumbel_softmax_temp) * smCamMatch
-            self.attMatch = self._gumbel_softmax_temp * gsAttMatch + (1.0-self._gumbel_softmax_temp) * smAttMatch
+            #self.camMatch = self._gumbel_softmax_temp * gsCamMatch + (1.0-self._gumbel_softmax_temp) * smCamMatch
+            #self.attMatch = self._gumbel_softmax_temp * gsAttMatch + (1.0-self._gumbel_softmax_temp) * smAttMatch
             
+            sharpCamMatch = tf.pow(smCamMatch, 10)
+            sharpAttMatch = tf.pow(smAttMatch, 10)
+            
+            sharpCamDen = tf.reduce_sum(sharpCamMatch, 1, keepdims=True)
+            sharpAttDen = tf.reduce_sum(sharpAttMatch, 1, keepdims=True)
+            
+            sharpCamMatch = sharpCamMatch / sharpCamDen
+            sharpAttMatch = sharpAttMatch / sharpAttDen
+            
+            self.camMatch = self._gumbel_softmax_temp * sharpCamMatch + (1.0-self._gumbel_softmax_temp) * smCamMatch
+            self.attMatch = self._gumbel_softmax_temp * sharpAttMatch + (1.0-self._gumbel_softmax_temp) * smAttMatch
+            """
             
             # gumbel softmax used till 20190525
             #cam1 = tf.layers.dense(self._input_encoding_2, self.numUniqueCams, activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
@@ -191,15 +203,15 @@ class CustomNeuralNetwork(object):
             
             
             # provide the ground truth DB entries
-            #self.camMatch = self._gtDbCams
-            #self.attMatch = self._gtDbAtts
+            self.camMatch = self._gtDbCams
+            self.attMatch = self._gtDbAtts
             
             
             self.camMatchIndex = tf.argmax(self.camMatch, axis=1)
             self.attMatchIndex = tf.argmax(self.attMatch, axis=1)
             
-        
-        with tf.variable_scope("DB_encoder"):
+            
+        with tf.variable_scope("decoding/DB_encoder"):
             # DB encoder
             self._db_entries = tf.placeholder(tf.float32, [self.batchSize, self.numUniqueCams, self.numUniqueAtts, self.dbSeqLen, self.vocabSize], name='DB_entries')
             
@@ -254,7 +266,7 @@ class CustomNeuralNetwork(object):
             """
             
         
-        with tf.variable_scope("location_layer"):
+        with tf.variable_scope("decoding/location_layer"):
             # get the shopkeeper output location
             
             locHid = tf.layers.dense(self._loc_utt_combined_input_encoding,
@@ -274,6 +286,11 @@ class CustomNeuralNetwork(object):
         #
         self._ground_truth_outputs = tf.placeholder(tf.int32, [self.batchSize, self.outputSeqLen], name='true_robot_outputs')
         #self._ground_truth_outputs_one_hot = tf.one_hot(self._ground_truth_outputs, self.vocabSize)
+        
+        
+        self._ground_truth_output_lens = tf.placeholder(tf.int32, [self.batchSize,], name="true_robot_output_lens")
+        self._output_mask = tf.sequence_mask(self._ground_truth_output_lens, self.outputSeqLen, dtype=tf.int32)
+        
         
         self._ground_truth_location_outputs = tf.placeholder(tf.int32, [self.batchSize, self.locationVecLen])
         
@@ -298,7 +315,7 @@ class CustomNeuralNetwork(object):
         self._teacher_forcing_prob = tf.placeholder(tf.float32, shape=(), name='teacher_forcing_prob')
         
         # for training
-        self._loss, self._train_predicted_output_sequences, self._train_copy_scores, self._train_gen_scores = self.build_decoder(teacherForcing=True, scopeName="decoder_train")
+        self._loss, self._train_predicted_output_sequences, self._train_copy_scores, self._train_gen_scores = self.build_decoder(teacherForcing=True, scopeName="decoding/decoder_train")
         
         #self._loss = tf.check_numerics(self._loss, "_loss")                                                                                                                                                                  
         
@@ -321,13 +338,28 @@ class CustomNeuralNetwork(object):
         
         self.reset_optimizer_op = tf.variables_initializer(opt.variables())
         
+        
+        #
+        # for training the entire network
+        #
         gradients = opt.compute_gradients(self._loss)
-        
         #tf.check_numerics(gradients, "gradients")
-        
         capped_gradients = [(tf.clip_by_value(grad, -1., 1.), var) for grad, var in gradients if grad is not None]
         
-        self._train_op = opt.apply_gradients(capped_gradients, name="train_op")
+        self._train_op_1 = opt.apply_gradients(capped_gradients, name="train_op")
+        
+        
+        #
+        # for only training the decoding part (and not the addressing part)
+        #
+        decoding_train_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "decoding")
+        decoding_gradients = opt.compute_gradients(self._loss, var_list=decoding_train_vars)
+        decoding_capped_gradients = [(tf.clip_by_value(grad, -1., 1.), var) for grad, var in decoding_gradients if grad is not None]
+        
+        self._train_op_2 = opt.apply_gradients(decoding_capped_gradients)
+        
+        
+        self._train_op = self._train_op_1
         
         
         #
@@ -340,6 +372,8 @@ class CustomNeuralNetwork(object):
         
         
         self._init_op = tf.initialize_all_variables()
+        self._init_decoding_op = tf.initialize_variables(decoding_train_vars)
+        
         
         self.initialize()
         
@@ -385,7 +419,7 @@ class CustomNeuralNetwork(object):
                 
                 # compute the loss
                 #cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=ground_truth_output, logits=output)
-                cross_entropy = tf.losses.softmax_cross_entropy(ground_truth_output, output, reduction=tf.losses.Reduction.SUM_OVER_BATCH_SIZE) # is this right for sequence eval?
+                cross_entropy = tf.losses.softmax_cross_entropy(ground_truth_output, output, weights=self._output_mask[:,i], reduction=tf.losses.Reduction.SUM_OVER_BATCH_SIZE) # is this right for sequence eval?
                 #current_loss = tf.reduce_sum(cross_entropy)
                 loss = loss + cross_entropy
             
@@ -405,11 +439,12 @@ class CustomNeuralNetwork(object):
         self._sess.run(self._init_op)
         
     
-    def train(self, inputUtts, inputCustLocs, databases, groundTruthUttOutputs, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, gumbelSoftmaxTemp, teacherForcingProb=1.0):
+    def train(self, inputUtts, inputCustLocs, databases, groundTruthUttOutputs, groundTruthOutputStringLens, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, gumbelSoftmaxTemp, teacherForcingProb=1.0):
         feedDict = {self._inputs: inputUtts, 
                     self._location_inputs: inputCustLocs, 
                     self._db_entries: databases, 
                     self._ground_truth_outputs: groundTruthUttOutputs,
+                    self._ground_truth_output_lens: groundTruthOutputStringLens,
                     self._ground_truth_location_outputs: groundTruthOutputShkpLocs,
                     self._gtDbCamIndices: gtDbCams, 
                     self._gtDbAttIndices: gtDbAtts,
@@ -421,11 +456,12 @@ class CustomNeuralNetwork(object):
         return trainingLoss
     
     
-    def train_loss(self, inputUtts, inputCustLocs, databases, groundTruthOutputs, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, gumbelSoftmaxTemp, teacherForcingProb=1.0):
+    def train_loss(self, inputUtts, inputCustLocs, databases, groundTruthOutputs, groundTruthOutputStringLens, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, gumbelSoftmaxTemp, teacherForcingProb=1.0):
         feedDict = {self._inputs: inputUtts, 
                     self._location_inputs: inputCustLocs, 
                     self._db_entries: databases, 
                     self._ground_truth_outputs: groundTruthOutputs,
+                    self._ground_truth_output_lens: groundTruthOutputStringLens,
                     self._ground_truth_location_outputs: groundTruthOutputShkpLocs,
                     self._gtDbCamIndices: gtDbCams, 
                     self._gtDbAttIndices: gtDbAtts,
@@ -437,11 +473,12 @@ class CustomNeuralNetwork(object):
         return loss
     
     
-    def predict(self, inputUtts, inputCustLocs, databases, groundTruthOutputs, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, gumbelSoftmaxTemp, teacherForcingProb=1.0):
+    def predict(self, inputUtts, inputCustLocs, databases, groundTruthOutputs, groundTruthOutputStringLens, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, gumbelSoftmaxTemp, teacherForcingProb=1.0):
         feedDict = {self._inputs: inputUtts, 
                     self._location_inputs: inputCustLocs, 
                     self._db_entries: databases, 
                     self._ground_truth_outputs: groundTruthOutputs,
+                    self._ground_truth_output_lens: groundTruthOutputStringLens,
                     self._ground_truth_location_outputs: groundTruthOutputShkpLocs,
                     self._gtDbCamIndices: gtDbCams, 
                     self._gtDbAttIndices: gtDbAtts,
@@ -467,6 +504,21 @@ class CustomNeuralNetwork(object):
     def reset_optimizer(self):
         
         self._sess.run(self.reset_optimizer_op)
+        
+    
+    def reinitialize_decoding_weights(self):
+        
+        self._sess.run(self._init_decoding_op)
+        
+    
+    def set_train_op(self, op):
+        if op == 1:
+            self._train_op = self._train_op_1
+        elif op == 2:
+            self._train_op = self._train_op_2
+        else:
+            self._train_op = None
+            print("Warning: Invalid train op", op)
         
     
     
