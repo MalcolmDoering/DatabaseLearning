@@ -33,7 +33,7 @@ from utterancevectorizer import UtteranceVectorizer
 
 
 
-DEBUG = False
+DEBUG = True
 
 
 eosChar = "#"
@@ -43,8 +43,8 @@ goChar = "~"
 cameras = ["CAMERA_1", "CAMERA_2", "CAMERA_3"]
 
 
-numTrainDbs = 2
-batchSize = 64
+numTrainDbs = 10
+batchSize = 128
 embeddingSize = 30
 numEpochs = 10000
 evalEvery = 50
@@ -129,12 +129,14 @@ def vectorize_sentences(sentences, charToIndex, maxSentLen, padChar=None, useEos
     
     sentVecs = []
     sentCharIndexLists = []
+    sentLens = [] # including EoS char, to be used for masking losses
     
     for i in range(len(sentences)):
         
         # vectorize the main portion of the sentence
         sentCharVecs = []
-        sentCharIndexList = []           
+        sentCharIndexList = []
+        sentLen = len(sentences[i])
         
         for j in range(len(sentences[i])):
             
@@ -155,6 +157,8 @@ def vectorize_sentences(sentences, charToIndex, maxSentLen, padChar=None, useEos
             
             sentCharVecs.append(charVec)
             sentCharIndexList.append(charIndex)
+            
+            sentLen += 1
         
         
         # add padding
@@ -187,9 +191,11 @@ def vectorize_sentences(sentences, charToIndex, maxSentLen, padChar=None, useEos
         
         sentVecs.append(sentVec)
         sentCharIndexLists.append(sentCharIndexList)
+        sentLens.append(sentLen)
     
     
-    return sentVecs, sentCharIndexLists
+    return sentVecs, sentCharIndexLists, sentLens
+
 
 
 def vectorize_databases(dbStrings, charToIndex, maxDbValLen):
@@ -198,7 +204,7 @@ def vectorize_databases(dbStrings, charToIndex, maxDbValLen):
     dbIndexLists = []
     
     for row in dbStrings:
-        valVecs, valCharIndexLists = vectorize_sentences(row, charToIndex, maxDbValLen, padChar=None, useEosChar=False, padPre=False)
+        valVecs, valCharIndexLists, _ = vectorize_sentences(row, charToIndex, maxDbValLen, padChar=None, useEosChar=False, padPre=False)
         
         dbVectors.append(valVecs)
         dbIndexLists.append(valCharIndexLists)
@@ -333,7 +339,7 @@ def read_simulated_interactions(filename, dbFieldnames, keepActions=None):
         
         for row in reader:
             
-            if (keepActions == None) or (row["OUTPUT_SHOPKEEPER_ACTION"] in keepActions): # and row["SHOPKEEPER_TOPIC"] == "price"):
+            if (keepActions == None) or (row["OUTPUT_SHOPKEEPER_ACTION"] in keepActions and row["SHOPKEEPER_TOPIC"] == "price"):
                 
                 row["CUSTOMER_SPEECH"] = row["CUSTOMER_SPEECH"].lower().translate(str.maketrans('', '', string.punctuation))
                 row["SHOPKEEPER_SPEECH"] = row["SHOPKEEPER_SPEECH"].lower()
@@ -444,8 +450,8 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     print("loading data...", flush=True, file=sessionTerminalOutputStream)
     
     
-    #dataDirectory = tools.dataDir+"/2019-05-21_14-11-57_advancedSimulator8"
-    dataDirectory = tools.dataDir+"/handmade_0"
+    dataDirectory = tools.dataDir+"/2019-05-21_14-11-57_advancedSimulator8"
+    #dataDirectory = tools.dataDir+"/handmade_0"
     
     
     filenames = os.listdir(dataDirectory)
@@ -646,17 +652,18 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     inputIndexLists = []
     
     for inStrs in inputStrings:
-        _, inIndLst = vectorize_sentences(inStrs, charToIndex, maxInputLen, padChar=None, useEosChar=False, padPre=True)
+        _, inIndLst, _ = vectorize_sentences(inStrs, charToIndex, maxInputLen, padChar=None, useEosChar=False, padPre=True)
         inputIndexLists.append(inIndLst)
     """
     
-    
     # vectorize the outputs
     outputIndexLists = []
+    outputStringLens = []
     
     for outStrs in outputStrings:
-        _, outIndLst = vectorize_sentences(outStrs, charToIndex, maxOutputLen, padChar=" ", useEosChar=True, padPre=False)
+        _, outIndLst, outSentLens = vectorize_sentences(outStrs, charToIndex, maxOutputLen, padChar=None, useEosChar=True, padPre=False)
         outputIndexLists.append(outIndLst)
+        outputStringLens.append(outSentLens)
     
     
     # vectorize the DB values
@@ -677,6 +684,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
         splitInputUttVectors = []
         splitOutputIndexLists = []
         splitOutputStrings = []
+        splitOutputStringLens = []
         
         splitGtDatabasebCameras = []
         splitGtDatabaseAttributes = []
@@ -690,6 +698,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
             splitInputUttVectors += inputUttVectors[i]
             splitOutputIndexLists += outputIndexLists[i]
             splitOutputStrings += outputStrings[i]
+            splitOutputStringLens += outputStringLens[i]
             
             splitGtDatabasebCameras += gtDatabaseCameras[i]
             splitGtDatabaseAttributes += gtDatabaseAttributes[i]
@@ -716,15 +725,15 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
         
         
         
-        return splitInteractions, splitInputUttVectors, splitOutputIndexLists, splitOutputStrings, splitInputCustomerLocations, splitOutputShopkeeperLocations, splitDbVectors, splitGtDatabasebCameras, splitGtDatabaseAttributes
+        return splitInteractions, splitInputUttVectors, splitOutputIndexLists, splitOutputStrings, splitOutputStringLens, splitInputCustomerLocations, splitOutputShopkeeperLocations, splitDbVectors, splitGtDatabasebCameras, splitGtDatabaseAttributes
         
     
     
     # training
-    trainInteractions, trainInputUttVectors, trainOutputIndexLists, trainOutputStrings, trainInputCustomerLocations, trainOutputShopkeeperLocations, trainDbVectors, trainGtDatabasebCameras, trainGtDatabaseAttributes = prepare_split(0, numTrainDbs, "Train")
+    trainInteractions, trainInputUttVectors, trainOutputIndexLists, trainOutputStrings, trainOutputStringLens, trainInputCustomerLocations, trainOutputShopkeeperLocations, trainDbVectors, trainGtDatabasebCameras, trainGtDatabaseAttributes = prepare_split(0, numTrainDbs, "Train")
     
     # testing
-    testInteractions, testInputUttVectors, testOutputIndexLists, testOutputStrings, testInputCustomerLocations, testOutputShopkeeperLocations, testDbVectors, testGtDatabasebCameras, testGtDatabaseAttributes = prepare_split(numTrainDbs, numDatabases, "Test")
+    testInteractions, testInputUttVectors, testOutputIndexLists, testOutputStrings, testOutputStringLens, testInputCustomerLocations, testOutputShopkeeperLocations, testDbVectors, testGtDatabasebCameras, testGtDatabaseAttributes = prepare_split(numTrainDbs, numDatabases, "Test")
     
     
     
@@ -993,6 +1002,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                        splitInputCustomerLocations, 
                        splitDbVectors, 
                        splitOutputIndexLists,
+                       splitOutputStringLens,
                        splitOutputShopkeeperLocations,
                        splitGtDatabasebCameras,
                        splitGtDatabaseAttributes,
@@ -1013,6 +1023,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                                              splitInputCustomerLocations[i-batchSize:i], 
                                              splitDbVectors[i-batchSize:i], 
                                              splitOutputIndexLists[i-batchSize:i],
+                                             splitOutputStringLens[i-batchSize:i],
                                              splitOutputShopkeeperLocations[i-batchSize:i],
                                              splitGtDatabasebCameras[i-batchSize:i],
                                              splitGtDatabaseAttributes[i-batchSize:i],
@@ -1046,6 +1057,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                                                splitInputCustomerLocations[i-batchSize:i],
                                                splitDbVectors[i-batchSize:i], 
                                                splitOutputIndexLists[i-batchSize:i],
+                                               splitOutputStringLens[i-batchSize:i],
                                                splitOutputShopkeeperLocations[i-batchSize:i],
                                                splitGtDatabasebCameras[i-batchSize:i],
                                                splitGtDatabaseAttributes[i-batchSize:i])
@@ -1230,10 +1242,10 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
         
         # shuffle the training data
         
-        temp = list(zip(trainInputUttVectors, trainDbVectors, trainOutputIndexLists, trainInputCustomerLocations, trainOutputShopkeeperLocations))
+        temp = list(zip(trainInputUttVectors, trainOutputStringLens, trainDbVectors, trainOutputIndexLists, trainInputCustomerLocations, trainOutputShopkeeperLocations))
         if randomizeTrainingBatches:
             random.shuffle(temp)
-        trainInputIndexLists_shuf, trainDbVectors_shuf, trainOutputIndexLists_shuf, trainInputCustomerLocations_shuf, trainOutputShopkeeperLocations_shuf = zip(*temp)
+        trainInputIndexLists_shuf, trainOutputStringLens_shuf, trainDbVectors_shuf, trainOutputIndexLists_shuf, trainInputCustomerLocations_shuf, trainOutputShopkeeperLocations_shuf = zip(*temp)
         
         
         for i in trainBatchEndIndices:
@@ -1242,6 +1254,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                                            trainInputCustomerLocations_shuf[i-batchSize:i],
                                            trainDbVectors_shuf[i-batchSize:i], 
                                            trainOutputIndexLists_shuf[i-batchSize:i],
+                                           trainOutputStringLens_shuf[i-batchSize:i],
                                            trainOutputShopkeeperLocations_shuf[i-batchSize:i],
                                            trainGtDatabasebCameras[i-batchSize:i],
                                            trainGtDatabaseAttributes[i-batchSize:i],
@@ -1271,6 +1284,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                                                                                                                                             trainInputCustomerLocations, 
                                                                                                                                             trainDbVectors, 
                                                                                                                                             trainOutputIndexLists,
+                                                                                                                                            trainOutputStringLens,
                                                                                                                                             trainOutputShopkeeperLocations,
                                                                                                                                             trainGtDatabasebCameras,
                                                                                                                                             trainGtDatabaseAttributes,
@@ -1289,6 +1303,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                                              testInputCustomerLocations[i-batchSize:i], 
                                              testDbVectors[i-batchSize:i], 
                                              testOutputIndexLists[i-batchSize:i],
+                                             testOutputStringLens[i-batchSize:i],
                                              testOutputShopkeeperLocations[i-batchSize:i],
                                              testGtDatabasebCameras[i-batchSize:i],
                                              testGtDatabaseAttributes[i-batchSize:i],
@@ -1307,6 +1322,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                                                                                                                                       testInputCustomerLocations, 
                                                                                                                                       testDbVectors, 
                                                                                                                                       testOutputIndexLists,
+                                                                                                                                      testOutputStringLens,
                                                                                                                                       testOutputShopkeeperLocations,
                                                                                                                                       testGtDatabasebCameras,
                                                                                                                                       testGtDatabaseAttributes,
@@ -1354,7 +1370,7 @@ if __name__ == "__main__":
     attTemp = 0
     
     
-    #run(0, 0, camTemp, attTemp, 1.0, sessionDir)
+    run(0, 0, camTemp, attTemp, 1.0, sessionDir)
     
     
     for gpu in range(8):
