@@ -1064,6 +1064,17 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
             
             batchSplitUttPreds, batchSplitLocPreds, batchSplitCopyScores, batchSplitGenScores, batchSplitCamMatchArgMax, batchSplitAttMatchArgMax, batchSplitCamMatch, batchSplitAttMatch, batchSplitDbReadWeights, batchSplitCopyWeights, batchSplitGenWeights = batchPredResults 
             
+            """
+            batchDbMatchVal = learner.get_db_match_val(splitInputUttVectors[i-batchSize:i], 
+                                               splitInputCustomerLocations[i-batchSize:i],
+                                               splitDbVectors[i-batchSize:i], 
+                                               splitOutputIndexLists[i-batchSize:i],
+                                               splitOutputStringLens[i-batchSize:i],
+                                               splitOutputShopkeeperLocations[i-batchSize:i],
+                                               splitGtDatabasebCameras[i-batchSize:i],
+                                               splitGtDatabaseAttributes[i-batchSize:i])
+            """
+            
             
             splitUttPreds.append(batchSplitUttPreds)
             splitLocPreds.append(batchSplitLocPreds)
@@ -1370,7 +1381,7 @@ if __name__ == "__main__":
     attTemp = 0
     
     
-    run(0, 0, camTemp, attTemp, 1.0, sessionDir)
+    run(0, 0, camTemp, attTemp, 0.0, sessionDir)
     
     
     for gpu in range(8):

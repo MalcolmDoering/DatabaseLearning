@@ -147,11 +147,11 @@ class CustomNeuralNetwork(object):
             # find the best matching camera and attribute from the database
             
             # use only softmax for addressing
-            #cam1 = tf.layers.dense(self._loc_utt_combined_input_encoding_2, self.numUniqueCams, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
-            #att1 = tf.layers.dense(self._loc_utt_combined_input_encoding_2, self.numUniqueAtts, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
+            cam1 = tf.layers.dense(self._loc_utt_combined_input_encoding_2, self.numUniqueCams, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
+            att1 = tf.layers.dense(self._loc_utt_combined_input_encoding_2, self.numUniqueAtts, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
             
-            #self.camMatch = tf.nn.softmax(cam1)
-            #self.attMatch = tf.nn.softmax(att1)
+            self.camMatch = tf.nn.softmax(cam1)
+            self.attMatch = tf.nn.softmax(att1)
             
             
             # gumbel softmax used till 20190525
@@ -174,8 +174,8 @@ class CustomNeuralNetwork(object):
             
             
             # provide the ground truth DB entries
-            self.camMatch = self._gtDbCams
-            self.attMatch = self._gtDbAtts
+            #self.camMatch = self._gtDbCams
+            #self.attMatch = self._gtDbAtts
             
             
             self.camMatchIndex = tf.argmax(self.camMatch, axis=1)
@@ -187,7 +187,7 @@ class CustomNeuralNetwork(object):
             # DB encoder
             self._db_entries = tf.placeholder(tf.float32, [self.batchSize, self.numUniqueCams, self.numUniqueAtts, self.dbSeqLen, self.vocabSize], name='DB_entries')
             
-            self._db_entries = tf.random.normal(tf.shape(self._db_entries), mean=0, stddev=0.01)
+            #self._db_entries += tf.random.normal(tf.shape(self._db_entries), mean=0, stddev=0.01)
             
             
             # multiply by the match vectors and sum so that only the matching value remains
@@ -271,31 +271,27 @@ class CustomNeuralNetwork(object):
         self._db_read_weight_layer = tf.layers.Dense(1, activation=tf.nn.leaky_relu, use_bias=True, kernel_initializer=tf.initializers.he_normal())
         #self._gen_weight_layer = tf.layers.Dense(1, activation=tf.nn.sigmoid, use_bias=True, kernel_initializer=tf.initializers.he_normal())
         self._char_gen_layer = tf.layers.Dense(self.vocabSize, activation=tf.nn.leaky_relu, use_bias=True, kernel_initializer=tf.initializers.he_normal())
-            
-            
         
-        
-
+                
+        """
         # append start char on to beginning of outputs so they can be used for teacher forcing - i.e. as inputs to the copynet decoder
         #after_slice = tf.strided_slice(self._ground_truth_outputs, [0, 0], [self.batchSize, -1], [1, 1]) # slice of the last char of each output sequence (is this necessary?)
         after_slice, _ = tf.split(self._ground_truth_outputs, [self.outputSeqLen-1, 1], axis=1) # slice of the last char of each output sequence
-
+        
         decoder_inputs = tf.concat( [tf.fill([self.batchSize, 1], charToIndex[goChar]), after_slice], 1) # concatenate on a go char onto the start of each output sequence
-        
         self.decoder_inputs_one_hot = tf.one_hot(decoder_inputs, self.vocabSize)
-        
-        self.decoder_inputs_one_hot = tf.random.normal(tf.shape(self.decoder_inputs_one_hot), mean=0, stddev=0.01)
+        """
         
         
         # rollout the decoder two times - once for use with teacher forcing (training) and once without (testing)
         self._teacher_forcing_prob = tf.placeholder(tf.float32, shape=(), name='teacher_forcing_prob')
         
         # for training
-        self._loss, self._train_predicted_output_sequences, self._train_copy_scores, self._train_gen_scores, self._train_db_read_weights, self._train_copy_weights, self._train_gen_weights = self.build_decoder_3(teacherForcing=True, scopeName="decoder_train")
+        self._loss, self._train_predicted_output_sequences, self._train_copy_scores, self._train_gen_scores, self._train_db_read_weights, self._train_copy_weights, self._train_gen_weights = self.build_decoder_3(teacherForcing=False, scopeName="decoder_train")
         
         
         # for testing
-        self._test_loss, self._test_predicted_output_sequences, self._test_copy_scores, self._test_gen_scores, self._test_db_read_weights, self._test_copy_weights, self._test_gen_weights = self.build_decoder_3(teacherForcing=True, scopeName="decoder_test")
+        self._test_loss, self._test_predicted_output_sequences, self._test_copy_scores, self._test_gen_scores, self._test_db_read_weights, self._test_copy_weights, self._test_gen_weights = self.build_decoder_3(teacherForcing=False, scopeName="decoder_test")
         
         
         # add the loss from the location predictions
@@ -308,8 +304,8 @@ class CustomNeuralNetwork(object):
         #
         # setup the training function
         #
-        #opt = tf.train.AdamOptimizer(learning_rate=1e-3)
-        opt = tf.train.GradientDescentOptimizer(learning_rate=1e-3)
+        opt = tf.train.AdamOptimizer(learning_rate=1e-3)
+        #opt = tf.train.GradientDescentOptimizer(learning_rate=1e-3)
         
         
         gradients = opt.compute_gradients(self._loss)
@@ -346,20 +342,13 @@ class CustomNeuralNetwork(object):
             loss = 0
             
             state = self.decoder_initial_state
-            output = self.decoder_inputs_one_hot[:, 0, :] # each output sequence must have a 'start' char appended to the beginning
+            #output = self.decoder_inputs_one_hot[:, 0, :] # each output sequence must have a 'start' char appended to the beginning
             raw_output = tf.zeros((self.batchSize, self.embeddingSize), tf.float32)
             
-            #db_read_weight_state = self.db_read_weight_layer_initial_state
             db_read_weight = tf.zeros((self.batchSize, 1), tf.float32)
             
             
-            copy_scores_lists = [[tf.zeros((self.batchSize, 1, self.vocabSize), tf.float32)]] * self.outputSeqLen
-            
-            # try giving ground truth copy scores (for price)
-            #groundTruthCopyStartIndex = 15
-            #padding1 = tf.zeros((self.batchSize, groundTruthCopyStartIndex, self.vocabSize), tf.float32)
-            #temp = tf.concat((padding1, self.db_match_val), axis=1)
-            #gt_copy_scores, _ = tf.split(temp, [self.outputSeqLen, (groundTruthCopyStartIndex+self.dbSeqLen)-self.outputSeqLen], axis=1)
+            copy_buffer = tf.zeros((self.batchSize, self.outputSeqLen, self.vocabSize), tf.float32)
             
             
             copy_scores = [] # scores for each char based on copy mechanism
@@ -368,10 +357,6 @@ class CustomNeuralNetwork(object):
             
             
             db_read_weights = []
-            #gen_weights = []
-            #copy_weights = []
-            gen_weights = tf.zeros((self.batchSize, self.outputSeqLen), tf.float32)
-            copy_weights = tf.zeros((self.batchSize, self.outputSeqLen), tf.float32)
             
             
             
@@ -379,59 +364,34 @@ class CustomNeuralNetwork(object):
             for i in range(self.outputSeqLen):
                 
                 if teacherForcing:
-                    # if using teacher forcing, set the previous output
-                    #bernoulliSample = tf.to_float(tf.distributions.Bernoulli(probs=self._teacher_forcing_prob).sample())
-                    #output = tf.math.scalar_mul(bernoulliSample, self.decoder_inputs_one_hot[:, i, :]) + tf.math.scalar_mul((1.0-bernoulliSample), output)
-                    
-                    output = self.decoder_inputs_one_hot[:, i, :] # previous output
-                
-                
-                # input the copy score before the update into the decoder so it can tell if the db string has finished copying
-                copy_score_before_update = tf.reshape(tf.add_n(copy_scores_lists[i]), (self.batchSize, self.vocabSize))
-                output = tf.concat((output, copy_score_before_update), axis=1)
-                
+                    pass
+                 
                 
                 raw_output, state = self.decoder_cell(raw_output, state)
                 
-                #output, _ = tf.split(output, [self.vocabSize, 1], axis=1)
-                
-                #gen_score = tf.reshape(output, shape=(self.batchSize, 1, self.vocabSize))
                 gen_score = self._char_gen_layer(raw_output)
                 gen_score = tf.reshape(gen_score, shape=(self.batchSize, 1, self.vocabSize))
                 
-                #db_read_weight = self._db_read_weight_layer(tf.concat((tf.concat(state, axis=1), db_read_weight), axis=1))
                 db_read_weight = self._db_read_weight_layer(tf.concat((raw_output, db_read_weight), axis=1))
                 
+                #
+                # do the copying function
+                #
+                copied_content = tf.expand_dims(db_read_weight, 2) * self.db_match_val
                 
-                #gen_weight = self._gen_weight_layer(tf.concat((tf.concat(state, axis=1), db_read_weight), axis=1))
+                # add the padding
+                padding = tf.zeros((self.batchSize, i, self.vocabSize), tf.float32)
+                copied_content_with_padding = tf.concat([padding, copied_content], axis=1)
                 
+                # trim to the output sequence len
+                coppied_content_with_padding_trimmed = copied_content_with_padding[:, :self.outputSeqLen, :]
                 
+                copy_buffer += coppied_content_with_padding_trimmed
                 
-                ################################################
-                # is there some problem here? it works when this part is replaced with the ground truth copy scores
-                ################################################
-                copy_scores_i = tf.expand_dims(db_read_weight, 2) * self.db_match_val
-                copy_scores_i = tf.split(copy_scores_i, self.dbSeqLen, axis=1)    
-                
-                for j in range(self.dbSeqLen):
-                    if (i+j) >= self.outputSeqLen:
-                        break
-                    else:
-                        copy_scores_lists[i+j].append(copy_scores_i[j])
-                
-                copy_score = tf.add_n(copy_scores_lists[i]) # the copy score for this step based on all copy scores previous to now
-                ################################################
-                
-                #copy_score = gt_copy_scores[:, i:i+1, :] * 50.0 # provide the GT copy scores
-                
-                
-                
-                #gen_score = tf.expand_dims(gen_weight, 2) * gen_score
-                
+                copy_score = tf.expand_dims(copy_buffer[:, i, :], axis=1)
                 
                 
                 predicted_output_char = gen_score + copy_score
-                output = tf.nn.softmax(tf.reshape(predicted_output_char, (self.batchSize, self.vocabSize)))
                 
                 gen_scores.append(gen_score)
                 copy_scores.append(copy_score)
@@ -439,9 +399,6 @@ class CustomNeuralNetwork(object):
                 
                 
                 db_read_weights.append(db_read_weight)
-                #gen_weights.append(gen_weight)
-                #copy_weights.append(copy_weight)
-                
             
             
             # combine chars in lists into a single sequence
@@ -450,10 +407,6 @@ class CustomNeuralNetwork(object):
             predicted_output_sequences = tf.concat(predicted_output_sequences, 1)
             
             db_read_weights = tf.concat(db_read_weights, 1)
-            #gen_weights = tf.concat(gen_weights, 1)
-            #copy_weights = tf.concat(copy_weights, 1)
-                
-            
             
             
             # compute the loss
@@ -462,15 +415,14 @@ class CustomNeuralNetwork(object):
                 # get the ground truth output
                 ground_truth_output = tf.one_hot(self._ground_truth_outputs[:, i], self.vocabSize) # these are one-hot char encodings at timestep i
                 
-                
                 # compute the loss
-                #cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=ground_truth_output, logits=output)
                 cross_entropy = tf.losses.softmax_cross_entropy(ground_truth_output, predicted_output_sequences[:, i, :], weights=self._output_mask[:,i], reduction=tf.losses.Reduction.SUM_OVER_BATCH_SIZE) # is this right for sequence eval?
-                #current_loss = tf.reduce_sum(cross_entropy)
                 loss = loss + cross_entropy
         
-        
-        
+        # these were used in a previous version, but now they're just place holders so I don't have to change all the code downstream
+        gen_weights = tf.zeros((self.batchSize, self.outputSeqLen), tf.float32)
+        copy_weights = tf.zeros((self.batchSize, self.outputSeqLen), tf.float32)
+            
         return loss, predicted_output_sequences, copy_scores, gen_scores, db_read_weights, copy_weights, gen_weights
     
     
@@ -678,6 +630,22 @@ class CustomNeuralNetwork(object):
                                                                                                                             self._test_gen_weights], feed_dict=feedDict)
         
         return predUtts, predShkpLocs, copyScores, genScores, camMatchArgMax, attMatchArgMax, camMatch, attMatch, db_read_weights, copy_weights, gen_weights
+    
+    
+    def get_db_match_val(self, inputUtts, inputCustLocs, databases, groundTruthOutputs, groundTruthOutputStringLens, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, teacherForcingProb=1.0):
+        feedDict = {self._inputs: inputUtts, 
+                    self._location_inputs: inputCustLocs, 
+                    self._db_entries: databases, 
+                    self._ground_truth_outputs: groundTruthOutputs,
+                    self._ground_truth_output_lens: groundTruthOutputStringLens,
+                    self._ground_truth_location_outputs: groundTruthOutputShkpLocs,
+                    self._gtDbCamIndices: gtDbCams, 
+                    self._gtDbAttIndices: gtDbAtts,
+                    self._teacher_forcing_prob: teacherForcingProb}
+        
+        dbMatchVal = self._sess.run(self.db_match_val, feed_dict=feedDict)
+        
+        return dbMatchVal
     
     
     def save(self, filename):
