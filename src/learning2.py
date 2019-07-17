@@ -198,7 +198,7 @@ class CustomNeuralNetwork(object):
             #self.db_match_val = tf.nn.softmax(self.db_match_val, axis=2)
             
             
-            #self.db_match_sum = tf.reduce_sum(tf.reduce_sum(self.db_match_val, axis=2), axis=1, keepdims=True)
+            self.db_match_sum = tf.reduce_sum(tf.reduce_sum(self.db_match_val, axis=2), axis=1, keepdims=True)
             
             self.db_match_val_charindices = tf.argmax(self.db_match_val, axis=2)
             
@@ -252,7 +252,7 @@ class CustomNeuralNetwork(object):
         #cells = [tf.nn.rnn_cell.GRUCell(num_units=self.embeddingSize+1, kernel_initializer=tf.initializers.glorot_normal()),
         #         tf.nn.rnn_cell.GRUCell(num_units=self.vocabSize+1, activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.glorot_normal())]
         
-        cells = [tf.nn.rnn_cell.GRUCell(num_units=self.embeddingSize+1, kernel_initializer=tf.initializers.glorot_normal()),
+        cells = [tf.nn.rnn_cell.GRUCell(num_units=self.embeddingSize+2, kernel_initializer=tf.initializers.glorot_normal()),
                  tf.nn.rnn_cell.GRUCell(num_units=self.embeddingSize, kernel_initializer=tf.initializers.glorot_normal())]
         
         self.decoder_cell = tf.contrib.rnn.MultiRNNCell(cells)
@@ -262,7 +262,7 @@ class CustomNeuralNetwork(object):
         # add the input encoding to the initial state of the first layer RNN
         self.decoder_initial_state = self.decoder_cell.zero_state(self.batchSize, tf.float32)
         
-        self.decoder_initial_state = (self.decoder_initial_state[0] + tf.concat((self._loc_utt_combined_input_encoding, tf.ones((self.batchSize, 1))), axis=1),
+        self.decoder_initial_state = (self.decoder_initial_state[0] + tf.concat((self._loc_utt_combined_input_encoding, tf.ones((self.batchSize, 1)), self.db_match_sum), axis=1),
                                       self.decoder_initial_state[1])
         
 
@@ -379,14 +379,20 @@ class CustomNeuralNetwork(object):
                 #
                 copied_content = tf.expand_dims(db_read_weight, 2) * self.db_match_val
                 
-                # add the padding
-                padding = tf.zeros((self.batchSize, i, self.vocabSize), tf.float32)
-                copied_content_with_padding = tf.concat([padding, copied_content], axis=1)
+                # add the padding to the beginning
+                prePadding = tf.zeros((self.batchSize, i, self.vocabSize), tf.float32)
+                copied_content_with_padding = tf.concat([prePadding, copied_content], axis=1)
                 
-                # trim to the output sequence len
-                coppied_content_with_padding_trimmed = copied_content_with_padding[:, :self.outputSeqLen, :]
+                # make the same length as the output sequence len
+                if (i+self.dbSeqLen) >= self.outputSeqLen:
+                    # trim to the output sequence len
+                    coppied_content_with_padding_2 = copied_content_with_padding[:, :self.outputSeqLen, :]
+                else:
+                    # add padding to the ending
+                    postPadding = tf.zeros((self.batchSize, self.outputSeqLen-(i+self.dbSeqLen) , self.vocabSize), tf.float32)
+                    coppied_content_with_padding_2 = tf.concat([copied_content_with_padding, postPadding], axis=1)
                 
-                copy_buffer += coppied_content_with_padding_trimmed
+                copy_buffer += coppied_content_with_padding_2
                 
                 copy_score = tf.expand_dims(copy_buffer[:, i, :], axis=1)
                 

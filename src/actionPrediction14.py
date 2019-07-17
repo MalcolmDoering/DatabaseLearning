@@ -43,11 +43,11 @@ goChar = "~"
 cameras = ["CAMERA_1", "CAMERA_2", "CAMERA_3"]
 
 
-numTrainDbs = 10
+numTrainDbs = 2
 batchSize = 128
 embeddingSize = 30
 numEpochs = 10000
-evalEvery = 50
+evalEvery = 10
 randomizeTrainingBatches = False
 
 sessionDir = tools.create_session_dir("actionPrediction14_dbl")
@@ -302,6 +302,9 @@ def read_database_file(filename):
         
         for row in reader:
             
+            for key in row:
+                row[key] = row[key].lower()
+            
             database.append(row)
     
     return database, fieldnames
@@ -339,7 +342,7 @@ def read_simulated_interactions(filename, dbFieldnames, keepActions=None):
         
         for row in reader:
             
-            if (keepActions == None) or (row["OUTPUT_SHOPKEEPER_ACTION"] in keepActions and row["SHOPKEEPER_TOPIC"] == "price"):
+            if (keepActions == None) or (row["OUTPUT_SHOPKEEPER_ACTION"] in keepActions): # and row["SHOPKEEPER_TOPIC"] == "price"):
                 
                 row["CUSTOMER_SPEECH"] = row["CUSTOMER_SPEECH"].lower().translate(str.maketrans('', '', string.punctuation))
                 row["SHOPKEEPER_SPEECH"] = row["SHOPKEEPER_SPEECH"].lower()
@@ -450,8 +453,8 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     print("loading data...", flush=True, file=sessionTerminalOutputStream)
     
     
-    dataDirectory = tools.dataDir+"/2019-05-21_14-11-57_advancedSimulator8"
-    #dataDirectory = tools.dataDir+"/handmade_0"
+    #dataDirectory = tools.dataDir+"/2019-05-21_14-11-57_advancedSimulator8"
+    dataDirectory = tools.dataDir+"/handmade_0"
     
     
     filenames = os.listdir(dataDirectory)
