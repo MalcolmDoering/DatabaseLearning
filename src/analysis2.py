@@ -436,14 +436,14 @@ expLogDir = "E:/eclipse-log/2019-07-08_16-34-31_actionPrediction13_dbl"
 # price only
 # swicth to GS 0.01 and reset optimizer at 3000
 # result: performance dropped at 3000 and addressing stopped working
-expLogDir = "E:/eclipse-log/2019-07-08_18-33-50_actionPrediction13_dbl"
+#expLogDir = "E:/eclipse-log/2019-07-08_18-33-50_actionPrediction13_dbl"
 
 # copynet
 # 10 train 
 # price only
 # switch to GS 0.01 at 3000
 # result: performance dropped at 3000 and addressing stopped working
-expLogDir = "E:/eclipse-log/2019-07-09_12-26-09_actionPrediction13_dbl"
+#expLogDir = "E:/eclipse-log/2019-07-09_12-26-09_actionPrediction13_dbl"
 
 
 
@@ -453,7 +453,7 @@ expLogDir = "E:/eclipse-log/2019-07-09_12-26-09_actionPrediction13_dbl"
 # use softmax till 3000, apply GS with temp 0.01 from 3000
 # train whole network till 3000, only train decoding part (not addressing) from 3000
 # result: performance dropped at 3000 and addressing stopped working
-expLogDir = "E:/eclipse-log/2019-07-09_13-23-24_actionPrediction13_dbl"
+#expLogDir = "E:/eclipse-log/2019-07-09_13-23-24_actionPrediction13_dbl"
 
 
 
@@ -463,7 +463,7 @@ expLogDir = "E:/eclipse-log/2019-07-09_13-23-24_actionPrediction13_dbl"
 # use softmax till 3000, apply sharpening with ^10 from 3000
 # train whole network till 3000, only train decoding part (not addressing) from 3000
 # result: there was a bug in the code. did not swith to train_op_2 as expected
-expLogDir = "E:/eclipse-log/2019-07-09_17-51-05_actionPrediction13_dbl"
+#expLogDir = "E:/eclipse-log/2019-07-09_17-51-05_actionPrediction13_dbl"
 
 
 # copynet
@@ -479,10 +479,10 @@ expLogDir = "E:/eclipse-log/2019-07-09_17-51-05_actionPrediction13_dbl"
 # in the testing (and probably the training too) the correct substrings are being copied/generated. Spaces do not have high copy scores.
 # but, some of the test DB substrings are not entirely copied. Ie. they end early...
 # perhaps the optimizer should be reset at that point in time too to prevent getting stuck in local minimum, or reinitialize the decoding weights too
-expLogDir = "E:/eclipse-log/2019-07-10_12-51-05_actionPrediction13_dbl"
+#expLogDir = "E:/eclipse-log/2019-07-10_12-51-05_actionPrediction13_dbl"
 
 
-expLogDir = "E:/eclipse-log/2019-07-10_16-50-46_actionPrediction13_dbl"
+#expLogDir = "E:/eclipse-log/2019-07-10_16-50-46_actionPrediction13_dbl"
 
 
 # copynet
@@ -493,7 +493,13 @@ expLogDir = "E:/eclipse-log/2019-07-10_16-50-46_actionPrediction13_dbl"
 # reinitialize the decoding weights at 3000
 # uses dataset with variety of customer utterances
 # result: 
-#expLogDir = "E:/eclipse-log/2019-07-11_12-29-27_actionPrediction13_dbl"
+# the addressing is successfully frozen. All but 2 runs to get close to 100% accuracy. But, some of the testing runs to not get quite to 100% (i.e. around 95%)
+# after reset at 3000, good runs recover testing accuracy (% db substr all correct) to 100% within 1000 epochs, but then begin to degrade aroun epoch 5000
+# for the testing runs the results are not so good. Even runs with 100% addressing in testing do not get close to 100% db substr all correct.
+# I thought, maybe the reason for this is that now there are a variety of customer utterances. the samples that are printed in the output files have correct substrs,
+# so that means that the substrs are incorrect for some of other variations of customer inputs
+# so, try running the same thing but with the old dataset that did not have variety of customer utterances...
+expLogDir = "E:/eclipse-log/2019-07-11_12-29-27_actionPrediction13_dbl"
 
 
 # copynet
@@ -504,7 +510,101 @@ expLogDir = "E:/eclipse-log/2019-07-10_16-50-46_actionPrediction13_dbl"
 # reinitialize the decoding weights at 3000
 # uses dataset without a variety of customer utterances
 # result: 
+# this run is the same as the previous run but without the variety of customer utterances
+# results were very bad - the correct addressing was not even learned.
+# so, there is probably a bug in the code somewhere
+# try doing another run but with the ground truth DB addressing and see if it works...
 #expLogDir = "E:/eclipse-log/2019-07-11_17-49-44_actionPrediction13_dbl"
+
+
+
+# copynet
+# 10 train 
+# price only
+# does not do any reset
+# uses GT addresses
+# uses dataset without a variety of customer utterances
+# result: 
+expLogDir = "E:/eclipse-log/2019-07-12_12-07-58_actionPrediction13_dbl"
+
+
+# search over teacher forcing probs for copynet
+# price only, simple customer inputs
+# GT database addresses
+expLogDir = "E:/eclipse-log/2019-07-12_17-04-38_actionPrediction13_dbl"
+
+
+# tried using TF 0.0 for copynet with GT addresses
+# masked losses on output chars over the len of the GT output sentence
+expLogDir = "E:/eclipse-log/2019-07-16_12-49-26_actionPrediction13_dbl"
+
+
+
+# non-copynet architecture with the copy buffer error fixed
+# with softmax addresses, price only, LR 0.0001 Adam
+# two input encodings
+expLogDir = "E:/eclipse-log/2019-07-17_13-46-14_actionPrediction14_dbl"
+
+# non-copynet architecture with the copy buffer error fixed
+# with softmax addresses, price only, LR 0.0001 Adam
+# only one input encoding
+expLogDir = "E:/eclipse-log/2019-07-17_15-16-11_actionPrediction14_dbl"
+
+
+# non-copynet architecture with the copy buffer error fixed
+# with softmax addresses, all attributes, LR 0.0001 Adam
+# two input encodings
+# simple customer utterances
+expLogDir = "E:/eclipse-log/2019-07-17_16-09-29_actionPrediction14_dbl"
+
+
+# non-copynet architecture with the copy buffer error fixed
+# with softmax addresses, all attributes, LR 0.0001 Adam
+# two input encodings
+# variety of customer utterances
+expLogDir = "E:/eclipse-log/2019-07-17_17-56-59_actionPrediction14_dbl"
+
+
+# non-copynet architecture with the copy buffer error fixed
+# with softmax addresses, all attributes, LR 0.0001 Adam
+# two input encodings
+# variety of customer utterances
+# embedding size 100
+#expLogDir = "E:/eclipse-log/2019-07-18_12-22-11_actionPrediction14_dbl"
+
+
+
+# non-copynet architecture with the copy buffer error fixed
+# with GT addresses
+# all data - customer utt variety, all attributes, all actions
+# 10 databases with only prices changing
+# embedding size 100
+expLogDir = "E:/eclipse-log/2019-07-18_13-34-09_actionPrediction14_dbl"
+
+
+# non-copynet architecture with the copy buffer error fixed
+# with softmax addresses
+# all data - customer utt variety, all attributes, all actions
+# 10 databases with only prices changing
+# embedding size 100
+#expLogDir = "E:/eclipse-log/2019-07-21_14-44-40_actionPrediction14_dbl"
+
+
+# non-copynet architecture with the copy buffer error fixed
+# with GT addresses
+# all data - customer utt variety, all attributes, all actions
+# 2 handmade databases with all attributes changing
+# embedding size 100
+#expLogDir = "E:/eclipse-log/"
+
+
+# non-copynet architecture with the copy buffer error fixed
+# with softmax addresses
+# all data - customer utt variety, all attributes, all actions
+# 2 handmade databases with all attributes changing
+# embedding size 100
+#expLogDir = "E:/eclipse-log/"
+
 
 
 
@@ -703,12 +803,13 @@ def plot_2_conditions_3_metrics(runIdToData, runDirNames, metric1Name, metric2Na
 runDirNames = os.listdir(expLogDir)
 runDirNames.sort()
 
-"""
-temp = []
 
+temp = []
+"""
 for rdn in runDirNames:
     
-    if "ct3_" in rdn and rdn.endswith("at2"):
+    #if "ct3_" in rdn and rdn.endswith("at2"):
+    if rdn.endswith("tf1.0"):
         temp.append(rdn)
 
 runDirNames = temp

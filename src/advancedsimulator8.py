@@ -1166,16 +1166,26 @@ if __name__ == "__main__":
     
     
     print("started")
-    databaseFilename = tools.dataDir+"database_0.csv"
+    
     shopkeeperUtteranceFilename = tools.modelDir+"2019-04-04_shopkeeper_utterance_data.csv"
     #customerUtteranceFilename = tools.modelDir+"2019-04-04_customer_utterance_data.csv"
     customerUtteranceFilename = tools.modelDir+"2019-07-03_customer_utterance_data.csv"
     
+    """
+    databaseFilename = tools.dataDir+"database_0.csv"
     newDatabaseFilenames = generate_databases(databaseFilename, 11)
-    
     
     for i in range(len(newDatabaseFilenames)):
         run_simulator(sessionDir, newDatabaseFilenames[i], shopkeeperUtteranceFilename, customerUtteranceFilename, randomSeed=i)
-        
+    """ 
+    
+    
+    dbFilenames = [tools.dataDir+"/handmade_0/handmade_database_0-00.csv",
+                   tools.dataDir+"/handmade_0/handmade_database_0-01.csv",
+                   tools.dataDir+"/handmade_0/handmade_database_0-02.csv"]
+    
+    for i in range(len(dbFilenames)):
+        run_simulator(sessionDir, dbFilenames[i], shopkeeperUtteranceFilename, customerUtteranceFilename, randomSeed=i)
+    
     
     
