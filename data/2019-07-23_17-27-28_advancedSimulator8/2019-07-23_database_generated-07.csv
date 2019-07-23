@@ -1,0 +1,4 @@
+camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
+CAMERA_1,Sony PowerShot ELPH S2800,DSLR,"silver, white, red, pink, or purple",850 grams (only body),various preset modes,"9 glamor retouch effects (skin softening, vivid, small face, etc.)",$1575,21.8 megapixels,,limited manual settings,215 autofocus points,full frame,up to 3200 ISO,30 seconds max with starry sky mode
+CAMERA_2,Fujifilm Alpha a6000,premium compact digital camera,"red, pink, or blue",210 grams,,,$4715,15.6 megapixels,,manual and automatic settings,11 autofocus points,,,up to 60 seconds
+CAMERA_3,Nikon LUMIX GH5s C4K 360 HS,digital single lens mirrorless,"pink, red, silver, purple, white, or black",310 grams (only body),,"16 photo effects (vivid, skin softening, small face, etc.)",$4712,,12x optical zoom,full manual control,,,up to 51200 ISO,

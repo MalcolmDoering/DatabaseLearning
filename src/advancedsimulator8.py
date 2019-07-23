@@ -17,6 +17,7 @@ import random
 
 
 import tools
+import attr
 
 
 DEBUG_FLAG = True
@@ -1111,6 +1112,273 @@ def generate_databases(originalDatabaseFilename, numDatabasesToGenerate, randomS
 
 
 
+def generate_databases_2(numDatabasesToGenerate, randomSeed=0):
+    """randomly generate all attributes, not just price"""
+    
+    fieldnames = ["camera_ID", "camera_name", "camera_type", "color", "weight", "preset_modes", "effects", "price", "resolution", "optical_zoom", "settings", "autofocus_points", "sensor_size", "ISO", "long_exposure"]
+    
+    newDatabaseFilenames = []
+    
+    for i in range(numDatabasesToGenerate):
+
+        dbId = "generated"
+        today = time.strftime("%Y-%m-%d")
+        
+        newDatabaseFilename = sessionDir + "/{}_database_{}-{:02d}.csv".format(today, dbId, i)
+        newDatabaseFilenames.append(newDatabaseFilename)
+        
+        newDatabase = []
+        
+        # generate attributes for 3 cameras
+        for r in range(3):
+            row = {}
+            
+            row["camera_ID"] = "CAMERA_{}".format(r+1)
+            row["camera_name"] = generate_camera_name()
+            row["camera_type"] = generate_camera_type()
+            row["color"] = generate_color()
+            row["weight"] = generate_weight()
+            row["preset_modes"] = generate_preset_modes()
+            row["effects"] = generate_effects()
+            row["price"] = generate_price()
+            row["resolution"] = generate_resolution()
+            row["optical_zoom"] = generate_optical_zoom()
+            row["settings"] = generate_settings()
+            row["autofocus_points"] = generate_autofocus_points()
+            row["sensor_size"] = generate_sensor_size()
+            row["ISO"] = generate_ISO()
+            row["long_exposure"] = generate_long_exposure()
+            
+            newDatabase.append(row)
+        
+        # save
+        with open(newDatabaseFilename, "w", newline="") as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(newDatabase)
+    
+    return newDatabaseFilenames
+
+
+
+def generate_camera_name():
+    
+    component1 = ["Nikon", "Sony", "Canon", "Fujifilm", "Panasonic"]
+    
+    component2 = ["Coolpix", "Alpha", "EOS 5D", "PowerShot ELPH", "X-T20", "LUMIX GH5s C4K", "Lumix", "X100T"]
+    
+    component3 = ["S2800", "a6000", "Mark III", "360 HS", "ILC Camera", "DMC-ZS3", "A900"]
+    
+    attr = "{} {} {}".format(np.random.choice(component1), np.random.choice(component2), np.random.choice(component3))
+    
+    return attr
+
+
+def generate_camera_type():
+    
+    types = ["point and shoot", "mirrorless", "DSLR", "digital single lens mirrorless", "compact digital camera", "premium compact digital camera"]
+    
+    attr = random.choice(types)
+    
+    return attr
+
+
+def generate_color():
+    colors = ["black", "white", "silver", "red", "purple", "pink", "blue"]
+    numColors = random.randrange(1, len(colors)+1)
+    
+    selectedColors = random.sample(colors, numColors)
+    
+    if numColors == 1:
+        attr = selectedColors[0]
+    elif numColors == 2:
+        attr = " or ".join(selectedColors)
+    else:
+        attr = ", ".join(selectedColors[:-1])
+        attr += ", or " + selectedColors[-1]
+    
+    return attr
+
+
+def generate_weight():
+    weight = random.randrange(12, 100) * 10
+    attr = "{} grams".format(weight)
+    
+    if random.random() < 0.3:
+        attr += " (only body)"
+    
+    return attr
+
+
+def generate_preset_modes():
+    
+    if random.random() < 0.33:
+        attr = ""
+    
+    elif random.random() < 0.11:
+        attr = "various preset modes"
+    
+    else:
+        numPresetModes = random.randrange(9, 30)
+        
+        examples = ["beach", "snow", "night", "portrait", "fireworks", "low light", "soft skin", "sports", "beach", "backlighting", "close-up"]
+        
+        selectedExamples = random.sample(examples, 3)
+        selectedExamples = ", ".join(selectedExamples)
+        
+        modeType = np.random.choice(["preset modes", "exposure modes"], p=[0.8, 0.2])
+        
+        attr = "{} {} (e.g. {})".format(numPresetModes, modeType, selectedExamples)
+        
+        if random.random() < 0.2:
+            attr = "more  than " + attr
+    
+    return attr
+
+
+def generate_effects():
+    
+    if random.random() < 0.33:
+        attr = ""
+    
+    else:
+        modeType = np.random.choice(["glamor retouch effects", "artistic effect modes", "photo effects", "advanced filters", "creative mode settings", "advanced filters"])
+        
+        examples = ["skin softening", "small face", "big eyes", "toy camera", "soft focus", "vivid", "lighter or darker skin tones", "sepia", "miniature", "retro"]
+        selectedExamples = random.sample(examples, 3)
+        selectedExamples = ", ".join(selectedExamples)
+        
+        numModes = random.randrange(8, 25)
+        
+        attr = "{} {} ({}, etc.)".format(numModes, modeType, selectedExamples)
+        
+    return attr
+
+
+def generate_price():
+    attr = "$" + str(random.randrange(50, 5000))
+    return attr
+
+
+def generate_resolution():
+    
+    if random.random() < 0.22:
+        attr = ""
+    
+    else:
+        resolution = random.randrange(100, 250) / 10
+        
+        attr = "{} megapixels".format(resolution)
+    
+    return attr
+
+
+def generate_optical_zoom():
+    
+    if random.random() < 0.44:
+        attr = ""
+
+    else:    
+        if random.random() < 0.2:
+            attr = "no optical zoom"
+        else:
+            zoom = random.randrange(5, 35)
+            attr = "{}x optical zoom".format(zoom)
+        
+    return attr
+
+
+def generate_settings():
+    
+    attr = np.random.choice(["full manual control", "limited manual settings", "manual and automatic settings", "manual control and various automatic settings (video modeburst shooting, etc.)"], 
+                            p=[0.22, 0.33, 0.34, 0.11])
+    
+    return attr
+
+
+def generate_autofocus_points():
+    
+    if random.random() < 0.22:
+        attr = ""
+    
+    else:
+        numAfPoints = random.randrange(10, 230)    
+        
+        attr = "{} autofocus points".format(numAfPoints)
+    
+    return attr
+
+
+def generate_sensor_size():
+    
+    if random.random() < 0.11:
+        attr = ""
+    
+    else:
+        sensorOptions = ["1/2.3 inch CMOS sensor",
+                         "23.6mm x 15.6mm (APS-C) X-Trans CMOS II with primary color filter",
+                         "23.5mm x 15.6mm [APS-C] X-Trans CMOS III with primary color filter",
+                         "17.3 x 13.0 mm (in 4:3 aspect ratio)",
+                         "APS-C sensor (crop sensor)",
+                         "full frame",
+                         "1/2.33 inch sensor"]
+        
+        attr = np.random.choice(sensorOptions)
+    
+    return attr
+
+
+def generate_ISO():
+    
+    if random.random() < 0.11:
+        attr = ""
+    
+    else:
+        options = ["3200", "6400", "12800", "51200"]
+        
+        attr = "up to {} ISO".format(np.random.choice(options))
+        
+        if random.random() < 0.25:
+            attr += " with little noise"
+    
+    return attr
+
+
+def generate_long_exposure():
+    
+    if random.random() < 0.11:
+        attr = ""
+    
+    else:
+        duration = np.random.choice([15, 25, 30, 60], p=[0.125, 0.125, 0.375, 0.375])
+        
+        units = np.random.choice(["seconds", "minutes"])
+        
+        if units == "seconds":
+            
+            if random.random() < .2:
+                extraMode = ", with bulb mode expose as long as you want"
+            elif random.random() < .2:
+                extraMode = " with Long Shutter Mode"
+            elif random.random() < 0.2:
+                extraMode = " with starry sky mode"
+            else:
+                extraMode = ""
+        
+        else:
+            extraMode = " with bulb mode"
+        
+        attr = "{} {}".format(duration, units)
+        
+        if random.random() < 0.25:
+            attr = "up to " + attr
+        else:
+            attr += " max"
+        
+        attr += extraMode
+    
+    return attr
+
 
 def run_simulator(sessionDir, databaseFilename, shopkeeperUtteranceFilename, customerUtteranceFilename, randomSeed):
     
@@ -1172,6 +1440,7 @@ if __name__ == "__main__":
     customerUtteranceFilename = tools.modelDir+"2019-07-03_customer_utterance_data.csv"
     
     """
+    # simulate interactions with databases where only the prices change
     databaseFilename = tools.dataDir+"database_0.csv"
     newDatabaseFilenames = generate_databases(databaseFilename, 11)
     
@@ -1179,13 +1448,21 @@ if __name__ == "__main__":
         run_simulator(sessionDir, newDatabaseFilenames[i], shopkeeperUtteranceFilename, customerUtteranceFilename, randomSeed=i)
     """ 
     
+    # simulate interactions where all the database fileds are generated randomly
+    newDatabaseFilenames = generate_databases_2(101)
     
+    for i in range(len(newDatabaseFilenames)):
+        run_simulator(sessionDir, newDatabaseFilenames[i], shopkeeperUtteranceFilename, customerUtteranceFilename, randomSeed=i)
+    
+    
+    """
+    # simulate interactions with the handmade databases
     dbFilenames = [tools.dataDir+"/handmade_0/handmade_database_0-00.csv",
                    tools.dataDir+"/handmade_0/handmade_database_0-01.csv",
                    tools.dataDir+"/handmade_0/handmade_database_0-02.csv"]
     
     for i in range(len(dbFilenames)):
         run_simulator(sessionDir, dbFilenames[i], shopkeeperUtteranceFilename, customerUtteranceFilename, randomSeed=i)
-    
+    """
     
     

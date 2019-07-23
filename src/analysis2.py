@@ -579,7 +579,7 @@ expLogDir = "E:/eclipse-log/2019-07-17_17-56-59_actionPrediction14_dbl"
 # all data - customer utt variety, all attributes, all actions
 # 10 databases with only prices changing
 # embedding size 100
-expLogDir = "E:/eclipse-log/2019-07-18_13-34-09_actionPrediction14_dbl"
+#expLogDir = "E:/eclipse-log/2019-07-18_13-34-09_actionPrediction14_dbl - GT addresses all data"
 
 
 # non-copynet architecture with the copy buffer error fixed
@@ -587,7 +587,7 @@ expLogDir = "E:/eclipse-log/2019-07-18_13-34-09_actionPrediction14_dbl"
 # all data - customer utt variety, all attributes, all actions
 # 10 databases with only prices changing
 # embedding size 100
-#expLogDir = "E:/eclipse-log/2019-07-21_14-44-40_actionPrediction14_dbl"
+expLogDir = "E:/eclipse-log/2019-07-21_14-44-40_actionPrediction14_dbl - SM addresses all data"
 
 
 # non-copynet architecture with the copy buffer error fixed
@@ -603,7 +603,7 @@ expLogDir = "E:/eclipse-log/2019-07-18_13-34-09_actionPrediction14_dbl"
 # all data - customer utt variety, all attributes, all actions
 # 2 handmade databases with all attributes changing
 # embedding size 100
-#expLogDir = "E:/eclipse-log/"
+#expLogDir = "E:/eclipse-log/2019-07-22_16-55-13_actionPrediction14_dbl"
 
 
 
@@ -617,6 +617,7 @@ def plot_2_conditions_3_metrics(runIdToData, runDirNames, metric1Name, metric2Na
     colors = list(cmap.colors)
     runIdToColor = {}
     
+    ymax = 1.05
     
     i = 0
     for runId in runIdToData:
@@ -629,21 +630,29 @@ def plot_2_conditions_3_metrics(runIdToData, runDirNames, metric1Name, metric2Na
         
         # training
         # graph Cost Ave
+        if metric1Name == "Cost Ave":
+            metric1Ymax = 100
+        else:
+            metric1Ymax = ymax
+        
         runIdToData[runId].plot(x="Epoch", y="Train {} ({})".format(metric1Name, runId), ax=axes[0,0],
                                 color=runIdToColor[runId],
                                 legend=None,
-                                label=runId)
+                                label=runId,
+                                ylim=[0, metric1Ymax])
         
         # graph Substring Correct All
         runIdToData[runId].plot(x="Epoch", y="Train {} ({})".format(metric2Name, runId), ax=axes[1,0],
                                 color=runIdToColor[runId],
-                                legend=None)
+                                legend=None,
+                                ylim=[0, ymax])
         
         
         # graph Substring Correct Ave
         runIdToData[runId].plot(x="Epoch", y="Train {} ({})".format(metric3Name, runId), ax=axes[2,0],
                                 color=runIdToColor[runId],
-                                legend=None)
+                                legend=None,
+                                ylim=[0, ymax])
         
             
         # testing
@@ -651,26 +660,30 @@ def plot_2_conditions_3_metrics(runIdToData, runDirNames, metric1Name, metric2Na
         # graph Cost Ave
         if metric1Name == "Cost Ave":
             yColName = "Test {}({})".format(metric1Name, runId) # there's a typo in these column names (missing space)
+            metric1Ymax = 100
         else:
             yColName = "Test {} ({})".format(metric1Name, runId)
+            metric1Ymax = ymax
         
         
         runIdToData[runId].plot(x="Epoch", y=yColName, ax=axes[0,1],
                                 color=runIdToColor[runId],
-                                legend=None)
-        
+                                legend=None,
+                                ylim=[0, metric1Ymax])
         
         
         # graph Substring Correct All
         runIdToData[runId].plot(x="Epoch", y="Test {} ({})".format(metric2Name, runId), ax=axes[1,1],
                                 color=runIdToColor[runId],
-                                legend=None)
+                                legend=None,
+                                ylim=[0, ymax])
         
         
         # graph Substring Correct Ave
         runIdToData[runId].plot(x="Epoch", y="Test {} ({})".format(metric3Name, runId), ax=axes[2,1],
                                 color=runIdToColor[runId],
-                                legend=None)
+                                legend=None,
+                                ylim=[0, ymax])
     
     
     
@@ -694,6 +707,7 @@ def plot_2_conditions_3_metrics(runIdToData, runDirNames, metric1Name, metric2Na
     # plot the prob for teacher forcing
     #
     for runId in runDirNames:
+        """
         try:
             axes2_00 = axes[0,0].twinx()  # instantiate a second axes that shares the same x-axis
             axes2_10 = axes[1,0].twinx()
@@ -754,7 +768,7 @@ def plot_2_conditions_3_metrics(runIdToData, runDirNames, metric1Name, metric2Na
             
         except:
             pass
-    
+        """
     
     
         

@@ -1,0 +1,4 @@
+camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
+CAMERA_1,Panasonic EOS 5D Mark III,point and shoot,pink,860 grams,"22 exposure modes (e.g. close-up, beach, beach)",,$2184,16.2 megapixels,17x optical zoom,limited manual settings,139 autofocus points,1/2.33 inch sensor,up to 51200 ISO,up to 60 seconds
+CAMERA_2,Fujifilm LUMIX GH5s C4K ILC Camera,DSLR,"pink, white, purple, or silver",750 grams,"18 exposure modes (e.g. beach, beach, backlighting)","12 artistic effect modes (sepia, toy camera, vivid, etc.)",$2974,20.3 megapixels,,manual and automatic settings,,full frame,up to 51200 ISO,"25 seconds max, with bulb mode expose as long as you want"
+CAMERA_3,Panasonic Coolpix S2800,compact digital camera,"purple, red, or blue",250 grams,,,$447,15.9 megapixels,11x optical zoom,manual and automatic settings,,1/2.3 inch CMOS sensor,up to 3200 ISO,up to 15 seconds
