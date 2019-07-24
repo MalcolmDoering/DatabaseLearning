@@ -1,0 +1,4 @@
+camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
+CAMERA_1,Nikon EOS 5D A900,compact digital camera,"silver, purple, or pink",840 grams (only body),"24 preset modes (e.g. beach, portrait, low light)",,$4257,,25x optical zoom,manual and automatic settings,106 autofocus points,17.3 x 13.0 mm (in 4:3 aspect ratio),up to 51200 ISO,up to 60 seconds
+CAMERA_2,Sony Alpha A900,compact digital camera,"red, purple, or white",800 grams,,,$2645,22.2 megapixels,,full manual control,146 autofocus points,1/2.3 inch CMOS sensor,,60 minutes max with bulb mode
+CAMERA_3,Panasonic EOS 5D Mark III,premium compact digital camera,"white, purple, blue, or pink",210 grams,"24 exposure modes (e.g. soft skin, beach, portrait)",,$1339,17.7 megapixels,26x optical zoom,limited manual settings,58 autofocus points,1/2.33 inch sensor,,30 minutes max with bulb mode

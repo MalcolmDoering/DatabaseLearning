@@ -71,18 +71,16 @@ fieldnames = ["TRIAL",
               "CUSTOMER_LOCATION",
               "CUSTOMER_TOPIC",
               "CUSTOMER_SPEECH",
-              
-              #"SPATIAL_STATE",
-              #"STATE_TARGET",
+              "SPATIAL_STATE",
+              "STATE_TARGET",
               
               
               "OUTPUT_SHOPKEEPER_ACTION",
               "OUTPUT_SHOPKEEPER_LOCATION",
               "SHOPKEEPER_TOPIC",
               "SHOPKEEPER_SPEECH",
-              
-              #"OUTPUT_SPATIAL_STATE",
-              #"OUTPUT_STATE_TARGET"
+              "OUTPUT_SPATIAL_STATE",
+              "OUTPUT_STATE_TARGET",
               
               "SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"
               
@@ -279,11 +277,11 @@ class InteractionState(object):
                       "CUSTOMER_SPEECH":self.customerSpeech,
                       "SHOPKEEPER_SPEECH":self.shopkeeperSpeech,
                       
-                      #"SPATIAL_STATE":self.spatialState,
-                      #"STATE_TARGET":self.stateTarget,
+                      "SPATIAL_STATE":self.spatialState,
+                      "STATE_TARGET":self.stateTarget,
                       
-                      #"OUTPUT_SPATIAL_STATE":self.outputSpatialState,
-                      #"OUTPUT_STATE_TARGET":self.outputStateTarget,
+                      "OUTPUT_SPATIAL_STATE":self.outputSpatialState,
+                      "OUTPUT_STATE_TARGET":self.outputStateTarget,
                       
                       "CUSTOMER_LOCATION":self.customerLocation,
                       "OUTPUT_SHOPKEEPER_LOCATION":self.outputShopkeeperLocation
@@ -1017,6 +1015,49 @@ class ShopkeeperAgent(object):
         return currIntState
 
 
+def set_spatial_formation(prevIntState, currIntState):
+    
+    
+    # for before the shopkeeper acts
+    if prevIntState.turnCount == 0:
+        # the begining of the interaction
+        currIntState.spatialState = "WAITING"
+        currIntState.stateTarget = "NONE"
+        
+    else:
+        currIntState.spatialState = prevIntState.outputSpatialState
+        currIntState.stateTarget = prevIntState.stateTarget
+    
+    
+    # for after the shopkeeper acts
+    if currIntState.customerLocation in cameras and currIntState.outputShopkeeperLocation == currIntState.customerLocation:
+        currIntState.outputSpatialState = "PRESENT_X"
+        currIntState.outputStateTarget = currIntState.outputShopkeeperLocation
+    
+    elif currIntState.customerLocation not in cameras and currIntState.outputShopkeeperLocation == currIntState.customerLocation:
+        currIntState.outputSpatialState = "FACE_TO_FACE"
+        currIntState.outputStateTarget = "NONE"
+    
+    elif currIntState.outputShopkeeperLocation == "SERVICE_COUNTER":
+        currIntState.outputSpatialState = "WAITING"
+        currIntState.outputStateTarget = "NONE"
+    
+    if currIntState.outputShopkeeperAction == "S_INTRODUCES_CAMERA":
+        currIntState.outputSpatialState = "PRESENT_X"
+        currIntState.outputStateTarget = currIntState.outputShopkeeperLocation
+    
+    if currIntState.outputShopkeeperAction == "S_GREETS":
+        currIntState.outputSpatialState = "FACE_TO_FACE"
+        currIntState.outputStateTarget = "NONE"
+    
+    if currIntState.outputShopkeeperAction == "S_THANK_YOU":
+        currIntState.outputSpatialState = "FACE_TO_FACE"
+        currIntState.outputStateTarget = "NONE"
+    
+    
+
+    
+    return currIntState
 
 
 def simulate_interaction(trialId, seed):
@@ -1035,6 +1076,8 @@ def simulate_interaction(trialId, seed):
         
         currIntState = custAgent.perform_action(prevIntState)
         currIntState = shkpAgent.perform_action(prevIntState, currIntState)
+        
+        currIntState = set_spatial_formation(prevIntState, currIntState)
         
         #print currIntState.turnCount
         

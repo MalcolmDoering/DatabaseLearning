@@ -1,4 +1,0 @@
-camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
-CAMERA_1,Panasonic X-T20 S2800,DSLR,"pink, white, black, purple, or blue",670 grams (only body),"29 preset modes (e.g. beach, backlighting, soft skin)",,$906,,,full manual control,,1/2.3 inch CMOS sensor,,up to 30 seconds
-CAMERA_2,Sony Lumix S2800,premium compact digital camera,"blue, black, pink, purple, or red",860 grams (only body),,,$3206,13.5 megapixels,no optical zoom,manual and automatic settings,198 autofocus points,1/2.33 inch sensor,up to 3200 ISO,up to 30 minutes with bulb mode
-CAMERA_3,Sony PowerShot ELPH S2800,mirrorless,"red, white, or purple",880 grams (only body),,,$1504,,no optical zoom,limited manual settings,,full frame,,15 minutes max with bulb mode

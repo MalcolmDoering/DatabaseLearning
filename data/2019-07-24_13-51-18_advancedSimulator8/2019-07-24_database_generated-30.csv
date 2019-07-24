@@ -1,4 +1,0 @@
-camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
-CAMERA_1,Panasonic X100T Mark III,point and shoot,"red, white, black, silver, blue, or pink",300 grams,,,$3033,11.2 megapixels,,full manual control,125 autofocus points,1/2.3 inch CMOS sensor,,60 seconds max with Long Shutter Mode
-CAMERA_2,Sony PowerShot ELPH S2800,premium compact digital camera,"white, purple, silver, red, black, or pink",530 grams,,"9 advanced filters (miniature, small face, toy camera, etc.)",$965,19.4 megapixels,,full manual control,63 autofocus points,APS-C sensor (crop sensor),up to 6400 ISO,60 minutes max with bulb mode
-CAMERA_3,Sony Coolpix A900,point and shoot,"white, red, or pink",270 grams,,"10 glamor retouch effects (vivid, skin softening, lighter or darker skin tones, etc.)",$4579,,,manual and automatic settings,,,up to 51200 ISO,
