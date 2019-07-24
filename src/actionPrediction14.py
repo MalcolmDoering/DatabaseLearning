@@ -33,7 +33,7 @@ from utterancevectorizer import UtteranceVectorizer
 
 
 
-DEBUG = True
+DEBUG = False
 
 
 eosChar = "#"
@@ -45,7 +45,7 @@ cameras = ["CAMERA_1", "CAMERA_2", "CAMERA_3"]
 
 numTrainDbs = 2
 batchSize = 128
-embeddingSize = 30
+embeddingSize = 100
 numEpochs = 10000
 evalEvery = 10
 randomizeTrainingBatches = False
@@ -453,8 +453,14 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     print("loading data...", flush=True, file=sessionTerminalOutputStream)
     
     
-    #dataDirectory = tools.dataDir+"/2019-05-21_14-11-57_advancedSimulator8"
-    dataDirectory = tools.dataDir+"/handmade_0"
+    #dataDirectory = tools.dataDir+"/2019-05-21_14-11-57_advancedSimulator8" # only one possible sentence per customer and shopkeeper action
+    #dataDirectory = tools.dataDir+"/handmade_0" # only one possible sentence per customer and shopkeeper action
+    
+    #dataDirectory = tools.dataDir+"/2019-07-03_15-16-05_advancedSimulator8" # many possible sentences for customer actions (from h-h dataset)
+    #dataDirectory = tools.dataDir+"/2019-07-22_handmade_0" # many possible sentences for customer actions (from h-h dataset)
+    
+    dataDirectory = tools.dataDir+"/2019-07-23_17-27-28_advancedSimulator8" # many possible sentences for customer actions (from h-h dataset), all attributes change
+    
     
     
     filenames = os.listdir(dataDirectory)
@@ -503,7 +509,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     for i in range(len(interactionFilenames)):
         iFn = interactionFilenames[i]
         
-        inters, sutder, gtDbCamera, gtDbAttribute = read_simulated_interactions(iFn, dbFieldnames, keepActions=["S_ANSWERS_QUESTION_ABOUT_FEATURE"]) # S_INTRODUCES_CAMERA S_INTRODUCES_FEATURE
+        inters, sutder, gtDbCamera, gtDbAttribute = read_simulated_interactions(iFn, dbFieldnames)#, keepActions=["S_ANSWERS_QUESTION_ABOUT_FEATURE"]) # S_INTRODUCES_CAMERA S_INTRODUCES_FEATURE
         
         if i < numTrainDbs:
             # reduce the amount of training data because we have increased the number of training databases (assumes 1000 interactions per DB)
@@ -1384,14 +1390,14 @@ if __name__ == "__main__":
     attTemp = 0
     
     
-    run(0, 0, camTemp, attTemp, 0.0, sessionDir)
+    #run(0, 0, camTemp, attTemp, 0.0, sessionDir)
     
     
     for gpu in range(8):
         
         seed = gpu
                 
-        process = Process(target=run, args=[gpu, seed, camTemp, attTemp, 1.0, sessionDir])
+        process = Process(target=run, args=[gpu, seed, camTemp, attTemp, 0.0, sessionDir])
         process.start()
     
     
