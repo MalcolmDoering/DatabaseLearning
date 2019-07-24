@@ -1,4 +1,0 @@
-camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
-CAMERA_1,Fujifilm Lumix Mark III,mirrorless,red or purple,160 grams (only body),,,$2476,17.6 megapixels,32x optical zoom,limited manual settings,186 autofocus points,23.6mm x 15.6mm (APS-C) X-Trans CMOS II with primary color filter,up to 12800 ISO,30 seconds max
-CAMERA_2,Fujifilm X100T a6000,DSLR,"pink, white, purple, black, red, or silver",860 grams,,"22 photo effects (lighter or darker skin tones, toy camera, small face, etc.)",$1435,10.8 megapixels,12x optical zoom,full manual control,82 autofocus points,APS-C sensor (crop sensor),up to 3200 ISO,60 seconds max
-CAMERA_3,Panasonic Coolpix a6000,premium compact digital camera,red,390 grams,,,$2564,16.5 megapixels,11x optical zoom,limited manual settings,35 autofocus points,1/2.3 inch CMOS sensor,up to 6400 ISO with little noise,

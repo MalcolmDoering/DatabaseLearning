@@ -1,0 +1,4 @@
+camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
+CAMERA_1,Nikon LUMIX GH5s C4K S2800,mirrorless,blue or red,570 grams,,,$3515,,6x optical zoom,manual and automatic settings,81 autofocus points,23.5mm x 15.6mm [APS-C] X-Trans CMOS III with primary color filter,up to 51200 ISO,up to 30 seconds
+CAMERA_2,Panasonic Lumix S2800,DSLR,"purple, pink, silver, red, white, or blue",360 grams,"20 preset modes (e.g. fireworks, backlighting, beach)",,$4362,,,manual and automatic settings,92 autofocus points,APS-C sensor (crop sensor),up to 51200 ISO,30 minutes max with bulb mode
+CAMERA_3,Sony X100T 360 HS,compact digital camera,"pink, blue, purple, black, or silver",810 grams,"27 exposure modes (e.g. fireworks, low light, backlighting)",,$1471,,,full manual control,204 autofocus points,1/2.33 inch sensor,up to 6400 ISO,30 seconds max

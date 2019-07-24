@@ -1,0 +1,4 @@
+camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
+CAMERA_1,Canon LUMIX GH5s C4K A900,DSLR,"white, silver, black, red, or blue",540 grams,,"16 advanced filters (sepia, toy camera, retro, etc.)",$3826,24.9 megapixels,,manual and automatic settings,214 autofocus points,1/2.33 inch sensor,up to 12800 ISO,
+CAMERA_2,Fujifilm Lumix a6000,premium compact digital camera,"blue, black, pink, purple, white, silver, or red",210 grams (only body),,,$2267,13.6 megapixels,,full manual control,,full frame,up to 12800 ISO,
+CAMERA_3,Nikon Coolpix A900,digital single lens mirrorless,"red, white, silver, blue, or black",870 grams,"more  than 10 preset modes (e.g. soft skin, low light, close-up)","10 glamor retouch effects (toy camera, small face, big eyes, etc.)",$192,19.1 megapixels,,full manual control,,,up to 6400 ISO with little noise,up to 30 minutes with bulb mode

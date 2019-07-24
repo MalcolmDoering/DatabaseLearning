@@ -1,0 +1,4 @@
+camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
+CAMERA_1,Panasonic LUMIX GH5s C4K ILC Camera,digital single lens mirrorless,black,880 grams (only body),,"8 creative mode settings (vivid, toy camera, small face, etc.)",$4942,21.1 megapixels,,full manual control,94 autofocus points,17.3 x 13.0 mm (in 4:3 aspect ratio),up to 51200 ISO,
+CAMERA_2,Panasonic PowerShot ELPH A900,DSLR,"red, white, pink, silver, black, blue, or purple",450 grams (only body),,,$3828,17.8 megapixels,,full manual control,10 autofocus points,23.6mm x 15.6mm (APS-C) X-Trans CMOS II with primary color filter,up to 6400 ISO,60 seconds max
+CAMERA_3,Panasonic X100T DMC-ZS3,DSLR,"purple, black, white, silver, or blue",470 grams (only body),various preset modes,,$2967,18.6 megapixels,,manual and automatic settings,,APS-C sensor (crop sensor),up to 51200 ISO,30 seconds max with Long Shutter Mode

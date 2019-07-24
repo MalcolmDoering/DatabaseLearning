@@ -1,4 +1,0 @@
-camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
-CAMERA_1,Canon LUMIX GH5s C4K S2800,mirrorless,purple or red,940 grams,,,$3273,23.6 megapixels,19x optical zoom,"manual control and various automatic settings (video modeburst shooting, etc.)",122 autofocus points,1/2.33 inch sensor,up to 51200 ISO,up to 25 minutes with bulb mode
-CAMERA_2,Panasonic EOS 5D a6000,point and shoot,silver,690 grams,,,$3762,20.9 megapixels,,"manual control and various automatic settings (video modeburst shooting, etc.)",,,up to 3200 ISO,60 seconds max
-CAMERA_3,Canon X-T20 S2800,compact digital camera,silver or pink,980 grams,,"11 creative mode settings (retro, lighter or darker skin tones, soft focus, etc.)",$4853,11.4 megapixels,5x optical zoom,limited manual settings,120 autofocus points,APS-C sensor (crop sensor),up to 3200 ISO,25 minutes max with bulb mode

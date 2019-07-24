@@ -1,0 +1,4 @@
+camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
+CAMERA_1,Nikon Coolpix 360 HS,mirrorless,"red, white, silver, or pink",460 grams,,"16 advanced filters (vivid, sepia, big eyes, etc.)",$1005,,no optical zoom,limited manual settings,,17.3 x 13.0 mm (in 4:3 aspect ratio),up to 3200 ISO,15 seconds max
+CAMERA_2,Canon Lumix 360 HS,point and shoot,"white, pink, or black",930 grams (only body),various preset modes,,$4320,,,manual and automatic settings,123 autofocus points,,up to 6400 ISO with little noise,"30 seconds max, with bulb mode expose as long as you want"
+CAMERA_3,Fujifilm PowerShot ELPH ILC Camera,point and shoot,"silver, black, red, purple, pink, or blue",930 grams,,"16 photo effects (sepia, miniature, vivid, etc.)",$4827,15.0 megapixels,,manual and automatic settings,,full frame,up to 51200 ISO,up to 30 seconds

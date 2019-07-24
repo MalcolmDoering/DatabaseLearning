@@ -1,4 +1,0 @@
-camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
-CAMERA_1,Panasonic EOS 5D a6000,mirrorless,"pink, silver, blue, purple, or red",550 grams,"more  than 16 preset modes (e.g. fireworks, beach, night)",,$4694,17.4 megapixels,21x optical zoom,full manual control,122 autofocus points,1/2.3 inch CMOS sensor,up to 6400 ISO with little noise,60 seconds max
-CAMERA_2,Sony Lumix A900,point and shoot,"white, purple, blue, silver, black, pink, or red",380 grams,,,$1677,,no optical zoom,manual and automatic settings,155 autofocus points,,up to 6400 ISO,60 seconds max
-CAMERA_3,Panasonic X100T DMC-ZS3,premium compact digital camera,"black, red, silver, white, blue, purple, or pink",220 grams,,,$3368,10.4 megapixels,,limited manual settings,,APS-C sensor (crop sensor),up to 51200 ISO,up to 60 seconds
