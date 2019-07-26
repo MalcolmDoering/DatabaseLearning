@@ -20,10 +20,22 @@ goChar = "~"
 
 class CustomNeuralNetwork(object):
     
-    def __init__(self, inputUttVecDim, dbSeqLen, outputSeqLen, locationVecLen, 
-                 batchSize, numUniqueCams, numUniqueAtts, vocabSize, 
-                 embeddingSize, charToIndex, camTemp, attTemp,
-                 seed):
+    def __init__(self, 
+                 inputUttVecDim, 
+                 dbSeqLen, 
+                 outputSeqLen, 
+                 locationVecLen, 
+                 batchSize, 
+                 numUniqueCams, 
+                 numUniqueAtts, 
+                 vocabSize, 
+                 embeddingSize, 
+                 charToIndex, 
+                 camTemp, 
+                 attTemp,
+                 seed,
+                 inputDim=None,
+                 inputSeqLen=None):
         
         self.inputUttVecDim = inputUttVecDim
         self.dbSeqLen = dbSeqLen
@@ -35,6 +47,9 @@ class CustomNeuralNetwork(object):
         self.vocabSize = vocabSize
         self.embeddingSize = embeddingSize
         self.charToIndex = charToIndex
+        
+        self.inputDim = inputDim
+        self.inputSeqLen = inputSeqLen
         
         self.gumbel_softmax_temp_cams = camTemp
         self.gumbel_softmax_temp_atts = attTemp
@@ -69,76 +84,13 @@ class CustomNeuralNetwork(object):
         
         
         
-        with tf.variable_scope("input_encoder_1"):
-            # input encoder for the initial state of the copynet
-            
-            """
-            num_units = [self.embeddingSize, self.embeddingSize]
-            #cells = [tf.nn.rnn_cell.LSTMCell(num_units=n, initializer=tf.initializers.glorot_normal()) for n in num_units]
-            cells = [tf.nn.rnn_cell.GRUCell(num_units=n, kernel_initializer=tf.initializers.glorot_normal()) for n in num_units]
-            
-            stacked_rnn_cell = tf.contrib.rnn.MultiRNNCell(cells)
-            
-            _, input_encoding = tf.nn.dynamic_rnn(stacked_rnn_cell, self._input_one_hot, dtype=tf.float32)
-            
-            # for single layer GRU
-            self._input_utt_encoding = input_encoding[-1] # TODO why is this here??? [-1] A: get output instead of candidate 
-        
-            # for two layer LSTM
-            #self._input_encoding = tf.concat([input_encoding[0][-1], input_encoding[1][-1]], axis=1)
-            
-            
-            
-            self._loc_utt_combined_input_encoding = tf.layers.dense(tf.concat([self._input_utt_encoding, self._location_inputs], axis=1),
-                                                                    self.embeddingSize, 
-                                                                    activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
-            """
-            
-            self._loc_utt_combined_input_encoding = tf.concat([self._inputs, self._location_inputs], axis=1)
-            
-            self._loc_utt_combined_input_encoding = tf.layers.dense(self._loc_utt_combined_input_encoding,
-                                                                    1900, 
-                                                                    activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
-            
-            self._loc_utt_combined_input_encoding = tf.layers.dense(self._loc_utt_combined_input_encoding,
-                                                                    self.embeddingSize, 
-                                                                    activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
-            
-        
-        
-        with tf.variable_scope("input_encoder_2"):
-            # input encoder for finding the most relevant camera and attribute
-            
-            """
-            num_units = [self.embeddingSize, self.embeddingSize]
-            #cells = [tf.nn.rnn_cell.LSTMCell(num_units=n, initializer=tf.initializers.glorot_normal()) for n in num_units]
-            cells = [tf.nn.rnn_cell.GRUCell(num_units=n, kernel_initializer=tf.initializers.glorot_normal()) for n in num_units]
-            
-            stacked_rnn_cell = tf.contrib.rnn.MultiRNNCell(cells)
-            
-            _, input_encoding = tf.nn.dynamic_rnn(stacked_rnn_cell, self._input_one_hot, dtype=tf.float32)
-            
-            # for single layer GRU
-            self._input_utt_encoding_2 = input_encoding[-1] # TODO why is this here??? [-1] A: get output instead of candidate 
-        
-            # for two layer LSTM
-            #self._input_encoding_2 = tf.concat([input_encoding[0][-1], input_encoding[1][-1]], axis=1)
-            
-            self._loc_utt_combined_input_encoding_2 = tf.layers.dense(tf.concat([self._input_utt_encoding_2, self._location_inputs], axis=1),
-                                                                    self.embeddingSize, 
-                                                                    activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
-            """
-            
-            self._loc_utt_combined_input_encoding_2 = tf.concat([self._inputs, self._location_inputs], axis=1)
-            
-            self._loc_utt_combined_input_encoding_2 = tf.layers.dense(self._loc_utt_combined_input_encoding_2,
-                                                                    1900, 
-                                                                    activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
-            
-            self._loc_utt_combined_input_encoding_2 = tf.layers.dense(self._loc_utt_combined_input_encoding_2,
-                                                                    self.embeddingSize, 
-                                                                    activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
-        
+        #self._input_sequences = None
+        #self._loc_utt_combined_input_encoding = self.build_feedforward_encoder("input_encoder_1")
+        #self._loc_utt_combined_input_encoding_2 = self.build_feedforward_encoder("input_encoder_2")
+    
+        self._input_sequences = tf.placeholder(tf.float32, [self.batchSize, self.inputSeqLen, self.inputDim], "input_sequence_vectors")
+        self._loc_utt_combined_input_encoding = self.build_sequence_encoder("input_encoder_1")
+        self._loc_utt_combined_input_encoding_2 = self.build_sequence_encoder("input_encoder_2")
         
         
         
@@ -248,12 +200,13 @@ class CustomNeuralNetwork(object):
         self._output_mask = tf.sequence_mask(self._ground_truth_output_lens, self.outputSeqLen, dtype=tf.int32)
         
         
-        
-        #cells = [tf.nn.rnn_cell.GRUCell(num_units=self.embeddingSize+1, kernel_initializer=tf.initializers.glorot_normal()),
-        #         tf.nn.rnn_cell.GRUCell(num_units=self.vocabSize+1, activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.glorot_normal())]
-        
         cells = [tf.nn.rnn_cell.GRUCell(num_units=self.embeddingSize+2, kernel_initializer=tf.initializers.glorot_normal()),
                  tf.nn.rnn_cell.GRUCell(num_units=self.embeddingSize, kernel_initializer=tf.initializers.glorot_normal())]
+        
+        #cells = [tf.nn.rnn_cell.LSTMCell(num_units=self.embeddingSize+2, initializer=tf.initializers.glorot_normal()),
+        #         tf.nn.rnn_cell.LSTMCell(num_units=self.embeddingSize, initializer=tf.initializers.glorot_normal())]
+        
+        
         
         self.decoder_cell = tf.contrib.rnn.MultiRNNCell(cells)
         
@@ -331,6 +284,83 @@ class CustomNeuralNetwork(object):
         self.initialize()
         
         self.saver = tf.train.Saver()
+    
+    
+    
+    def build_feedforward_encoder(self, scopeName):
+        
+        with tf.variable_scope(scopeName):
+            # input encoder for the initial state of the copynet
+            
+            """
+            num_units = [self.embeddingSize, self.embeddingSize]
+            #cells = [tf.nn.rnn_cell.LSTMCell(num_units=n, initializer=tf.initializers.glorot_normal()) for n in num_units]
+            cells = [tf.nn.rnn_cell.GRUCell(num_units=n, kernel_initializer=tf.initializers.glorot_normal()) for n in num_units]
+            
+            stacked_rnn_cell = tf.contrib.rnn.MultiRNNCell(cells)
+            
+            _, input_encoding = tf.nn.dynamic_rnn(stacked_rnn_cell, self._input_one_hot, dtype=tf.float32)
+            
+            # for single layer GRU
+            self._input_utt_encoding = input_encoding[-1] # TODO why is this here??? [-1] A: get output instead of candidate 
+        
+            # for two layer LSTM
+            #self._input_encoding = tf.concat([input_encoding[0][-1], input_encoding[1][-1]], axis=1)
+            
+            
+            
+            self._loc_utt_combined_input_encoding = tf.layers.dense(tf.concat([self._input_utt_encoding, self._location_inputs], axis=1),
+                                                                    self.embeddingSize, 
+                                                                    activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
+            """
+            
+            loc_utt_combined_input_encoding = tf.concat([self._inputs, self._location_inputs], axis=1)
+            
+            loc_utt_combined_input_encoding = tf.layers.dense(loc_utt_combined_input_encoding,
+                                                                    1900, 
+                                                                    activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
+            
+            loc_utt_combined_input_encoding = tf.layers.dense(loc_utt_combined_input_encoding,
+                                                                    self.embeddingSize, 
+                                                                    activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
+        
+        return loc_utt_combined_input_encoding
+        
+    
+    
+    def build_sequence_encoder(self, scopeName):
+        
+        with tf.variable_scope(scopeName):
+            # input encoder for the initial state of the copynet
+            
+            # first condense the inputs 
+            inputs_reshaped = tf.reshape(self._input_sequences, [self.batchSize*self.inputSeqLen, self.inputDim])
+            
+            inputs_reshaped_condensed = tf.layers.dense(inputs_reshaped,
+                                                        self.embeddingSize,
+                                                        activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
+            
+            inputs_reshaped_condensed = tf.layers.dense(inputs_reshaped_condensed,
+                                                        self.embeddingSize,
+                                                        activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
+            
+            inputs_condensed = tf.reshape(inputs_reshaped_condensed, [self.batchSize, self.inputSeqLen, self.embeddingSize])
+            
+            
+            num_units = [self.embeddingSize, self.embeddingSize]
+            cells = [tf.nn.rnn_cell.GRUCell(num_units=n, kernel_initializer=tf.initializers.glorot_normal()) for n in num_units]
+            #cells = [tf.nn.rnn_cell.LSTMCell(num_units=n, initializer=tf.initializers.glorot_normal()) for n in num_units]
+            
+            
+            stacked_rnn_cell = tf.contrib.rnn.MultiRNNCell(cells)
+            
+            _, input_encoding = tf.nn.dynamic_rnn(stacked_rnn_cell, inputs_condensed, dtype=tf.float32)
+            
+            # for single layer GRU
+            loc_utt_combined_input_encoding = input_encoding[0] + input_encoding[1] # TODO why is this here??? [-1] A: get output instead of candidate
+        
+            
+        return loc_utt_combined_input_encoding
     
     
     
@@ -580,7 +610,7 @@ class CustomNeuralNetwork(object):
         self._sess.run(self._init_op)
         
     
-    def train(self, inputUtts, inputCustLocs, databases, groundTruthUttOutputs, groundTruthOutputStringLens, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, teacherForcingProb=1.0):
+    def train(self, inputUtts, inputCustLocs, databases, groundTruthUttOutputs, groundTruthOutputStringLens, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, inputSequences=None, teacherForcingProb=1.0):
         feedDict = {self._inputs: inputUtts, 
                     self._location_inputs: inputCustLocs, 
                     self._db_entries: databases, 
@@ -591,12 +621,15 @@ class CustomNeuralNetwork(object):
                     self._gtDbAttIndices: gtDbAtts,
                     self._teacher_forcing_prob: teacherForcingProb}
         
+        if inputSequences != None:
+            feedDict[self._input_sequences] = inputSequences
+        
         trainingLoss, _ = self._sess.run([self._loss, self._train_op], feed_dict=feedDict)
         
         return trainingLoss
     
     
-    def train_loss(self, inputUtts, inputCustLocs, databases, groundTruthOutputs, groundTruthOutputStringLens, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, teacherForcingProb=1.0):
+    def train_loss(self, inputUtts, inputCustLocs, databases, groundTruthOutputs, groundTruthOutputStringLens, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, inputSequences=None, teacherForcingProb=1.0):
         feedDict = {self._inputs: inputUtts, 
                     self._location_inputs: inputCustLocs, 
                     self._db_entries: databases, 
@@ -606,13 +639,16 @@ class CustomNeuralNetwork(object):
                     self._gtDbCamIndices: gtDbCams, 
                     self._gtDbAttIndices: gtDbAtts,
                     self._teacher_forcing_prob: teacherForcingProb}
+        
+        if inputSequences != None:
+            feedDict[self._input_sequences] = inputSequences
         
         loss = self._sess.run(self._loss, feed_dict=feedDict)
         
         return loss
     
     
-    def predict(self, inputUtts, inputCustLocs, databases, groundTruthOutputs, groundTruthOutputStringLens, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, teacherForcingProb=1.0):
+    def predict(self, inputUtts, inputCustLocs, databases, groundTruthOutputs, groundTruthOutputStringLens, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, inputSequences=None, teacherForcingProb=1.0):
         feedDict = {self._inputs: inputUtts, 
                     self._location_inputs: inputCustLocs, 
                     self._db_entries: databases, 
@@ -622,6 +658,9 @@ class CustomNeuralNetwork(object):
                     self._gtDbCamIndices: gtDbCams, 
                     self._gtDbAttIndices: gtDbAtts,
                     self._teacher_forcing_prob: teacherForcingProb}
+        
+        if inputSequences != None:
+            feedDict[self._input_sequences] = inputSequences
         
         predUtts, predShkpLocs, copyScores, genScores, camMatchArgMax, attMatchArgMax, camMatch, attMatch, db_read_weights, copy_weights, gen_weights = self._sess.run([self._pred_utt_op,
                                                                                                                             self._pred_shkp_loc_op,
@@ -638,7 +677,7 @@ class CustomNeuralNetwork(object):
         return predUtts, predShkpLocs, copyScores, genScores, camMatchArgMax, attMatchArgMax, camMatch, attMatch, db_read_weights, copy_weights, gen_weights
     
     
-    def get_db_match_val(self, inputUtts, inputCustLocs, databases, groundTruthOutputs, groundTruthOutputStringLens, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, teacherForcingProb=1.0):
+    def get_db_match_val(self, inputUtts, inputCustLocs, databases, groundTruthOutputs, groundTruthOutputStringLens, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, inputSequences=None, teacherForcingProb=1.0):
         feedDict = {self._inputs: inputUtts, 
                     self._location_inputs: inputCustLocs, 
                     self._db_entries: databases, 
@@ -648,6 +687,9 @@ class CustomNeuralNetwork(object):
                     self._gtDbCamIndices: gtDbCams, 
                     self._gtDbAttIndices: gtDbAtts,
                     self._teacher_forcing_prob: teacherForcingProb}
+        
+        if inputSequences != None:
+            feedDict[self._input_sequences] = inputSequences
         
         dbMatchVal = self._sess.run(self.db_match_val, feed_dict=feedDict)
         

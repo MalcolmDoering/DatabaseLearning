@@ -227,12 +227,13 @@ class UtteranceVectorizer(object):
             allUttVecs = self.get_utterance_vectors(allUtterances, returnAll=True, asArray=False)
             
             ngramUttVecs = []
-            keywordUttVecs = []
+            #keywordUttVecs = []
             
             while len(allUttVecs) > 0:
                 uttVec = allUttVecs.pop()
-                ngramUttVecs.append(uttVec[:self.keywordsStartIndex])
-                keywordUttVecs.append(uttVec[self.keywordsStartIndex:])
+                #ngramUttVecs.append(uttVec[:self.keywordsStartIndex])
+                ngramUttVecs.append(uttVec)
+                #keywordUttVecs.append(uttVec[self.keywordsStartIndex:])
                 
             #for i in range(len(allUttVecs)):
             #    ngramUttVecs.append(allUttVecs[i][:self.keywordsStartIndex])
@@ -242,14 +243,14 @@ class UtteranceVectorizer(object):
             self.nrgamTfidfVectorizer = TfidfTransformer()
             ngramAllTfidfUttVecs = self.nrgamTfidfVectorizer.fit_transform(ngramUttVecs)
             
-            self.keywordTfidfVectorizer = TfidfTransformer()
-            keywordAllTfidfUttVecs = self.keywordTfidfVectorizer.fit_transform(keywordUttVecs)
+            #self.keywordTfidfVectorizer = TfidfTransformer()
+            #keywordAllTfidfUttVecs = self.keywordTfidfVectorizer.fit_transform(keywordUttVecs)
             
             self.ngramLsaModel = TruncatedSVD(n_components=min(1000, len(ngramUttVecs[0])-1))
             self.ngramLsaModel.fit(ngramAllTfidfUttVecs)
             
-            self.keywordLsaModel = TruncatedSVD(n_components=min(200, len(keywordUttVecs[0])-1))
-            self.keywordLsaModel.fit(keywordAllTfidfUttVecs)
+            #self.keywordLsaModel = TruncatedSVD(n_components=min(200, len(keywordUttVecs[0])-1))
+            #self.keywordLsaModel.fit(keywordAllTfidfUttVecs)
     
     
         
@@ -278,13 +279,17 @@ class UtteranceVectorizer(object):
         
         uttVec = self.get_utterance_vector(utt)
         
-        ngramTfidfVec = self.nrgamTfidfVectorizer.transform([uttVec[:self.keywordsStartIndex]])
-        keywordTfidfVec = self.keywordTfidfVectorizer.transform([uttVec[self.keywordsStartIndex:]])
+        #ngramTfidfVec = self.nrgamTfidfVectorizer.transform([uttVec[:self.keywordsStartIndex]])
+        #keywordTfidfVec = self.keywordTfidfVectorizer.transform([uttVec[self.keywordsStartIndex:]])
+        
+        ngramTfidfVec = self.nrgamTfidfVectorizer.transform([uttVec])
+        
         
         ngramLsaVec = self.ngramLsaModel.transform(ngramTfidfVec)[0]
-        keywordLsaVec = self.keywordLsaModel.transform(keywordTfidfVec)[0]
+        #keywordLsaVec = self.keywordLsaModel.transform(keywordTfidfVec)[0]
         
-        return np.concatenate([ngramLsaVec, keywordLsaVec], axis=0)
+        #return np.concatenate([ngramLsaVec, keywordLsaVec], axis=0)
+        return ngramLsaVec
     
     
     
@@ -307,7 +312,7 @@ class UtteranceVectorizer(object):
     
     def get_utterance_vector(self, utt, returnAll=False, unigramOnly=False):
         
-        uttVec = np.zeros(self.numIndices)
+        uttVec = np.zeros(self.numIndices, dtype=np.float32)
         
         if self.backchannelList != [] and utt.lower() in self.backchannelList:
             uttVec[self.unigramToIndex[self.backchannelPlaceholder]] = 1.0
