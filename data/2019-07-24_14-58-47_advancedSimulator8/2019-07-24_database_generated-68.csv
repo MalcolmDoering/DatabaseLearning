@@ -1,4 +1,0 @@
-camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
-CAMERA_1,Nikon X100T 360 HS,point and shoot,white,630 grams,,"19 glamor retouch effects (miniature, vivid, lighter or darker skin tones, etc.)",$2849,23.9 megapixels,,full manual control,226 autofocus points,full frame,,60 minutes max with bulb mode
-CAMERA_2,Nikon Coolpix ILC Camera,compact digital camera,"pink, purple, red, blue, or black",560 grams (only body),,"14 creative mode settings (soft focus, retro, miniature, etc.)",$3205,19.9 megapixels,,manual and automatic settings,,,up to 3200 ISO with little noise,up to 25 minutes with bulb mode
-CAMERA_3,Fujifilm X-T20 360 HS,mirrorless,red,470 grams,,"17 glamor retouch effects (toy camera, retro, miniature, etc.)",$4455,11.1 megapixels,34x optical zoom,limited manual settings,185 autofocus points,17.3 x 13.0 mm (in 4:3 aspect ratio),up to 6400 ISO,15 seconds max

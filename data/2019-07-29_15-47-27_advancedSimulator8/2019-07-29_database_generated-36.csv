@@ -1,0 +1,4 @@
+camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
+CAMERA_1,Panasonic Lumix S2800,point and shoot,"white, blue, pink, silver, black, red, or purple",910 grams (only body),various preset modes,"15 advanced filters (vivid, lighter or darker skin tones, retro, etc.)",$774,,,full manual control,,,up to 6400 ISO,
+CAMERA_2,Panasonic Coolpix ILC Camera,mirrorless,"blue, pink, white, silver, red, or black",590 grams,"20 preset modes (e.g. beach, beach, close-up)",,$182,24.1 megapixels,,manual and automatic settings,65 autofocus points,1/2.3 inch CMOS sensor,up to 3200 ISO with little noise,30 minutes max with bulb mode
+CAMERA_3,Nikon Coolpix a6000,compact digital camera,"blue, red, or purple",480 grams,,,$1819,20.4 megapixels,,limited manual settings,141 autofocus points,APS-C sensor (crop sensor),up to 51200 ISO,up to 30 seconds

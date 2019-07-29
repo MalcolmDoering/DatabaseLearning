@@ -1,0 +1,4 @@
+camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
+CAMERA_1,Sony PowerShot ELPH a6000,mirrorless,silver,700 grams,,,$2568,10.7 megapixels,14x optical zoom,manual and automatic settings,219 autofocus points,1/2.3 inch CMOS sensor,up to 6400 ISO,60 seconds max
+CAMERA_2,Sony Lumix DMC-ZS3,point and shoot,"blue, red, silver, white, purple, or black",620 grams,various preset modes,,$2377,22.6 megapixels,,limited manual settings,135 autofocus points,,,"30 seconds max, with bulb mode expose as long as you want"
+CAMERA_3,Panasonic Coolpix Mark III,premium compact digital camera,"white, purple, pink, or blue",970 grams,"17 exposure modes (e.g. sports, night, low light)","12 advanced filters (big eyes, miniature, sepia, etc.)",$2633,,,full manual control,20 autofocus points,1/2.33 inch sensor,up to 6400 ISO,"25 seconds max, with bulb mode expose as long as you want"

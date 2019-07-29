@@ -1,0 +1,4 @@
+camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
+CAMERA_1,Panasonic PowerShot ELPH ILC Camera,premium compact digital camera,"red, white, black, or silver",800 grams,,,$4041,,12x optical zoom,limited manual settings,159 autofocus points,1/2.3 inch CMOS sensor,,60 seconds max
+CAMERA_2,Nikon EOS 5D a6000,point and shoot,"pink, silver, black, blue, white, red, or purple",980 grams,"10 preset modes (e.g. fireworks, soft skin, beach)",,$2702,22.5 megapixels,,limited manual settings,82 autofocus points,1/2.33 inch sensor,up to 6400 ISO,up to 60 seconds
+CAMERA_3,Canon Coolpix 360 HS,DSLR,red,830 grams,"12 preset modes (e.g. beach, soft skin, snow)",,$1063,21.2 megapixels,no optical zoom,"manual control and various automatic settings (video modeburst shooting, etc.)",85 autofocus points,APS-C sensor (crop sensor),up to 12800 ISO,30 minutes max with bulb mode

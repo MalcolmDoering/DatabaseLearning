@@ -1,0 +1,4 @@
+camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
+CAMERA_1,Sony EOS 5D S2800,compact digital camera,"black, silver, purple, or white",940 grams (only body),,"18 photo effects (lighter or darker skin tones, toy camera, miniature, etc.)",$1503,,,limited manual settings,189 autofocus points,full frame,up to 51200 ISO,60 seconds max
+CAMERA_2,Panasonic LUMIX GH5s C4K Mark III,mirrorless,"black, pink, purple, red, blue, or silver",120 grams,,,$4171,,,manual and automatic settings,121 autofocus points,full frame,up to 51200 ISO,
+CAMERA_3,Sony X100T A900,point and shoot,"purple, silver, white, blue, or black",520 grams,"11 exposure modes (e.g. snow, sports, fireworks)",,$1294,21.0 megapixels,11x optical zoom,full manual control,,APS-C sensor (crop sensor),up to 51200 ISO,25 seconds max

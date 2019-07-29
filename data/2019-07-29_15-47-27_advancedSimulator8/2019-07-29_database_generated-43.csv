@@ -1,0 +1,4 @@
+camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
+CAMERA_1,Panasonic PowerShot ELPH Mark III,DSLR,"purple, blue, black, red, or white",700 grams,,,$1513,24.1 megapixels,9x optical zoom,manual and automatic settings,36 autofocus points,17.3 x 13.0 mm (in 4:3 aspect ratio),up to 51200 ISO with little noise,15 minutes max with bulb mode
+CAMERA_2,Nikon Alpha Mark III,mirrorless,"silver, pink, white, purple, blue, black, or red",970 grams,,,$122,18.8 megapixels,,manual and automatic settings,167 autofocus points,,up to 51200 ISO,15 minutes max with bulb mode
+CAMERA_3,Fujifilm X100T a6000,compact digital camera,silver,370 grams,,"19 glamor retouch effects (skin softening, sepia, small face, etc.)",$348,,no optical zoom,manual and automatic settings,,1/2.3 inch CMOS sensor,up to 12800 ISO,up to 60 minutes with bulb mode

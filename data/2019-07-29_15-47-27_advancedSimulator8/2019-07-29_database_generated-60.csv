@@ -1,0 +1,4 @@
+camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
+CAMERA_1,Nikon EOS 5D ILC Camera,DSLR,"blue, pink, or silver",210 grams (only body),"26 exposure modes (e.g. low light, portrait, beach)","23 advanced filters (skin softening, vivid, small face, etc.)",$4648,20.4 megapixels,33x optical zoom,manual and automatic settings,51 autofocus points,,up to 6400 ISO,30 minutes max with bulb mode
+CAMERA_2,Fujifilm EOS 5D S2800,point and shoot,pink,470 grams,"more  than 28 preset modes (e.g. close-up, snow, fireworks)",,$3878,15.2 megapixels,,manual and automatic settings,228 autofocus points,1/2.33 inch sensor,up to 51200 ISO,up to 30 seconds
+CAMERA_3,Nikon X100T DMC-ZS3,point and shoot,"blue, white, silver, or red",220 grams,"21 preset modes (e.g. snow, beach, low light)",,$258,,,limited manual settings,25 autofocus points,,up to 12800 ISO,30 seconds max

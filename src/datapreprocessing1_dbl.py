@@ -15,10 +15,10 @@ import tools
 from utterancevectorizer import UtteranceVectorizer
 
 
-sessionDir = tools.create_session_dir("datapreprocessing1_dbl")
+#sessionDir = tools.create_session_dir("datapreprocessing1_dbl")
+sessionDir = tools.dataDir+"2019-07-29_15-47-27_advancedSimulator8_input_sequence_vectors"
 
-
-dataDirectory = tools.dataDir+"2019-07-24_14-58-47_advancedSimulator8"
+dataDirectory = tools.dataDir+"2019-07-29_15-47-27_advancedSimulator8"
 numTrainDbs = 10
 
 dtype = np.int8
@@ -286,7 +286,15 @@ for i in range(len(interactions)):
         
         interactions[i][j]["JOINT_STATE_VECTOR"] = jointStateVector 
     
-    
+
+print("shkp utt vec len", len(prevShkpUttVec))
+print("shkp loc vec len", len(prevShkpLocVec))
+print("spat state vec len", len(prevSpatFormVec))
+print("state targ vec len", len(prevStateTargVec))
+print("cust utt vec len", len(custUttVec))
+print("cust loc vec len", len(custLocVec))
+
+
 #
 # create input sequences
 #

@@ -1,0 +1,4 @@
+camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
+CAMERA_1,Sony Coolpix a6000,point and shoot,"silver, blue, red, white, or pink",930 grams,"more  than 28 preset modes (e.g. sports, night, low light)",,$2873,11.8 megapixels,34x optical zoom,manual and automatic settings,53 autofocus points,,,up to 15 seconds with Long Shutter Mode
+CAMERA_2,Sony Alpha Mark III,mirrorless,"blue, black, or red",810 grams (only body),,"10 artistic effect modes (toy camera, vivid, soft focus, etc.)",$1414,,,manual and automatic settings,81 autofocus points,1/2.33 inch sensor,up to 51200 ISO with little noise,15 seconds max
+CAMERA_3,Nikon X-T20 a6000,compact digital camera,"blue, pink, or silver",930 grams (only body),"27 preset modes (e.g. soft skin, close-up, night)",,$993,,no optical zoom,limited manual settings,216 autofocus points,,up to 12800 ISO,up to 60 minutes with bulb mode

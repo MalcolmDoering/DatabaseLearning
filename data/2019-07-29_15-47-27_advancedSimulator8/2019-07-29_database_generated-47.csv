@@ -1,0 +1,4 @@
+camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
+CAMERA_1,Nikon PowerShot ELPH DMC-ZS3,mirrorless,"black, silver, white, or purple",900 grams (only body),,,$3806,22.9 megapixels,,manual and automatic settings,136 autofocus points,1/2.3 inch CMOS sensor,,30 seconds max with starry sky mode
+CAMERA_2,Sony X100T Mark III,compact digital camera,"blue, red, purple, white, pink, or black",860 grams,"25 preset modes (e.g. fireworks, beach, sports)",,$1511,21.9 megapixels,,limited manual settings,86 autofocus points,23.5mm x 15.6mm [APS-C] X-Trans CMOS III with primary color filter,up to 51200 ISO with little noise,60 minutes max with bulb mode
+CAMERA_3,Panasonic X100T Mark III,DSLR,"purple, red, or blue",980 grams,,,$566,11.4 megapixels,23x optical zoom,limited manual settings,42 autofocus points,1/2.3 inch CMOS sensor,up to 6400 ISO,25 minutes max with bulb mode

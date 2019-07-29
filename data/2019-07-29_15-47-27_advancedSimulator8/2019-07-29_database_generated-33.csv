@@ -1,0 +1,4 @@
+camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
+CAMERA_1,Panasonic X100T ILC Camera,mirrorless,"pink, red, blue, silver, white, or purple",570 grams,"11 preset modes (e.g. soft skin, low light, snow)","16 advanced filters (sepia, retro, big eyes, etc.)",$2865,10.1 megapixels,,manual and automatic settings,39 autofocus points,1/2.3 inch CMOS sensor,up to 12800 ISO,25 minutes max with bulb mode
+CAMERA_2,Nikon Coolpix A900,digital single lens mirrorless,"white, purple, pink, blue, or black",320 grams,,,$1907,,23x optical zoom,full manual control,87 autofocus points,,,60 seconds max
+CAMERA_3,Canon X-T20 ILC Camera,point and shoot,red,980 grams,"16 exposure modes (e.g. soft skin, beach, portrait)","21 creative mode settings (miniature, vivid, small face, etc.)",$1489,17.4 megapixels,,full manual control,121 autofocus points,1/2.3 inch CMOS sensor,up to 3200 ISO,

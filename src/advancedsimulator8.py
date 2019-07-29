@@ -1026,7 +1026,7 @@ def set_spatial_formation(prevIntState, currIntState):
         
     else:
         currIntState.spatialState = prevIntState.outputSpatialState
-        currIntState.stateTarget = prevIntState.stateTarget
+        currIntState.stateTarget = prevIntState.outputStateTarget
     
     
     # for after the shopkeeper acts
