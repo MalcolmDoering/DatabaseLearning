@@ -33,7 +33,7 @@ from utterancevectorizer import UtteranceVectorizer
 
 
 
-DEBUG = True
+DEBUG = False
 
 
 eosChar = "#"
@@ -51,11 +51,18 @@ evalEvery = 10
 randomizeTrainingBatches = False
 
 inputSeqLen = 20
-inputDim = 2020
+inputDim = 1073
 
 
-sessionDir = tools.create_session_dir("actionPrediction15_dbl")
+previousSessionDir = None # tools.logDir+"/2019-07-29_18-53-49_actionPrediction15_dbl"
 
+
+
+if previousSessionDir != None:
+    sessionDir = previousSessionDir
+else:
+    sessionDir = tools.create_session_dir("actionPrediction15_dbl")
+    
 
 
 def normalized_edit_distance(s1, s2):
@@ -372,13 +379,16 @@ def read_simulated_interactions(filename, dbFieldnames, keepActions=None):
     return interactions, shkpUttToDbEntryRange, gtDbCamera, gtDbAttribute
 
 
-def get_input_output_strings_and_location_vectors(interactions, locationToIndex):
+def get_input_output_strings_and_location_vectors(interactions, locationToIndex, spatialStateToIndex, stateTargetToIndex):
     
     inputStrings = []
     outputStrings = []
     
     inputCustomerLocations = []
     outputShopkeeperLocations = []
+    
+    outputSpatialStates = []
+    outputStateTargets = []
     
     for turn in interactions:
         
@@ -390,12 +400,19 @@ def get_input_output_strings_and_location_vectors(interactions, locationToIndex)
         
         inputCustomerLocations.append(turn["CUSTOMER_LOCATION"])
         outputShopkeeperLocations.append(turn["OUTPUT_SHOPKEEPER_LOCATION"])
-    
+        
+        outputSpatialStates.append(turn["OUTPUT_SPATIAL_STATE"])
+        outputStateTargets.append(turn["OUTPUT_STATE_TARGET"])
+        
         
     inputCustomerLocationVectors = one_hot_vectorize(inputCustomerLocations, locationToIndex)
     outputShopkeeperLocationVectors = one_hot_vectorize(outputShopkeeperLocations, locationToIndex)
     
-    return inputStrings, outputStrings, inputCustomerLocationVectors, outputShopkeeperLocationVectors
+    outputSpatialStateVectors = one_hot_vectorize(outputSpatialStates, spatialStateToIndex)
+    outputStateTargetVectors = one_hot_vectorize(outputStateTargets, stateTargetToIndex)
+    
+    
+    return inputStrings, outputStrings, inputCustomerLocationVectors, outputShopkeeperLocationVectors, outputSpatialStateVectors, outputStateTargetVectors
 
 
 def one_hot_vectorize(labels, labelToIndex):
@@ -463,7 +480,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     #dataDirectory = tools.dataDir+"/2019-07-03_15-16-05_advancedSimulator8" # many possible sentences for customer actions (from h-h dataset)
     #dataDirectory = tools.dataDir+"/2019-07-22_handmade_0" # many possible sentences for customer actions (from h-h dataset)
     
-    dataDirectory = tools.dataDir+"2019-07-24_14-58-47_advancedSimulator8" # many possible sentences for customer actions (from h-h dataset), all attributes change
+    dataDirectory = tools.dataDir+"2019-07-29_15-47-27_advancedSimulator8" # many possible sentences for customer actions (from h-h dataset), all attributes change
     
     
     
@@ -560,8 +577,12 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     inputCustomerLocationVectors = []
     outputShopkeeperLocationVectors = []
     
+    outputSpatialStateVectors = []
+    outputStateTargetVectors = []
+    
+    
     locationToIndex = {}
-    locationToIndex["DOOR"] = 0
+    locationToIndex["DOOR"] = len(locationToIndex)
     locationToIndex["MIDDLE"] = len(locationToIndex)
     locationToIndex["CAMERA_1"] = len(locationToIndex)
     locationToIndex["CAMERA_2"] = len(locationToIndex)
@@ -571,13 +592,34 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     indexToLocation = dict(map(reversed, locationToIndex.items()))
     
     
+    spatialStateToIndex = {}
+    spatialStateToIndex["WAITING"] = len(spatialStateToIndex)
+    spatialStateToIndex["FACE_TO_FACE"] = len(spatialStateToIndex)
+    spatialStateToIndex["PRESENT_X"] = len(spatialStateToIndex)
+    
+    indexToSpatialState = dict(map(reversed, spatialStateToIndex.items()))
+    
+    
+    stateTargetToIndex = {}
+    stateTargetToIndex["NONE"] = len(stateTargetToIndex)
+    stateTargetToIndex["CAMERA_1"] = len(stateTargetToIndex)
+    stateTargetToIndex["CAMERA_2"] = len(stateTargetToIndex)
+    stateTargetToIndex["CAMERA_3"] = len(stateTargetToIndex)
+    
+    indexToStateTarget = dict(map(reversed, stateTargetToIndex.items()))
+    
+    
+    
     for intSet in interactions:
-        inStrs, outStrs, inCustLocVecs, outCustLocVecs = get_input_output_strings_and_location_vectors(intSet, locationToIndex)
+        inStrs, outStrs, inCustLocVecs, outShkpLocVecs, outSpatStateVecs, outStateTargVecs = get_input_output_strings_and_location_vectors(intSet, locationToIndex, spatialStateToIndex, stateTargetToIndex)
         
         inputStrings.append(inStrs)
         outputStrings.append(outStrs)
         inputCustomerLocationVectors.append(inCustLocVecs)
-        outputShopkeeperLocationVectors.append(outCustLocVecs)
+        outputShopkeeperLocationVectors.append(outShkpLocVecs)
+        
+        outputSpatialStateVectors.append(outSpatStateVecs)
+        outputStateTargetVectors.append(outStateTargVecs)
     
     
     dbStrings = []
@@ -662,6 +704,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     # vectorize the inputs
     allInputStrings = sum(inputStrings, [])
     
+    
     inputUttVectorizer = UtteranceVectorizer(allInputStrings,
                                         minCount=2, 
                                         keywordWeight=1.0, 
@@ -676,8 +719,11 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     for inStrs in inputStrings:
         inUttVecs = inputUttVectorizer.get_utterance_vectors(inStrs, asArray=False)
         inputUttVectors.append(inUttVecs)
+        #inputUttVectors.append([np.zeros(0)] * len(inStrs))
     
+        
     inputUttVecDim = inputUttVectors[0][0].size
+    #inputUttVecDim = 0
     
     """
     inputIndexLists = []
@@ -753,6 +799,10 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
         splitInputCustomerLocations = np.concatenate(inputCustomerLocationVectors[startDbIndex:stopDbIndex])
         splitOutputShopkeeperLocations = np.concatenate(outputShopkeeperLocationVectors[startDbIndex:stopDbIndex])
         
+        splitOutputSpatialStates = np.concatenate(outputSpatialStateVectors[startDbIndex:stopDbIndex])
+        splitOutputStateTargets = np.concatenate(outputStateTargetVectors[startDbIndex:stopDbIndex])
+        
+        
         splitDbVectors = []
         
         for i in range(startDbIndex, stopDbIndex):
@@ -764,15 +814,15 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
         
         
         
-        return splitInteractions, splitInputSequenceVectors, splitInputUttVectors, splitOutputIndexLists, splitOutputStrings, splitOutputStringLens, splitInputCustomerLocations, splitOutputShopkeeperLocations, splitDbVectors, splitGtDatabasebCameras, splitGtDatabaseAttributes
+        return splitInteractions, splitInputSequenceVectors, splitInputUttVectors, splitOutputIndexLists, splitOutputStrings, splitOutputStringLens, splitInputCustomerLocations, splitOutputShopkeeperLocations, splitOutputSpatialStates, splitOutputStateTargets, splitDbVectors, splitGtDatabasebCameras, splitGtDatabaseAttributes
         
     
     
     # training
-    trainInteractions, trainInputSequenceVectors, trainInputUttVectors, trainOutputIndexLists, trainOutputStrings, trainOutputStringLens, trainInputCustomerLocations, trainOutputShopkeeperLocations, trainDbVectors, trainGtDatabasebCameras, trainGtDatabaseAttributes = prepare_split(0, numTrainDbs, "Train")
+    trainInteractions, trainInputSequenceVectors, trainInputUttVectors, trainOutputIndexLists, trainOutputStrings, trainOutputStringLens, trainInputCustomerLocations, trainOutputShopkeeperLocations, trainOutputSpatialStates, trainOutputStateTargets, trainDbVectors, trainGtDatabasebCameras, trainGtDatabaseAttributes = prepare_split(0, numTrainDbs, "Train")
     
     # testing
-    testInteractions, testInputSequenceVectors, testInputUttVectors, testOutputIndexLists, testOutputStrings, testOutputStringLens, testInputCustomerLocations, testOutputShopkeeperLocations, testDbVectors, testGtDatabasebCameras, testGtDatabaseAttributes = prepare_split(numTrainDbs, numDatabases, "Test")
+    testInteractions, testInputSequenceVectors, testInputUttVectors, testOutputIndexLists, testOutputStrings, testOutputStringLens, testInputCustomerLocations, testOutputShopkeeperLocations, testOutputSpatialStates, testOutputStateTargets, testDbVectors, testGtDatabasebCameras, testGtDatabaseAttributes = prepare_split(numTrainDbs, numDatabases, "Test")
     
     
     
@@ -796,6 +846,8 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     dbValLen = maxDbValueLen + 1
     
     locationVecLen = len(locationToIndex)
+    spatialStateVecLen = len(spatialStateToIndex)
+    stateTargetVecLen = len(stateTargetToIndex)
     
     
     """
@@ -816,6 +868,8 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                                             dbSeqLen=dbValLen, 
                                             outputSeqLen=outputLen,
                                             locationVecLen=locationVecLen,
+                                            spatialStateVecLen=spatialStateVecLen,
+                                            stateTargetVecLen=stateTargetVecLen,
                                             numUniqueCams=len(cameras),
                                             numUniqueAtts=len(dbFieldnames),
                                             batchSize=batchSize, 
@@ -828,6 +882,32 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                                             
                                             inputDim=inputDim,
                                             inputSeqLen=inputSeqLen,)
+    
+    
+    #
+    # load previous session if we're not starting a new one
+    #
+    if previousSessionDir != None:
+        print("loading previous session...", flush=True, file=sessionTerminalOutputStream)
+        
+        # find where the run left off
+        filenames = os.listdir(sessionDir)
+        
+        checkpointDirs = []
+        
+        for fn in filenames:
+            try:
+                checkpointDirs.append(int(fn))
+            except:
+                pass
+        
+        lastCheckpointDir = max(checkpointDirs)
+        
+        learner.load("{}/{}/saved_session".format(sessionDir, lastCheckpointDir))
+        runFromEpoch = int(lastCheckpointDir) + 1
+    
+    else: 
+        runFromEpoch = 0
     
     
     #
@@ -1031,6 +1111,8 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                       "SHOPKEEPER_SPEECH_DB_ENTRY_RANGE",
                       
                       "PRED_OUTPUT_SHOPKEEPER_LOCATION",
+                      "PRED_OUTPUT_SPATIAL_STATE",
+                      "PRED_OUTPUT_STATE_TARGET",
                       "PRED_SHOPKEEPER_SPEECH",
                       "PRED_CAM_MATCH",
                       "PRED_ATT_MATCH"]
@@ -1050,6 +1132,8 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                        splitOutputIndexLists,
                        splitOutputStringLens,
                        splitOutputShopkeeperLocations,
+                       splitOutputSpatialStates,
+                       splitOutputStateTargets,
                        splitGtDatabasebCameras,
                        splitGtDatabaseAttributes,
                        splitOutputStrings,
@@ -1071,6 +1155,9 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                                              splitOutputIndexLists[i-batchSize:i],
                                              splitOutputStringLens[i-batchSize:i],
                                              splitOutputShopkeeperLocations[i-batchSize:i],
+                                             
+                       splitOutputSpatialStates,
+                       splitOutputStateTargets,
                                              splitGtDatabasebCameras[i-batchSize:i],
                                              splitGtDatabaseAttributes[i-batchSize:i],
                                              teacherForcingProb=0.0)
@@ -1083,6 +1170,8 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
         
         splitUttPreds = []
         splitLocPreds = []
+        splitSpatStatePreds = []
+        splitStateTargPreds = []
         splitCopyScores = []
         splitGenScores = []
         splitCamMatchArgMax = []
@@ -1105,11 +1194,14 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                                                splitOutputIndexLists[i-batchSize:i],
                                                splitOutputStringLens[i-batchSize:i],
                                                splitOutputShopkeeperLocations[i-batchSize:i],
+                                               splitOutputSpatialStates[i-batchSize:i],
+                                               splitOutputStateTargets[i-batchSize:i],
                                                splitGtDatabasebCameras[i-batchSize:i],
                                                splitGtDatabaseAttributes[i-batchSize:i],
-                                               inputSequences=splitInputSequenceVectors[i-batchSize:i])
+                                               inputSequences=splitInputSequenceVectors[i-batchSize:i],
+                                               sharpeningCoefficient=sharpeningCoefficient)
             
-            batchSplitUttPreds, batchSplitLocPreds, batchSplitCopyScores, batchSplitGenScores, batchSplitCamMatchArgMax, batchSplitAttMatchArgMax, batchSplitCamMatch, batchSplitAttMatch, batchSplitDbReadWeights, batchSplitCopyWeights, batchSplitGenWeights = batchPredResults 
+            batchSplitUttPreds, batchSplitLocPreds, batchSplitSpatStatePreds, batchSplitStateTargPreds, batchSplitCopyScores, batchSplitGenScores, batchSplitCamMatchArgMax, batchSplitAttMatchArgMax, batchSplitCamMatch, batchSplitAttMatch, batchSplitDbReadWeights, batchSplitCopyWeights, batchSplitGenWeights = batchPredResults 
             
             """
             batchDbMatchVal = learner.get_db_match_val(splitInputUttVectors[i-batchSize:i], 
@@ -1118,6 +1210,9 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                                                splitOutputIndexLists[i-batchSize:i],
                                                splitOutputStringLens[i-batchSize:i],
                                                splitOutputShopkeeperLocations[i-batchSize:i],
+                                               
+                       splitOutputSpatialStates,
+                       splitOutputStateTargets,
                                                splitGtDatabasebCameras[i-batchSize:i],
                                                splitGtDatabaseAttributes[i-batchSize:i])
             """
@@ -1125,6 +1220,8 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
             
             splitUttPreds.append(batchSplitUttPreds)
             splitLocPreds.append(batchSplitLocPreds)
+            splitSpatStatePreds.append(batchSplitSpatStatePreds)
+            splitStateTargPreds.append(batchSplitStateTargPreds)
             splitCopyScores.append(batchSplitCopyScores)
             splitGenScores.append(batchSplitGenScores)
             splitCamMatchArgMax.append(batchSplitCamMatchArgMax)
@@ -1141,6 +1238,8 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
             
         splitUttPreds = np.concatenate(splitUttPreds)
         splitLocPreds = np.concatenate(splitLocPreds)
+        splitSpatStatePreds = np.concatenate(splitSpatStatePreds)
+        splitStateTargPreds = np.concatenate(splitStateTargPreds)
         splitCopyScores = np.concatenate(splitCopyScores)
         splitGenScores = np.concatenate(splitGenScores)
         splitCamMatchArgMax = np.concatenate(splitCamMatchArgMax)
@@ -1194,8 +1293,19 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
             index = splitInterestingInstances[i][0]
             info = splitInterestingInstances[i][1]
             
-            print("TRUE:", indexToLocation[np.argmax(splitOutputShopkeeperLocations[index])], splitOutputStrings[index], flush=True, file=sessionTerminalOutputStream)
-            print("PRED:", indexToLocation[splitLocPreds[index]], splitPredSents[index], flush=True, file=sessionTerminalOutputStream)
+            print("TRUE:", 
+                  indexToLocation[np.argmax(splitOutputShopkeeperLocations[index])], 
+                  indexToSpatialState[np.argmax(splitOutputSpatialStates[index])],
+                  indexToStateTarget[np.argmax(splitOutputStateTargets[index])],
+                  splitOutputStrings[index], 
+                  flush=True, file=sessionTerminalOutputStream)
+            
+            print("PRED:", 
+                  indexToLocation[splitLocPreds[index]],
+                  indexToSpatialState[splitSpatStatePreds[index]],
+                  indexToStateTarget[splitStateTargPreds[index]],
+                  splitPredSents[index], 
+                  flush=True, file=sessionTerminalOutputStream)
             
             print(np.round(splitCamMatch[index], 4), flush=True, file=sessionTerminalOutputStream)
             print(np.round(splitAttMatch[index], 4), flush=True, file=sessionTerminalOutputStream)
@@ -1221,6 +1331,8 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                 
                 # add the important prediction information to the row
                 row["PRED_OUTPUT_SHOPKEEPER_LOCATION"] = indexToLocation[splitLocPreds[i]]
+                row["PRED_OUTPUT_SPATIAL_STATE"] = indexToSpatialState[splitSpatStatePreds[i]]
+                row["PRED_OUTPUT_STATE_TARGET"] = indexToStateTarget[splitStateTargPreds[i]]
                 row["PRED_SHOPKEEPER_SPEECH"] = splitPredSents[i]
                 
                 
@@ -1254,11 +1366,17 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                 
                 
                 writer.writerow(["TRUE:"] + 
-                                [indexToLocation[np.argmax(splitOutputShopkeeperLocations[index])]] +
+                                ["{} {} {}".format(indexToLocation[np.argmax(splitOutputShopkeeperLocations[index])],
+                                                   indexToSpatialState[np.argmax(splitOutputSpatialStates[index])],
+                                                   indexToStateTarget[np.argmax(splitOutputStateTargets[index])])
+                                 ] +
                                 [c for c in splitOutputStrings[index]])
                 
                 writer.writerow(["PRED:"] + 
-                                [indexToLocation[splitLocPreds[index]]] +
+                                ["{} {} {}".format(indexToLocation[splitLocPreds[index]],
+                                                   indexToSpatialState[splitSpatStatePreds[index]],
+                                                   indexToStateTarget[splitStateTargPreds[index]])
+                                 ] +
                                 [c for c in splitPredSents[index]])
                 
                 writer.writerow(["PRED COPY WEIGHT:"] + [""] + [c for c in splitCopyWeights[i]])
@@ -1285,13 +1403,32 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     
     
     
+    sharpeningCoefficient = 0.0
     
     
-    for e in range(numEpochs):
+    
+    for e in range(runFromEpoch, numEpochs):
         
         startTime = time.time()
         
         #teacherForcingProb = 0.6 #1.0 - 1.0 / (1.0 + np.exp( - (e-200.0)/10.0))
+        
+        """
+        if e == 1000:
+            print("setting to use the sharpened softmax addressing", flush=True, file=sessionTerminalOutputStream)
+            sharpeningCoefficient = 1.0
+            
+            print("reinitializing the decoding weights", flush=True, file=sessionTerminalOutputStream)
+            learner.reinitialize_decoding_weights()
+            
+            print("resetting the optimizer", flush=True, file=sessionTerminalOutputStream)
+            learner.reset_optimizer()
+            
+            print("using train_op_2 (for only the decoding parts of the network and not the addressing parts)", flush=True, file=sessionTerminalOutputStream)
+            learner.set_train_op(2)
+        """
+        
+        
         
         #
         # train
@@ -1300,10 +1437,10 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
         
         # shuffle the training data
         
-        temp = list(zip(trainInputUttVectors, trainOutputStringLens, trainDbVectors, trainOutputIndexLists, trainInputCustomerLocations, trainOutputShopkeeperLocations, trainGtDatabasebCameras, trainGtDatabaseAttributes, trainInputSequenceVectors))
+        temp = list(zip(trainInputUttVectors, trainOutputStringLens, trainDbVectors, trainOutputIndexLists, trainInputCustomerLocations, trainOutputShopkeeperLocations, trainOutputSpatialStates, trainOutputStateTargets, trainGtDatabasebCameras, trainGtDatabaseAttributes, trainInputSequenceVectors))
         if randomizeTrainingBatches:
             random.shuffle(temp)
-        trainInputIndexLists_shuf, trainOutputStringLens_shuf, trainDbVectors_shuf, trainOutputIndexLists_shuf, trainInputCustomerLocations_shuf, trainOutputShopkeeperLocations_shuf, trainGtDatabasebCameras_shuf, trainGtDatabaseAttributes_shuf, trainInputSequenceVectors_shuf = zip(*temp)
+        trainInputIndexLists_shuf, trainOutputStringLens_shuf, trainDbVectors_shuf, trainOutputIndexLists_shuf, trainInputCustomerLocations_shuf, trainOutputShopkeeperLocations_shuf, trainOutputSpatialStates_shuf, trainOutputStateTargets_shuf, trainGtDatabasebCameras_shuf, trainGtDatabaseAttributes_shuf, trainInputSequenceVectors_shuf = zip(*temp)
         
         
         for i in trainBatchEndIndices:
@@ -1314,10 +1451,13 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                                            trainOutputIndexLists_shuf[i-batchSize:i],
                                            trainOutputStringLens_shuf[i-batchSize:i],
                                            trainOutputShopkeeperLocations_shuf[i-batchSize:i],
+                                           trainOutputSpatialStates_shuf[i-batchSize:i],
+                                           trainOutputStateTargets_shuf[i-batchSize:i],
                                            trainGtDatabasebCameras_shuf[i-batchSize:i],
                                            trainGtDatabaseAttributes_shuf[i-batchSize:i],
                                            teacherForcingProb=teacherForcingProb,
-                                           inputSequences=trainInputSequenceVectors_shuf[i-batchSize:i])
+                                           inputSequences=trainInputSequenceVectors_shuf[i-batchSize:i],
+                                           sharpeningCoefficient=sharpeningCoefficient)
             
             trainCosts.append(batchTrainCost)
             #print("\t", batchTrainCost, flush=True, file=sessionTerminalOutputStream)
@@ -1345,6 +1485,8 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                                                                                                                                             trainOutputIndexLists,
                                                                                                                                             trainOutputStringLens,
                                                                                                                                             trainOutputShopkeeperLocations,
+                                                                                                                                            trainOutputSpatialStates,
+                                                                                                                                            trainOutputStateTargets,
                                                                                                                                             trainGtDatabasebCameras,
                                                                                                                                             trainGtDatabaseAttributes,
                                                                                                                                             trainOutputStrings,
@@ -1365,10 +1507,13 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                                              testOutputIndexLists[i-batchSize:i],
                                              testOutputStringLens[i-batchSize:i],
                                              testOutputShopkeeperLocations[i-batchSize:i],
+                                             testOutputSpatialStates[i-batchSize:i],
+                                             testOutputStateTargets[i-batchSize:i],
                                              testGtDatabasebCameras[i-batchSize:i],
                                              testGtDatabaseAttributes[i-batchSize:i],
                                              teacherForcingProb=0.0,
-                                             inputSequences=testInputSequenceVectors[i-batchSize:i])
+                                             inputSequences=testInputSequenceVectors[i-batchSize:i],
+                                             sharpeningCoefficient=sharpeningCoefficient)
                 
                 testCosts.append(batchTestCost)
             
@@ -1385,6 +1530,8 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                                                                                                                                       testOutputIndexLists,
                                                                                                                                       testOutputStringLens,
                                                                                                                                       testOutputShopkeeperLocations,
+                                                                                                                                      testOutputSpatialStates,
+                                                                                                                                      testOutputStateTargets,
                                                                                                                                       testGtDatabasebCameras,
                                                                                                                                       testGtDatabaseAttributes,
                                                                                                                                       testOutputStrings,
@@ -1432,13 +1579,13 @@ if __name__ == "__main__":
     attTemp = 0
     
     
-    run(0, 0, camTemp, attTemp, 0.0, sessionDir)
+    #run(0, 0, camTemp, attTemp, 0.0, sessionDir)
     
     
     for gpu in range(8):
         
         seed = gpu
-                
+        
         process = Process(target=run, args=[gpu, seed, camTemp, attTemp, 0.0, sessionDir])
         process.start()
     

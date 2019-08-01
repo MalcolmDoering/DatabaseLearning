@@ -24,7 +24,9 @@ class CustomNeuralNetwork(object):
                  inputUttVecDim, 
                  dbSeqLen, 
                  outputSeqLen, 
-                 locationVecLen, 
+                 locationVecLen,
+                 spatialStateVecLen,
+                 stateTargetVecLen,
                  batchSize, 
                  numUniqueCams, 
                  numUniqueAtts, 
@@ -41,6 +43,8 @@ class CustomNeuralNetwork(object):
         self.dbSeqLen = dbSeqLen
         self.outputSeqLen = outputSeqLen
         self.locationVecLen = locationVecLen
+        self.spatialStateVecLen=spatialStateVecLen
+        self.stateTargetVecLen=stateTargetVecLen
         self.batchSize = batchSize
         self.numUniqueCams = numUniqueCams
         self.numUniqueAtts = numUniqueAtts
@@ -83,27 +87,45 @@ class CustomNeuralNetwork(object):
         self._gtDbAtts = tf.one_hot(self._gtDbAttIndices, self.numUniqueAtts)
         
         
+        self._sharpening_coefficient = tf.placeholder(tf.float32, shape=(), name='sharpening_coefficient')
+        
         
         #self._input_sequences = None
         #self._loc_utt_combined_input_encoding = self.build_feedforward_encoder("input_encoder_1")
         #self._loc_utt_combined_input_encoding_2 = self.build_feedforward_encoder("input_encoder_2")
     
         self._input_sequences = tf.placeholder(tf.float32, [self.batchSize, self.inputSeqLen, self.inputDim], "input_sequence_vectors")
-        self._loc_utt_combined_input_encoding = self.build_sequence_encoder("input_encoder_1")
-        self._loc_utt_combined_input_encoding_2 = self.build_sequence_encoder("input_encoder_2")
+        self._loc_utt_combined_input_encoding = self.build_sequence_encoder("decoding/input_encoder_1")
+        self._loc_utt_combined_input_encoding_2 = self.build_sequence_encoder("addressing/input_encoder_2")
         
         
         
         
-        with tf.variable_scope("DB_matcher"):
+        with tf.variable_scope("addressing/DB_matcher"):
             # find the best matching camera and attribute from the database
             
             # use only softmax for addressing
             cam1 = tf.layers.dense(self._loc_utt_combined_input_encoding_2, self.numUniqueCams, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
             att1 = tf.layers.dense(self._loc_utt_combined_input_encoding_2, self.numUniqueAtts, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
             
-            self.camMatch = tf.nn.softmax(cam1)
-            self.attMatch = tf.nn.softmax(att1)
+            #self.camMatch = tf.nn.softmax(cam1)
+            #self.attMatch = tf.nn.softmax(att1)
+            
+            smCamMatch = tf.nn.softmax(cam1)
+            smAttMatch = tf.nn.softmax(att1)
+            
+            sharpCamMatch = tf.pow(smCamMatch, 10)
+            sharpAttMatch = tf.pow(smAttMatch, 10)
+            
+            sharpCamDen = tf.reduce_sum(sharpCamMatch, 1, keepdims=True)
+            sharpAttDen = tf.reduce_sum(sharpAttMatch, 1, keepdims=True)
+            
+            sharpCamMatch = sharpCamMatch / sharpCamDen
+            sharpAttMatch = sharpAttMatch / sharpAttDen
+            
+            self.camMatch = self._sharpening_coefficient * sharpCamMatch + (1.0-self._sharpening_coefficient) * smCamMatch
+            self.attMatch = self._sharpening_coefficient * sharpAttMatch + (1.0-self._sharpening_coefficient) * smAttMatch
+            
             
             
             # gumbel softmax used till 20190525
@@ -135,7 +157,7 @@ class CustomNeuralNetwork(object):
             
         
         
-        with tf.variable_scope("DB_encoder"):
+        with tf.variable_scope("decoding/DB_encoder"):
             # DB encoder
             self._db_entries = tf.placeholder(tf.float32, [self.batchSize, self.numUniqueCams, self.numUniqueAtts, self.dbSeqLen, self.vocabSize], name='DB_entries')
             
@@ -174,15 +196,23 @@ class CustomNeuralNetwork(object):
             """
         
         
-        with tf.variable_scope("location_layer"):
+        with tf.variable_scope("decoding/location_layer"):
             # get the shopkeeper output location
             
             locHid = tf.layers.dense(self._loc_utt_combined_input_encoding,
-                                     self.embeddingSize, 
+                                     20, 
                                      activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
             
             self.locationOut = tf.layers.dense(locHid,
                                                self.locationVecLen, 
+                                               activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
+            
+            self.spatialStateOut = tf.layers.dense(locHid,
+                                               self.spatialStateVecLen, 
+                                               activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
+            
+            self.stateTargetOut = tf.layers.dense(locHid,
+                                               self.stateTargetVecLen, 
                                                activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
             
             
@@ -193,7 +223,10 @@ class CustomNeuralNetwork(object):
         # setup the decoder - for generation
         #
         self._ground_truth_outputs = tf.placeholder(tf.int32, [self.batchSize, self.outputSeqLen], name='true_robot_outputs')
+        
         self._ground_truth_location_outputs = tf.placeholder(tf.int32, [self.batchSize, self.locationVecLen])
+        self._ground_truth_spatial_state_outputs = tf.placeholder(tf.int32, [self.batchSize, self.spatialStateVecLen])
+        self._ground_truth_state_target_outputs = tf.placeholder(tf.int32, [self.batchSize, self.stateTargetVecLen])
         
         
         self._ground_truth_output_lens = tf.placeholder(tf.int32, [self.batchSize,], name="true_robot_output_lens")
@@ -240,18 +273,21 @@ class CustomNeuralNetwork(object):
         self._teacher_forcing_prob = tf.placeholder(tf.float32, shape=(), name='teacher_forcing_prob')
         
         # for training
-        self._loss, self._train_predicted_output_sequences, self._train_copy_scores, self._train_gen_scores, self._train_db_read_weights, self._train_copy_weights, self._train_gen_weights = self.build_decoder_3(teacherForcing=False, scopeName="decoder_train")
+        self._loss, self._train_predicted_output_sequences, self._train_copy_scores, self._train_gen_scores, self._train_db_read_weights, self._train_copy_weights, self._train_gen_weights = self.build_decoder_3(teacherForcing=False, scopeName="decoding/decoder_train")
         
         
         # for testing
-        self._test_loss, self._test_predicted_output_sequences, self._test_copy_scores, self._test_gen_scores, self._test_db_read_weights, self._test_copy_weights, self._test_gen_weights = self.build_decoder_3(teacherForcing=False, scopeName="decoder_test")
+        self._test_loss, self._test_predicted_output_sequences, self._test_copy_scores, self._test_gen_scores, self._test_db_read_weights, self._test_copy_weights, self._test_gen_weights = self.build_decoder_3(teacherForcing=False, scopeName="decoding/decoder_test")
         
         
         # add the loss from the location predictions
         locLoss = tf.losses.softmax_cross_entropy(self._ground_truth_location_outputs, self.locationOut, reduction=tf.losses.Reduction.SUM_OVER_BATCH_SIZE) # is this right for sequence eval?
+        ssLoss = tf.losses.softmax_cross_entropy(self._ground_truth_spatial_state_outputs, self.spatialStateOut, reduction=tf.losses.Reduction.SUM_OVER_BATCH_SIZE) # is this right for sequence eval?
+        stLoss = tf.losses.softmax_cross_entropy(self._ground_truth_state_target_outputs, self.stateTargetOut, reduction=tf.losses.Reduction.SUM_OVER_BATCH_SIZE) # is this right for sequence eval?
         
-        self._loss += locLoss
-        self._test_loss += locLoss
+        
+        self._loss += locLoss + ssLoss + stLoss
+        self._test_loss += locLoss + ssLoss + stLoss
         
         
         #
@@ -260,14 +296,34 @@ class CustomNeuralNetwork(object):
         opt = tf.train.AdamOptimizer(learning_rate=1e-4)
         #opt = tf.train.GradientDescentOptimizer(learning_rate=1e-3)
         
+        self.reset_optimizer_op = tf.variables_initializer(opt.variables())
         
+        
+        #
+        # for training the entire network
+        #
         gradients = opt.compute_gradients(self._loss)
-        
         #tf.check_numerics(gradients, "gradients")
-        
         capped_gradients = [(tf.clip_by_value(grad, -1., 1.), var) for grad, var in gradients if grad is not None]
         
-        self._train_op = opt.apply_gradients(capped_gradients, name="train_op")
+        self._train_op_1 = opt.apply_gradients(capped_gradients, name="train_op")
+        
+        
+        #
+        # for only training the decoding part (and not the addressing part)
+        #
+        decoding_train_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "decoding")
+        decoding_gradients = opt.compute_gradients(self._loss, var_list=decoding_train_vars)
+        decoding_capped_gradients = [(tf.clip_by_value(grad, -1., 1.), var) for grad, var in decoding_gradients if grad is not None]
+        
+        self._train_op_2 = opt.apply_gradients(decoding_capped_gradients)
+        
+        
+        self._train_op = self._train_op_1
+        
+        
+        
+        
         
         
         #
@@ -275,11 +331,17 @@ class CustomNeuralNetwork(object):
         #
         self._pred_utt_op = tf.argmax(self._test_predicted_output_sequences, 2, name="predict_utterance_op")
         self._pred_shkp_loc_op = tf.argmax(self.locationOut, 1, name="predict_shopkeeper_location_op")
+        self._pred_spat_state_op = tf.argmax(self.spatialStateOut, 1, name="predict_spatial_formation_op")
+        self._pred_state_targ_op = tf.argmax(self.stateTargetOut, 1, name="predict_state_target_op")
+        
+        
         #self._pred_prob_op = tf.nn.softmax(predicted_output_sequences, axis=2, name="predict_prob_op")
         #self._pred_log_prob_op = tf.log(predict_proba_op, name="predict_log_proba_op")
         
         
         self._init_op = tf.initialize_all_variables()
+        self._init_decoding_op = tf.initialize_variables(decoding_train_vars)
+        
         
         self.initialize()
         
@@ -597,11 +659,6 @@ class CustomNeuralNetwork(object):
     
     
     
-    def compute_copy_score_from_grid(self):
-        
-        pass
-    
-    
     def initialize(self):
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
@@ -610,16 +667,33 @@ class CustomNeuralNetwork(object):
         self._sess.run(self._init_op)
         
     
-    def train(self, inputUtts, inputCustLocs, databases, groundTruthUttOutputs, groundTruthOutputStringLens, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, inputSequences=None, teacherForcingProb=1.0):
+    def train(self, 
+              inputUtts, 
+              inputCustLocs, 
+              databases, 
+              groundTruthOutputs, 
+              groundTruthOutputStringLens,
+              groundTruthOutputShkpLocs, 
+              groundTruthOutputSpatState, 
+              groundTruthOutputStateTarg, 
+              gtDbCams, 
+              gtDbAtts, 
+              inputSequences=None, 
+              teacherForcingProb=1.0,
+              sharpeningCoefficient=0.0):
+
         feedDict = {self._inputs: inputUtts, 
                     self._location_inputs: inputCustLocs, 
                     self._db_entries: databases, 
-                    self._ground_truth_outputs: groundTruthUttOutputs,
+                    self._ground_truth_outputs: groundTruthOutputs,
                     self._ground_truth_output_lens: groundTruthOutputStringLens,
                     self._ground_truth_location_outputs: groundTruthOutputShkpLocs,
+                    self._ground_truth_spatial_state_outputs: groundTruthOutputSpatState,
+                    self._ground_truth_state_target_outputs: groundTruthOutputStateTarg,
                     self._gtDbCamIndices: gtDbCams, 
                     self._gtDbAttIndices: gtDbAtts,
-                    self._teacher_forcing_prob: teacherForcingProb}
+                    self._teacher_forcing_prob: teacherForcingProb,
+                    self._sharpening_coefficient: sharpeningCoefficient}
         
         if inputSequences != None:
             feedDict[self._input_sequences] = inputSequences
@@ -629,16 +703,33 @@ class CustomNeuralNetwork(object):
         return trainingLoss
     
     
-    def train_loss(self, inputUtts, inputCustLocs, databases, groundTruthOutputs, groundTruthOutputStringLens, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, inputSequences=None, teacherForcingProb=1.0):
+    def train_loss(self, 
+                   inputUtts, 
+                   inputCustLocs, 
+                   databases, 
+                   groundTruthOutputs, 
+                   groundTruthOutputStringLens,
+                   groundTruthOutputShkpLocs, 
+                   groundTruthOutputSpatState, 
+                   groundTruthOutputStateTarg, 
+                   gtDbCams, 
+                   gtDbAtts, 
+                   inputSequences=None, 
+                   teacherForcingProb=1.0,
+                   sharpeningCoefficient=0.0):
+
         feedDict = {self._inputs: inputUtts, 
                     self._location_inputs: inputCustLocs, 
                     self._db_entries: databases, 
                     self._ground_truth_outputs: groundTruthOutputs,
                     self._ground_truth_output_lens: groundTruthOutputStringLens,
                     self._ground_truth_location_outputs: groundTruthOutputShkpLocs,
+                    self._ground_truth_spatial_state_outputs: groundTruthOutputSpatState,
+                    self._ground_truth_state_target_outputs: groundTruthOutputStateTarg,
                     self._gtDbCamIndices: gtDbCams, 
                     self._gtDbAttIndices: gtDbAtts,
-                    self._teacher_forcing_prob: teacherForcingProb}
+                    self._teacher_forcing_prob: teacherForcingProb,
+                    self._sharpening_coefficient: sharpeningCoefficient}
         
         if inputSequences != None:
             feedDict[self._input_sequences] = inputSequences
@@ -648,22 +739,41 @@ class CustomNeuralNetwork(object):
         return loss
     
     
-    def predict(self, inputUtts, inputCustLocs, databases, groundTruthOutputs, groundTruthOutputStringLens, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, inputSequences=None, teacherForcingProb=1.0):
+    def predict(self, 
+                inputUtts, 
+                inputCustLocs, 
+                databases, 
+                groundTruthOutputs, 
+                groundTruthOutputStringLens,
+                groundTruthOutputShkpLocs, 
+                groundTruthOutputSpatState, 
+                groundTruthOutputStateTarg, 
+                gtDbCams, 
+                gtDbAtts, 
+                inputSequences=None, 
+                teacherForcingProb=1.0,
+                sharpeningCoefficient=0.0):
+        
         feedDict = {self._inputs: inputUtts, 
                     self._location_inputs: inputCustLocs, 
                     self._db_entries: databases, 
                     self._ground_truth_outputs: groundTruthOutputs,
                     self._ground_truth_output_lens: groundTruthOutputStringLens,
                     self._ground_truth_location_outputs: groundTruthOutputShkpLocs,
+                    self._ground_truth_spatial_state_outputs: groundTruthOutputSpatState,
+                    self._ground_truth_state_target_outputs: groundTruthOutputStateTarg,
                     self._gtDbCamIndices: gtDbCams, 
                     self._gtDbAttIndices: gtDbAtts,
-                    self._teacher_forcing_prob: teacherForcingProb}
+                    self._teacher_forcing_prob: teacherForcingProb,
+                    self._sharpening_coefficient: sharpeningCoefficient}
         
         if inputSequences != None:
             feedDict[self._input_sequences] = inputSequences
         
-        predUtts, predShkpLocs, copyScores, genScores, camMatchArgMax, attMatchArgMax, camMatch, attMatch, db_read_weights, copy_weights, gen_weights = self._sess.run([self._pred_utt_op,
+        predUtts, predShkpLocs, predSpatState, predStatTarg,  copyScores, genScores, camMatchArgMax, attMatchArgMax, camMatch, attMatch, db_read_weights, copy_weights, gen_weights = self._sess.run([self._pred_utt_op,
                                                                                                                             self._pred_shkp_loc_op,
+                                                                                                                            self._pred_spat_state_op,
+                                                                                                                            self._pred_state_targ_op,
                                                                                                                             self._test_copy_scores, 
                                                                                                                             self._test_gen_scores,
                                                                                                                             self.camMatchIndex,
@@ -674,19 +784,36 @@ class CustomNeuralNetwork(object):
                                                                                                                             self._test_copy_weights, 
                                                                                                                             self._test_gen_weights], feed_dict=feedDict)
         
-        return predUtts, predShkpLocs, copyScores, genScores, camMatchArgMax, attMatchArgMax, camMatch, attMatch, db_read_weights, copy_weights, gen_weights
+        return predUtts, predShkpLocs, predSpatState, predStatTarg, copyScores, genScores, camMatchArgMax, attMatchArgMax, camMatch, attMatch, db_read_weights, copy_weights, gen_weights
     
     
-    def get_db_match_val(self, inputUtts, inputCustLocs, databases, groundTruthOutputs, groundTruthOutputStringLens, groundTruthOutputShkpLocs, gtDbCams, gtDbAtts, inputSequences=None, teacherForcingProb=1.0):
+    def get_db_match_val(self, 
+                         inputUtts, 
+                         inputCustLocs, 
+                         databases, 
+                         groundTruthOutputs, 
+                         groundTruthOutputStringLens,
+                         groundTruthOutputShkpLocs, 
+                         groundTruthOutputSpatState, 
+                         groundTruthOutputStateTarg, 
+                         gtDbCams, 
+                         gtDbAtts, 
+                         inputSequences=None, 
+                         teacherForcingProb=1.0,
+                         sharpeningCoefficient=0.0):
+        
         feedDict = {self._inputs: inputUtts, 
                     self._location_inputs: inputCustLocs, 
                     self._db_entries: databases, 
                     self._ground_truth_outputs: groundTruthOutputs,
                     self._ground_truth_output_lens: groundTruthOutputStringLens,
                     self._ground_truth_location_outputs: groundTruthOutputShkpLocs,
+                    self._ground_truth_spatial_state_outputs: groundTruthOutputSpatState,
+                    self._ground_truth_state_target_outputs: groundTruthOutputStateTarg,
                     self._gtDbCamIndices: gtDbCams, 
                     self._gtDbAttIndices: gtDbAtts,
-                    self._teacher_forcing_prob: teacherForcingProb}
+                    self._teacher_forcing_prob: teacherForcingProb,
+                    self._sharpening_coefficient: sharpeningCoefficient}
         
         if inputSequences != None:
             feedDict[self._input_sequences] = inputSequences
@@ -698,3 +825,28 @@ class CustomNeuralNetwork(object):
     
     def save(self, filename):
         self.saver.save(self._sess, filename)
+    
+    
+    def load(self, filename):
+        self.saver.restore(self._sess, filename)
+    
+    
+    def reset_optimizer(self):
+        
+        self._sess.run(self.reset_optimizer_op)
+        
+    
+    def reinitialize_decoding_weights(self):
+        
+        self._sess.run(self._init_decoding_op)
+        
+    
+    def set_train_op(self, op):
+        if op == 1:
+            self._train_op = self._train_op_1
+        elif op == 2:
+            self._train_op = self._train_op_2
+        else:
+            self._train_op = None
+            print("Warning: Invalid train op", op)
+        
