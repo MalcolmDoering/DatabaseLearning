@@ -43,7 +43,7 @@ goChar = "~"
 cameras = ["CAMERA_1", "CAMERA_2", "CAMERA_3"]
 
 
-numTrainDbs = 2
+numTrainDbs = 10
 batchSize = 128
 embeddingSize = 100
 numEpochs = 10000
@@ -459,7 +459,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     #dataDirectory = tools.dataDir+"/2019-07-03_15-16-05_advancedSimulator8" # many possible sentences for customer actions (from h-h dataset)
     #dataDirectory = tools.dataDir+"/2019-07-22_handmade_0" # many possible sentences for customer actions (from h-h dataset)
     
-    dataDirectory = tools.dataDir+"/2019-07-23_17-27-28_advancedSimulator8" # many possible sentences for customer actions (from h-h dataset), all attributes change
+    dataDirectory = tools.dataDir+"/2019-07-24_14-58-47_advancedSimulator8" # many possible sentences for customer actions (from h-h dataset), all attributes change
     
     
     
@@ -986,11 +986,15 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                       "CUSTOMER_LOCATION",
                       "CUSTOMER_TOPIC",
                       "CUSTOMER_SPEECH",
+                      "SPATIAL_STATE",
+                      "STATE_TARGET",
                       
                       "OUTPUT_SHOPKEEPER_ACTION",
                       "OUTPUT_SHOPKEEPER_LOCATION",
                       "SHOPKEEPER_TOPIC",
                       "SHOPKEEPER_SPEECH",
+                      "OUTPUT_SPATIAL_STATE",
+                      "OUTPUT_STATE_TARGET",
                       "SHOPKEEPER_SPEECH_DB_ENTRY_RANGE",
                       
                       "PRED_OUTPUT_SHOPKEEPER_LOCATION",
