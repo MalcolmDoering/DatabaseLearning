@@ -18,6 +18,7 @@ import random
 
 import tools
 import attr
+from docutils.nodes import raw
 
 
 DEBUG_FLAG = True
@@ -44,6 +45,36 @@ features = [#"camera_name",
             "sensor_size",
             "ISO",
             "long_exposure"]
+
+introFeatProb = {"camera_type":     0.119, 
+                 "color":           0.050, 
+                 "weight":          0.142, 
+                 "preset_modes":    0.037, 
+                 "effects":         0.018, 
+                 "price":           0.188,
+                 "resolution":      0.101, 
+                 "optical_zoom":    0.066, 
+                 "settings":        0.153,
+                 "autofocus_points":0.039,
+                 "sensor_size":     0.021,
+                 "ISO":             0.023,
+                 "long_exposure":   0.043}
+
+introCamProbs1 = {"CAMERA_1":  0.357, # NIKON
+                  "CAMERA_2":  0.253, # SONY
+                  "CAMERA_3":  0.390} # CANON
+
+introCamProbs2 = {"CAMERA_1": {"CAMERA_2": 0.615, # NIKON->SONY
+                               "CAMERA_3": 0.385  # NIKON->CANON
+                               },
+                  "CAMERA_2": {"CAMERA_1": 0.522, # SONY->NIKON
+                               "CAMERA_3": 0.478  # SONY->CANON
+                               },
+                  "CAMERA_3": {"CAMERA_1": 0.538, # CANON->NIKON
+                               "CAMERA_2": 0.462  # CANON->SONY
+                               }
+                  }
+
 
 
 #additionalQuestionTopics = ["bulb_mode_what",
@@ -947,13 +978,21 @@ class ShopkeeperAgent(object):
         # features that the current camera have that have not been talked about yet
         candidateFeats = [x for x in currCamFeats if x not in currIntState.previousFeaturesOfConversation[currIntState.currentCameraOfConversation]]
         
+        
+        
         # introduce a random feature that hasn't been talked about yet
         if len(candidateFeats) > 0:
-            currFeat = np.random.choice(candidateFeats)
+            rawProbs = [introFeatProb[f] for f in candidateFeats]
+            probs = [p/sum(rawProbs) for p in rawProbs]
+            
+            currFeat = np.random.choice(candidateFeats, p=probs)
         
         # if all features have already been introduced, restate a random feature
         else:
-            currFeat = np.random.choice(currCamFeats)
+            rawProbs = [introFeatProb[f] for f in currCamFeats]
+            probs = [p/sum(rawProbs) for p in rawProbs]
+            
+            currFeat = np.random.choice(currCamFeats, p=probs)
         
         
         currIntState.shopkeeperTopic = currFeat
@@ -975,9 +1014,31 @@ class ShopkeeperAgent(object):
         # which cameras haven't been talked about yet
         candidateCams = [c for c in cameras if c not in currIntState.previousCamerasOfConversation]
         
-        
         if len(candidateCams) > 0:
-            currCamera = np.random.choice(candidateCams)
+            #currCamera = np.random.choice(candidateCams)
+            
+            if currIntState.customerLocation == currIntState.shopkeeperLocation and currIntState.customerLocation in candidateCams:
+                currCamera = currIntState.customerLocation
+            
+            
+            elif len(candidateCams) == 3:
+                rawProbs = [introCamProbs1[c] for c in candidateCams]
+                probs = [p/sum(rawProbs) for p in rawProbs]
+                
+                currCamera = np.random.choice(candidateCams, p=probs)
+            
+            
+            elif len(candidateCams) == 2:
+                prevCam = currIntState.previousCamerasOfConversation[0]
+                    
+                rawProbs = [introCamProbs2[prevCam][c] for c in candidateCams]
+                probs = [p/sum(rawProbs) for p in rawProbs]
+                
+                currCamera = np.random.choice(candidateCams, p=probs)
+            
+            else: # len(candidateCams) == 1
+                currCamera = candidateCams[0]
+            
             
             currIntState.outputShopkeeperAction = "S_INTRODUCES_CAMERA"
             currIntState.currentCameraOfConversation = currCamera

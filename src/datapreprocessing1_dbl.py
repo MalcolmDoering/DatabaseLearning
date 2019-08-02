@@ -16,9 +16,9 @@ from utterancevectorizer import UtteranceVectorizer
 
 
 #sessionDir = tools.create_session_dir("datapreprocessing1_dbl")
-sessionDir = tools.dataDir+"2019-07-29_15-47-27_advancedSimulator8_input_sequence_vectors"
+sessionDir = tools.dataDir+"2019-08-02_18-35-32_advancedSimulator8_input_sequence_vectors"
 
-dataDirectory = tools.dataDir+"2019-07-29_15-47-27_advancedSimulator8"
+dataDirectory = tools.dataDir+"2019-08-02_18-35-32_advancedSimulator8"
 numTrainDbs = 10
 
 dtype = np.int8
@@ -182,18 +182,17 @@ custUttVectorizer = UtteranceVectorizer(allCustUtts,
                                         minCount=2, 
                                         keywordWeight=1.0, 
                                         keywordSet=[], 
-                                        unigramsAndKeywordsOnly=False, 
+                                        unigramsAndKeywordsOnly=True, 
                                         tfidf=False,
                                         useStopwords=False,
-                                        lsa=True)
+                                        lsa=False)
 
 custUttToVec = {}
 
 for cUtt in allCustUtts:
     if cUtt not in custUttToVec:
-        #custUttToVec[cUtt] = custUttVectorizer.get_utterance_vector(cUtt)
-        custUttToVec[cUtt] = custUttVectorizer.get_lsa_vector(cUtt)
-
+        custUttToVec[cUtt] = custUttVectorizer.get_utterance_vector(cUtt, unigramOnly=True)
+        #custUttToVec[cUtt] = custUttVectorizer.get_lsa_vector(cUtt)
 
 #
 # vectorize the shopkeeper utterances
@@ -204,19 +203,20 @@ print("vectorizing shopkeeper utterances...")
 
 shkpUttVectorizer = UtteranceVectorizer(allShkpUtts,
                                         minCount=0,
-                                        keywordWeight=1.0, 
+                                        keywordWeight=1.0,
                                         keywordSet=[], 
-                                        unigramsAndKeywordsOnly=False, 
+                                        unigramsAndKeywordsOnly=True, 
                                         tfidf=False,
                                         useStopwords=False,
-                                        lsa=True)
+                                        lsa=False)
 
 shkpUttToVec = {}
 
 for sUtt in allShkpUtts:
     if sUtt not in shkpUttToVec:
-        #shkpUttToVec[sUtt] = shkpUttVectorizer.get_utterance_vector(sUtt)
-        shkpUttToVec[sUtt] = shkpUttVectorizer.get_lsa_vector(sUtt)
+        shkpUttToVec[sUtt] = shkpUttVectorizer.get_utterance_vector(sUtt, unigramOnly=True)
+        #shkpUttToVec[sUtt] = shkpUttVectorizer.get_lsa_vector(sUtt)
+
 
 
 #

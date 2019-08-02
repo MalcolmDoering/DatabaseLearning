@@ -19,6 +19,12 @@ eosChar = "#"
 allOutputsFileName = "E:/eclipse-log/2019-07-18_13-34-09_actionPrediction14_dbl - GT addresses all data/rs0_ct0_at0/500_all_outputs.csv"
 allOutputsFileName = "E:/eclipse-log/2019-07-21_14-44-40_actionPrediction14_dbl - SM addresses all data/rs0_ct0_at0/500_all_outputs.csv"
 
+allOutputsFileName = "E:/eclipse-log/2019-07-23_17-38-43_actionPrediction14_dbl/rs0_ct0_at0/100_all_outputs.csv" # SM addresses all data, 10 DBs all attributes changing
+
+allOutputsFileName = "E:/eclipse-log/2019-07-24_17-48-26_actionPrediction14_dbl/rs0_ct0_at0/1000_all_outputs.csv"
+
+allOutputsFileName = "E:/eclipse-log/2019-07-26_19-59-46_actionPrediction15_dbl/rs0_ct0_at0/2000_all_outputs.csv"
+
 sessionDir = tools.create_session_dir("analysis3")
 
 

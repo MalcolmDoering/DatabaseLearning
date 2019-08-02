@@ -26,6 +26,7 @@ from multiprocessing import Process
 import sys
 import string
 from collections import OrderedDict
+import nltk
 
 
 import tools
@@ -33,7 +34,7 @@ from utterancevectorizer import UtteranceVectorizer
 
 
 
-DEBUG = False
+DEBUG = True
 
 
 eosChar = "#"
@@ -1579,7 +1580,7 @@ if __name__ == "__main__":
     attTemp = 0
     
     
-    #run(0, 0, camTemp, attTemp, 0.0, sessionDir)
+    run(0, 0, camTemp, attTemp, 0.0, sessionDir)
     
     
     for gpu in range(8):
