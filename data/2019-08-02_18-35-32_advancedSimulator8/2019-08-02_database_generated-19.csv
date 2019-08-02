@@ -1,0 +1,4 @@
+camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
+CAMERA_1,Panasonic X100T a6000,mirrorless,silver,950 grams,various preset modes,,$2627,,15x optical zoom,"manual control and various automatic settings (video modeburst shooting, etc.)",37 autofocus points,1/2.33 inch sensor,,60 minutes max with bulb mode
+CAMERA_2,Sony Alpha a6000,compact digital camera,"silver, pink, white, blue, purple, or black",230 grams,,,$2326,17.8 megapixels,18x optical zoom,manual and automatic settings,89 autofocus points,,up to 6400 ISO with little noise,30 minutes max with bulb mode
+CAMERA_3,Panasonic Lumix ILC Camera,DSLR,pink or red,540 grams,"27 preset modes (e.g. beach, fireworks, soft skin)","22 glamor retouch effects (miniature, skin softening, lighter or darker skin tones, etc.)",$2814,17.6 megapixels,8x optical zoom,limited manual settings,,,up to 6400 ISO,up to 30 seconds

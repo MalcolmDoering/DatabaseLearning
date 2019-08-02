@@ -33,7 +33,7 @@ from utterancevectorizer import UtteranceVectorizer
 
 
 
-DEBUG = False
+DEBUG = True
 
 
 eosChar = "#"
@@ -49,6 +49,10 @@ embeddingSize = 100
 numEpochs = 10000
 evalEvery = 10
 randomizeTrainingBatches = False
+
+inputSeqLen = 19
+inputDim = 9741
+
 
 sessionDir = tools.create_session_dir("actionPrediction14_dbl")
 
@@ -459,9 +463,12 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     #dataDirectory = tools.dataDir+"/2019-07-03_15-16-05_advancedSimulator8" # many possible sentences for customer actions (from h-h dataset)
     #dataDirectory = tools.dataDir+"/2019-07-22_handmade_0" # many possible sentences for customer actions (from h-h dataset)
     
+
     dataDirectory = tools.dataDir+"/2019-07-24_14-58-47_advancedSimulator8" # many possible sentences for customer actions (from h-h dataset), all attributes change
+
     
     
+    inputSequenceVectorDirectory = dataDirectory + "_input_sequence_vectors"
     
     filenames = os.listdir(dataDirectory)
     filenames.sort()
@@ -528,6 +535,21 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
         # combine the three dictionaries into one
         shkpUttToDbEntryRange = {**shkpUttToDbEntryRange, **sutder}
     
+    
+    #
+    # load the input sequence vectors
+    #
+    inputSequenceVectors = []
+    
+    for i in range(len(interactions)):
+        
+        iFn = interactionFilenames[i]
+        isvFn = iFn.split("/")[-1][:-4] + "_input_sequence_vectors_sl{}_dim{}.npy".format(inputSeqLen, inputDim)
+        
+        inVecSeqs = np.load(inputSequenceVectorDirectory+"/"+isvFn)
+        
+        inputSequenceVectors.append(inVecSeqs[:len(interactions[i])])
+        
     
     
     #
@@ -1394,7 +1416,7 @@ if __name__ == "__main__":
     attTemp = 0
     
     
-    #run(0, 0, camTemp, attTemp, 0.0, sessionDir)
+    run(0, 0, camTemp, attTemp, 0.0, sessionDir)
     
     
     for gpu in range(8):

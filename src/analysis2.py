@@ -606,6 +606,20 @@ expLogDir = "E:/eclipse-log/2019-07-21_14-44-40_actionPrediction14_dbl - SM addr
 #expLogDir = "E:/eclipse-log/2019-07-22_16-55-13_actionPrediction14_dbl"
 
 
+expLogDir = "E:/eclipse-log/2019-07-23_17-38-43_actionPrediction14_dbl"
+
+expLogDir = "E:/eclipse-log/2019-07-24_17-48-26_actionPrediction14_dbl"
+
+# non-copynet with RNN interaction history encoder
+expLogDir = "E:/eclipse-log/2019-07-26_19-59-46_actionPrediction15_dbl"
+
+
+# non-copynet with RNN interaction history encoder 1000 dim lsa utt vec
+# freeze addressing, apply sharpening, and reinitialize optimizer and decoding weights at 1000 epochs
+#expLogDir = "E:/eclipse-log/2019-07-29_18-53-49_actionPrediction15_dbl"
+
+# non-copynet with RNN interaction history encoder unigram utt vec
+expLogDir = "E:/eclipse-log/2019-07-31_16-34-21_actionPrediction15_dbl"
 
 
 def plot_2_conditions_3_metrics(runIdToData, runDirNames, metric1Name, metric2Name, metric3Name):

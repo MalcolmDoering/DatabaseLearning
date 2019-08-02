@@ -1,0 +1,4 @@
+camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
+CAMERA_1,Nikon EOS 5D A900,mirrorless,pink,660 grams,"28 preset modes (e.g. fireworks, low light, backlighting)",,$905,21.2 megapixels,no optical zoom,full manual control,66 autofocus points,full frame,up to 3200 ISO,60 seconds max
+CAMERA_2,Nikon Lumix S2800,point and shoot,white or black,830 grams,"29 preset modes (e.g. night, sports, close-up)",,$4432,19.1 megapixels,20x optical zoom,full manual control,51 autofocus points,1/2.3 inch CMOS sensor,up to 3200 ISO,"15 seconds max, with bulb mode expose as long as you want"
+CAMERA_3,Panasonic X100T Mark III,point and shoot,silver,690 grams,,,$2749,24.7 megapixels,15x optical zoom,limited manual settings,24 autofocus points,APS-C sensor (crop sensor),up to 51200 ISO,30 seconds max with Long Shutter Mode

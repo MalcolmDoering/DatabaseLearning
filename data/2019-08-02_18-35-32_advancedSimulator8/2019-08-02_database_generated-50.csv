@@ -1,0 +1,4 @@
+camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
+CAMERA_1,Canon X100T DMC-ZS3,point and shoot,"red, white, purple, or silver",370 grams,,,$3150,,29x optical zoom,limited manual settings,11 autofocus points,full frame,up to 3200 ISO,15 minutes max with bulb mode
+CAMERA_2,Panasonic EOS 5D Mark III,digital single lens mirrorless,"pink, black, silver, blue, purple, or white",270 grams,"more  than 26 preset modes (e.g. close-up, fireworks, low light)",,$1604,18.9 megapixels,,limited manual settings,62 autofocus points,,up to 3200 ISO,30 minutes max with bulb mode
+CAMERA_3,Sony PowerShot ELPH A900,premium compact digital camera,black,750 grams (only body),,"10 photo effects (big eyes, miniature, soft focus, etc.)",$4800,17.6 megapixels,17x optical zoom,manual and automatic settings,32 autofocus points,1/2.33 inch sensor,up to 51200 ISO,30 minutes max with bulb mode
