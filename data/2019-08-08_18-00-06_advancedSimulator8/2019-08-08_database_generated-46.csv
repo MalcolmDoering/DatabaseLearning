@@ -1,0 +1,4 @@
+camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
+CAMERA_1,Nikon PowerShot ELPH Mark III,mirrorless,"red, purple, pink, blue, or white",740 grams,,,$3225,11.0 megapixels,no optical zoom,manual and automatic settings,,1/2.3 inch CMOS sensor,up to 3200 ISO with little noise,
+CAMERA_2,Panasonic PowerShot ELPH A900,premium compact digital camera,"red, silver, pink, blue, or purple",630 grams (only body),,,$1673,17.7 megapixels,,limited manual settings,70 autofocus points,1/2.3 inch CMOS sensor,up to 6400 ISO with little noise,up to 30 seconds with Long Shutter Mode
+CAMERA_3,Canon X-T20 a6000,compact digital camera,red,440 grams,,"24 creative mode settings (skin softening, toy camera, miniature, etc.)",$2835,20.5 megapixels,19x optical zoom,manual and automatic settings,50 autofocus points,17.3 x 13.0 mm (in 4:3 aspect ratio),up to 12800 ISO,60 seconds max

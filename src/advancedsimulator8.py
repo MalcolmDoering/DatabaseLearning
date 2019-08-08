@@ -18,7 +18,6 @@ import random
 
 import tools
 import attr
-from docutils.nodes import raw
 
 
 DEBUG_FLAG = True
@@ -356,7 +355,7 @@ class CustomerAgent(object):
         else:    
         
             if prevIntState.customerAction == "C_ENTERS":
-                    action = np.random.choice([self.action_greets, self.action_walks_to_camera], p=[0.5, 0.5])
+                    action = np.random.choice([self.action_greets, self.action_walks_to_camera], p=[0.1, 0.9])
             
             elif prevIntState.outputShopkeeperAction == "S_GREETS":
                 action = self.action_looking_for_a_camera
@@ -385,8 +384,8 @@ class CustomerAgent(object):
             elif prevIntState.customerAction == "C_EXAMINES_CAMERA":
                 action = np.random.choice([self.action_examines_camera, self.action_walks_to_camera, self.action_question_about_feature], p=[0.25, 0.4, 0.35]) # "S_GREETS"
             
-            elif prevIntState.customerAction == "C_THANK_YOU":
-                action = np.random.choice([self.action_think_it_over, self.action_decides_to_buy], p=[0.5, 0.5]) # "S_THANK_YOU"
+            #elif prevIntState.customerAction == "C_THANK_YOU":
+            #    action = np.random.choice([self.action_think_it_over, self.action_decides_to_buy], p=[0.5, 0.5]) # "S_THANK_YOU"
         
         
         currIntState = action(prevIntState, currIntState)
@@ -708,11 +707,11 @@ class ShopkeeperAgent(object):
             elif currIntState.customerAction == "C_THANK_YOU":
                 action = self.action_thank_you
                 
-            elif currIntState.customerAction == "C_THINK_IT_OVER":
-                action = self.action_thank_you
+            #elif currIntState.customerAction == "C_THINK_IT_OVER":
+            #    action = self.action_thank_you
                 
-            elif currIntState.customerAction == "C_DECIDE_TO_BUY":
-                action = self.action_thank_you
+            #elif currIntState.customerAction == "C_DECIDE_TO_BUY":
+            #    action = self.action_thank_you
                 
             elif currIntState.customerAction == "C_LEAVES":
                 action = self.action_return_to_counter
@@ -981,11 +980,18 @@ class ShopkeeperAgent(object):
         
         
         # introduce a random feature that hasn't been talked about yet
+        #if len(candidateFeats) > 0:
+        #    rawProbs = [introFeatProb[f] for f in candidateFeats]
+        #    probs = [p/sum(rawProbs) for p in rawProbs]
+        #    
+        #    currFeat = np.random.choice(candidateFeats, p=probs)
+        
+        # introduce the candidate feature that has the highest probability
         if len(candidateFeats) > 0:
             rawProbs = [introFeatProb[f] for f in candidateFeats]
-            probs = [p/sum(rawProbs) for p in rawProbs]
             
-            currFeat = np.random.choice(candidateFeats, p=probs)
+            currFeat = candidateFeats[np.argmax(rawProbs)]
+            
         
         # if all features have already been introduced, restate a random feature
         else:

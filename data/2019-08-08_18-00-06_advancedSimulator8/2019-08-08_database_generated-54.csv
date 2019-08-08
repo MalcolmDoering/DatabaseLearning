@@ -1,0 +1,4 @@
+camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
+CAMERA_1,Canon PowerShot ELPH Mark III,compact digital camera,"blue, pink, or black",130 grams,,"19 creative mode settings (retro, soft focus, toy camera, etc.)",$3458,10.3 megapixels,9x optical zoom,manual and automatic settings,,1/2.33 inch sensor,up to 3200 ISO with little noise,60 seconds max with Long Shutter Mode
+CAMERA_2,Panasonic PowerShot ELPH A900,premium compact digital camera,pink,770 grams,"29 preset modes (e.g. snow, low light, sports)",,$4245,13.7 megapixels,,full manual control,156 autofocus points,,up to 51200 ISO,"up to 25 seconds, with bulb mode expose as long as you want"
+CAMERA_3,Sony Coolpix A900,DSLR,black or pink,940 grams,,,$2951,21.4 megapixels,,limited manual settings,77 autofocus points,1/2.33 inch sensor,up to 12800 ISO with little noise,up to 60 seconds

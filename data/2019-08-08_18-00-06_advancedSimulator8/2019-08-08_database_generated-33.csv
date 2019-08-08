@@ -1,0 +1,4 @@
+camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
+CAMERA_1,Sony Coolpix Mark III,mirrorless,"silver, purple, white, or blue",930 grams (only body),"more  than 19 preset modes (e.g. portrait, fireworks, soft skin)",,$742,14.4 megapixels,13x optical zoom,manual and automatic settings,70 autofocus points,1/2.33 inch sensor,up to 6400 ISO,
+CAMERA_2,Canon LUMIX GH5s C4K ILC Camera,point and shoot,blue,120 grams,"18 preset modes (e.g. close-up, beach, night)",,$813,13.5 megapixels,20x optical zoom,full manual control,19 autofocus points,,up to 12800 ISO,up to 60 seconds
+CAMERA_3,Nikon X100T ILC Camera,compact digital camera,purple or black,490 grams,"12 preset modes (e.g. beach, close-up, fireworks)",,$800,14.7 megapixels,no optical zoom,full manual control,149 autofocus points,APS-C sensor (crop sensor),up to 51200 ISO,up to 15 minutes with bulb mode

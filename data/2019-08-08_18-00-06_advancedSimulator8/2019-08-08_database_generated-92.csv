@@ -1,0 +1,4 @@
+camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
+CAMERA_1,Sony X100T Mark III,point and shoot,"pink, black, blue, purple, red, silver, or white",750 grams,"22 preset modes (e.g. snow, beach, soft skin)","22 advanced filters (big eyes, vivid, sepia, etc.)",$3610,19.4 megapixels,no optical zoom,full manual control,96 autofocus points,,up to 3200 ISO,60 minutes max with bulb mode
+CAMERA_2,Sony EOS 5D 360 HS,DSLR,red,270 grams,,"14 artistic effect modes (miniature, vivid, soft focus, etc.)",$3016,23.6 megapixels,no optical zoom,full manual control,52 autofocus points,APS-C sensor (crop sensor),up to 12800 ISO,
+CAMERA_3,Canon EOS 5D S2800,point and shoot,"white, red, pink, black, or blue",230 grams,,,$585,,,full manual control,149 autofocus points,17.3 x 13.0 mm (in 4:3 aspect ratio),,15 minutes max with bulb mode
