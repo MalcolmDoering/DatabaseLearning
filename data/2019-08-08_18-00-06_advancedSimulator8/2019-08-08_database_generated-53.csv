@@ -1,0 +1,4 @@
+camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
+CAMERA_1,Fujifilm LUMIX GH5s C4K DMC-ZS3,DSLR,"white, red, blue, or pink",470 grams,various preset modes,,$4292,24.8 megapixels,,manual and automatic settings,72 autofocus points,1/2.33 inch sensor,up to 3200 ISO,60 minutes max with bulb mode
+CAMERA_2,Canon Coolpix DMC-ZS3,DSLR,"white, pink, or black",700 grams,various preset modes,,$1196,12.5 megapixels,21x optical zoom,full manual control,128 autofocus points,1/2.33 inch sensor,up to 51200 ISO,30 minutes max with bulb mode
+CAMERA_3,Fujifilm Alpha A900,mirrorless,"black, pink, blue, or silver",750 grams,,,$4132,11.2 megapixels,21x optical zoom,manual and automatic settings,38 autofocus points,1/2.33 inch sensor,up to 3200 ISO,25 minutes max with bulb mode

@@ -1,0 +1,4 @@
+camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
+CAMERA_1,Fujifilm X-T20 360 HS,DSLR,"blue, pink, white, purple, or red",700 grams,,"24 artistic effect modes (soft focus, sepia, big eyes, etc.)",$1149,12.4 megapixels,,manual and automatic settings,190 autofocus points,,up to 51200 ISO,
+CAMERA_2,Canon PowerShot ELPH S2800,point and shoot,"black, silver, or white",660 grams,"11 exposure modes (e.g. low light, beach, beach)","19 advanced filters (big eyes, toy camera, small face, etc.)",$1540,,,manual and automatic settings,,full frame,up to 51200 ISO,
+CAMERA_3,Panasonic EOS 5D S2800,DSLR,"blue, white, purple, red, or pink",360 grams,,,$286,,,full manual control,195 autofocus points,full frame,up to 51200 ISO with little noise,30 minutes max with bulb mode

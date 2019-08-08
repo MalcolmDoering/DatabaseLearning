@@ -1,0 +1,4 @@
+camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
+CAMERA_1,Panasonic X-T20 a6000,mirrorless,"black, silver, blue, red, or pink",500 grams,,,$1522,13.0 megapixels,,manual and automatic settings,152 autofocus points,,up to 12800 ISO,30 minutes max with bulb mode
+CAMERA_2,Sony X100T ILC Camera,DSLR,white,490 grams,"9 preset modes (e.g. backlighting, close-up, portrait)","11 advanced filters (skin softening, big eyes, lighter or darker skin tones, etc.)",$1287,,32x optical zoom,manual and automatic settings,118 autofocus points,1/2.33 inch sensor,up to 3200 ISO,
+CAMERA_3,Panasonic X-T20 360 HS,mirrorless,black or silver,820 grams (only body),"9 preset modes (e.g. beach, beach, sports)",,$3053,11.2 megapixels,32x optical zoom,manual and automatic settings,,17.3 x 13.0 mm (in 4:3 aspect ratio),,25 minutes max with bulb mode
