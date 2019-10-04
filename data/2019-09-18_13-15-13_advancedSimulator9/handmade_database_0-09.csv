@@ -1,0 +1,4 @@
+camera_ID,camera_name,camera_type,color,weight,preset_modes,effects,price,resolution,optical_zoom,settings,autofocus_points,sensor_size,ISO,long_exposure
+CAMERA_1,Sony H300,point and shoot camera,black,500 grams,"11 scene modes (e.g. night scene, soft skin, and beach)","4 picture effects (e.g. toy camera, pop color, and partial color)",$180,20.1 megapixels,35x optical zoom,limited manual settings,,0.31 inch Super HAD CCD sensor,80 to 3200 ISO,
+CAMERA_2,Canon EOS R,DSLR camera,black,660 grams,,,$2700,30.3 megapixels,,manual and automatic settings,up to 5655 autofocus points,,100 to 40000 ISO,expose as long as you want with bulb mode
+CAMERA_3,Fujifilm FinePix XP130,waterproof digital camera,"white, dark silver, yellow, lime, or sky blue",210 grams,,"11 advanced filters (e.g. toy camera, miniature, and sketch)",$170,16.4 megapixels,5x optical zoom,limited manual settings,,1/2.3 inch CMOS sensor,100 to 6400 ISO,up to 4 seconds

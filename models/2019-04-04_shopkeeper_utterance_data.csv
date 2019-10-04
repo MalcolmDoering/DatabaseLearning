@@ -4,14 +4,14 @@ S_ANSWERS_QUESTION_ABOUT_FEATURE,autofocus_points,CAMERA_X,This one has {}.
 S_ANSWERS_QUESTION_ABOUT_FEATURE,black,CAMERA_X,This one comes in {}.
 S_ANSWERS_QUESTION_ABOUT_FEATURE,bulb_mode,CAMERA_X,#
 S_ANSWERS_QUESTION_ABOUT_FEATURE,bulb_mode_what,CAMERA_X,bulb mode so you just press the shutter once and then you can leave it as long as you can and it takes all the exposure and then if you press it again it will turn off.
-S_ANSWERS_QUESTION_ABOUT_FEATURE,camera_type,CAMERA_X,This is a {} camera.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,camera_type,CAMERA_X,This is a {}.
 S_ANSWERS_QUESTION_ABOUT_FEATURE,color,CAMERA_X,This one comes in {}.
 S_ANSWERS_QUESTION_ABOUT_FEATURE,DSLR,CAMERA_X,#
 S_ANSWERS_QUESTION_ABOUT_FEATURE,ease_of_use,CAMERA_X,#
 S_ANSWERS_QUESTION_ABOUT_FEATURE,effects,CAMERA_X,This one has {}.
 S_ANSWERS_QUESTION_ABOUT_FEATURE,expensive,CAMERA_X,#
 S_ANSWERS_QUESTION_ABOUT_FEATURE,exposure,CAMERA_X,#
-S_ANSWERS_QUESTION_ABOUT_FEATURE,exposure_what,CAMERA_X,"exposure is how long you leave the shutter open. The longer it‚Äôs open, the more light can come in."
+S_ANSWERS_QUESTION_ABOUT_FEATURE,exposure_what,CAMERA_X,"exposure is how long you leave the shutter open. The longer itÅEÄÅEs open, the more light can come in."
 S_ANSWERS_QUESTION_ABOUT_FEATURE,full_frame,CAMERA_X,#
 S_ANSWERS_QUESTION_ABOUT_FEATURE,glamour_retouch_effects_what,CAMERA_X,"when you're taking a picture of yourself, it can brighten your skin or widen your eyes."
 S_ANSWERS_QUESTION_ABOUT_FEATURE,high_performance,CAMERA_X,#
@@ -49,7 +49,7 @@ S_GREET_RESPONSE,,,how can I help you today?
 S_GREETS,,,can I help you?
 S_INTRODUCES_CAMERA,,CAMERA_X,Let me show you this. Here we have the {}.
 S_INTRODUCES_FEATURE,autofocus_points,CAMERA_X,This one has {}.
-S_INTRODUCES_FEATURE,camera_type,CAMERA_X,This is a {} camera.
+S_INTRODUCES_FEATURE,camera_type,CAMERA_X,This is a {}.
 S_INTRODUCES_FEATURE,color,CAMERA_X,This one comes in {}.
 S_INTRODUCES_FEATURE,effects,CAMERA_X,This one has {}.
 S_INTRODUCES_FEATURE,ISO,CAMERA_X,This one has {}.
