@@ -15,13 +15,14 @@ import os
 import random
 import copy
 import string
+import operator
 
 import tools
 
 
 originalHitCsvDir = "E:/Dropbox/ATR/2018 database learning/crowdsourcing/2019-09-26_20-37-52_generateHITcsv/"
 
-resultCsvDir = "E:/Dropbox/ATR/2018 database learning/crowdsourcing/2019-10-01_AMTresults/"
+resultCsvDir = "E:/Dropbox/ATR/2018 database learning/crowdsourcing/2019-10-24-AMTresults/"
 
 
 sessionDir = tools.create_session_dir("generateHITcsv2")
@@ -56,10 +57,22 @@ resultHits = []
 for fn in resultFilenames:
     with open(fn) as csvfile:
         reader = csv.DictReader(csvfile)
-        resultFieldnames = reader.fieldnames
+        
+        if "Input.DB_CONTENTS" in reader.fieldnames:
+            resultFieldnames = reader.fieldnames
         
         for row in reader:
             resultHits.append(row)
+
+
+with open(sessionDir + "/{}_crowdsourcing_results_all.csv".format(tools.time_now()), "w", newline="") as csvfile:
+    writer = csv.DictWriter(csvfile, resultFieldnames)
+    writer.writeheader()
+    
+    for i in range(len(resultHits)):
+        writer.writerow(resultHits[i])
+
+
 
 
 #
@@ -110,14 +123,36 @@ for hit in originalHits:
 #
 completedCounts = {"all":{}}
 
+numHitsPerWorker = {}
+amtWorkerIdToGroupId = {}
+
+for hit in resultHits:
+    amtWorkId = hit["WorkerId"]
+    
+    try:
+        w = hit["Input.WORKER_ID"]
+    except:
+        w = -1
+    
+    
+    if amtWorkId not in amtWorkerIdToGroupId:
+        amtWorkerIdToGroupId[amtWorkId] = w
+    if w != -1:
+        amtWorkerIdToGroupId[amtWorkId] = w    
+        
+
 for hit in resultHits:
     
-    w = hit["Input.WORKER_ID"]
+    amtWorkId = hit["WorkerId"]
+    w = amtWorkerIdToGroupId[amtWorkId]
     shkpAction = hit["Input.OUTPUT_SHOPKEEPER_ACTION"]
     cam = hit["Input.CURRENT_CAMERA_OF_CONVERSATION"]
     top= hit["Input.SHOPKEEPER_TOPIC"]
-    dbId = hit["Input.DB_ID"]
     
+    try:
+        dbId = hit["Input.DB_ID"]
+    except: 
+        dbId = hit["Input.DB_IMAGE"][69:71]
     
     if w not in completedCounts:
         completedCounts[w] = {}
@@ -132,6 +167,7 @@ for hit in resultHits:
 
     completedCounts[w][shkpAction][cam][top][dbId] += 1
     
+    
     w = "all"
     
     if shkpAction not in completedCounts[w]:
@@ -144,6 +180,11 @@ for hit in resultHits:
         completedCounts[w][shkpAction][cam][top][dbId] = 0
     
     completedCounts[w][shkpAction][cam][top][dbId] += 1
+    
+    
+    if amtWorkId not in numHitsPerWorker:
+        numHitsPerWorker[amtWorkId] = 0
+    numHitsPerWorker[amtWorkId] += 1
 
 
 # mark which categories have 0 hits completed
@@ -346,3 +387,19 @@ for w in hitsToWrite:
                 writer.writerow(hitGroups[i][j])
 
 
+
+numHitsPerWorker = sorted(numHitsPerWorker.items(), key=operator.itemgetter(1), reverse=True)
+
+with open(sessionDir + "/worker_statistics.csv".format(w, i, len(hitGroups[i])), "w", newline="") as csvfile:
+    writer = csv.writer(csvfile)
+    
+    writer.writerow(["AMT_WORKER_ID", "MY_WORKER_ID", "NUM_HITS_COMPLETED", "PERCENT_OF_ALL_HITS"])
+    
+    
+    for worker, numHits in numHitsPerWorker:
+        
+        writer.writerow([amtWorkerIdToGroupId[worker], worker, numHits, numHits / float(len(resultHits))])
+        
+        print(amtWorkerIdToGroupId[worker], worker, numHits, numHits / float(len(resultHits)))
+        #print(worker, numHits)
+        

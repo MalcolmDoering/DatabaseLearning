@@ -16,9 +16,11 @@ from utterancevectorizer import UtteranceVectorizer
 
 
 #sessionDir = tools.create_session_dir("datapreprocessing1_dbl")
-sessionDir = tools.dataDir+"2019-08-08_18-00-06_advancedSimulator8_input_sequence_vectors"
+sessionDir = tools.dataDir+"2019-09-18_13-15-13_advancedSimulator9_input_sequence_vectors"
+tools.create_directory(sessionDir)
 
-dataDirectory = tools.dataDir+"2019-08-08_18-00-06_advancedSimulator8"
+
+dataDirectory = tools.dataDir+"2019-09-18_13-15-13_advancedSimulator9"
 numTrainDbs = 10
 
 dtype = np.int8

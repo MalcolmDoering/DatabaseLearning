@@ -622,6 +622,21 @@ expLogDir = "E:/eclipse-log/2019-07-26_19-59-46_actionPrediction15_dbl"
 expLogDir = "E:/eclipse-log/2019-07-31_16-34-21_actionPrediction15_dbl"
 
 
+# non-copynet with RNN interaction history encoder unigram utt vec
+# simulated interactions with feature/camera introduction probs from h-h data
+expLogDir = "E:/eclipse-log/2019-08-02_19-27-47_actionPrediction15_dbl"
+
+
+# non-copynet with RNN interaction history encoder unigram utt vec
+# simulated interactions with vastly altered simulations that allow customer to take initiative
+expLogDir = "E:/eclipse-log/2019-08-08_18-27-30_actionPrediction15_dbl"
+
+
+
+expLogDir = "E:/eclipse-log/2019-09-13_12-49-12_actionPrediction15_dbl"
+
+
+
 def plot_2_conditions_3_metrics(runIdToData, runDirNames, metric1Name, metric2Name, metric3Name):
     
     fig, axes = plt.subplots(3, 2, sharex='col', sharey='row')
@@ -797,13 +812,13 @@ def plot_2_conditions_3_metrics(runIdToData, runDirNames, metric1Name, metric2Na
     
     
     cols = ["Training", "Testing"]
-    rows = [metric1Name, metric2Name, metric3Name]
+    hits = [metric1Name, metric2Name, metric3Name]
     
     
     for ax, col in zip(axes[0], cols):
         ax.set_title(col)
     
-    for ax, row in zip(axes[:,0], rows):
+    for ax, row in zip(axes[:,0], hits):
         ax.set_ylabel(row, rotation=90, size='medium')
     
     

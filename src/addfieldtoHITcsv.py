@@ -16,7 +16,7 @@ import tools
 
 databaseDir = tools.dataDir + "2019-09-18_13-15-13_advancedSimulator9"
 
-hitCsvFile = "E:/Dropbox/ATR/2018 database learning/crowdsourcing/2019-09-13_14-24-58_shopkeeper_utterance_HITs - batch 00-02 results.csv"
+hitCsvFile = "E:/Dropbox/ATR/2018 database learning/crowdsourcing/2019-09-13_14-24-58_shopkeeper_utterance_HITs - batch 00-02 results - 2.csv"
 modifiedHitCsvFile = hitCsvFile[:-4] + "_mod.csv"
 
 
