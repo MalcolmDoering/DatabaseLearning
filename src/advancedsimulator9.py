@@ -14,6 +14,7 @@ import copy
 import csv
 import time
 import random
+import os
 
 
 import tools
@@ -1647,7 +1648,7 @@ def run_simulator(sessionDir, databaseFilename, shopkeeperUtteranceFilename, cus
 
 if __name__ == "__main__":
     
-    sessionDir = tools.create_session_dir("advancedSimulator8")
+    sessionDir = tools.create_session_dir("advancedSimulator9")
     
     #global DEBUG_FLAG
     DEBUG_FLAG = False
@@ -1669,7 +1670,13 @@ if __name__ == "__main__":
     """ 
     
     # simulate interactions where all the database fileds are generated randomly
-    newDatabaseFilenames = generate_databases_2(101)
+    #newDatabaseFilenames = generate_databases_2(101)
+    
+    # use preexisting DBs
+    dbDir = tools.dataDir+"2019-09-12_handmade_databases/"
+    newDatabaseFilenames = [dbDir + fn for fn in os.listdir(dbDir)]
+    
+    
     
     for i in range(len(newDatabaseFilenames)):
         run_simulator(sessionDir, newDatabaseFilenames[i], shopkeeperUtteranceFilename, customerUtteranceFilename, randomSeed=i)

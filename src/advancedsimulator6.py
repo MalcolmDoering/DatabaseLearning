@@ -1051,20 +1051,20 @@ def read_customer_cluster_file(filename):
     
     with open(filename) as csvfile:
         reader = csv.DictReader(csvfile)
-        rows = []
+        hits = []
         
         for row in reader:
-            rows.append(row)
+            hits.append(row)
         
         # the data has to be in this order to make proper use of the annotations
-        #rows.sort(key=lambda x: (x["Cluster.ID"], x["Is.Representative"]), reverse=True)
+        #hits.sort(key=lambda x: (x["Cluster.ID"], x["Is.Representative"]), reverse=True)
         
         
         action = None
         topic = None
         badCluster = None
         
-        for row in rows:
+        for row in hits:
             if row["Utterance.ID"] == "271":
                 pass
             
@@ -1119,13 +1119,13 @@ def read_shopkeeper_cluster_file(filename):
     
     with open(filename) as csvfile:
         reader = csv.DictReader(csvfile)
-        rows = []
+        hits = []
         
         for row in reader:
-            rows.append(row)
+            hits.append(row)
         
         # the data has to be in this order to make proper use of the annotations
-        rows.sort(key=lambda x: (x["Cluster.ID"], x["Is.Representative"]), reverse=True)
+        hits.sort(key=lambda x: (x["Cluster.ID"], x["Is.Representative"]), reverse=True)
         
         
         action = None
@@ -1135,7 +1135,7 @@ def read_shopkeeper_cluster_file(filename):
         memDepTopic = None
         badCluster = None
         
-        for row in rows:
+        for row in hits:
             
             if row["Utterance.ID"] == "4772":
                 pass
@@ -1296,7 +1296,7 @@ def generate_customer_utterance_file():
     customerActionMap = read_customer_cluster_file(None)
     minNumUtts = 1
     
-    rows = []
+    hits = []
     
     for act in customerActionMap:
         for top in customerActionMap[act]:
@@ -1307,7 +1307,7 @@ def generate_customer_utterance_file():
                        "UTTERANCE_ID":info["Utterance.ID"],
                        "UTTERANCE":info["Utterance"]}
                 
-                rows.append(row)
+                hits.append(row)
             
             
             # add minimum number of empty slots for actions not represented in the h-h data
@@ -1318,7 +1318,7 @@ def generate_customer_utterance_file():
                        "UTTERANCE_ID":"-1",
                        "UTTERANCE":""}
                 
-                rows.append(row)
+                hits.append(row)
         
         # add empty slots for action, topic combinations missing from the h-h data
         missingTopics = [top for top in features+additionalQuestionTopics if top not in customerActionMap[act]]
@@ -1331,7 +1331,7 @@ def generate_customer_utterance_file():
                        "UTTERANCE_ID":"-1",
                        "UTTERANCE":""}
                 
-                rows.append(row)
+                hits.append(row)
         
         if act == "C_LOOKING_FOR_A_CAMERA_WITH_X" or act == "C_ANSWERS_QUESTION_X":
             missingCustomerTypes = [custType for custType in customerTypes if ("PURPOSE:"+custType) not in customerActionMap[act]]
@@ -1344,7 +1344,7 @@ def generate_customer_utterance_file():
                            "UTTERANCE_ID":"-1",
                            "UTTERANCE":""}
                     
-                    rows.append(row)
+                    hits.append(row)
             
             
     
@@ -1358,7 +1358,7 @@ def generate_customer_utterance_file():
                    "UTTERANCE_ID":"-1",
                    "UTTERANCE":""}
             
-            rows.append(row)
+            hits.append(row)
     
     
     # save
@@ -1367,7 +1367,7 @@ def generate_customer_utterance_file():
         
         writer = csv.DictWriter(csvfile, fieldnames=fd)
         writer.writeheader()
-        writer.writerows(rows)
+        writer.writerows(hits)
 
 
 
