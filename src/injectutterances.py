@@ -12,24 +12,38 @@ import os
 import random
 import copy
 import string
+import sys
+print('current trace function', sys.gettrace())
 
 import tools
 
 
 
-interactionDir = tools.dataDir+"2019-09-18_13-15-13_advancedSimulator9"
-resultCsvDir = "E:/Dropbox/ATR/2018 database learning/crowdsourcing/2019-10-01_AMTresults/"
-
+interactionDir = tools.dataDir+"2019-11-12_17-40-29_advancedSimulator9"
+shkpUttFilename = tools.dataDir + "2019-11-11_13-54-06_crowdsourcing_results_all_mod.csv"
+databaseDir = tools.dataDir+"2019-09-18_13-15-13_advancedSimulator9"
 
 sessionDir = tools.create_session_dir("injectutterances")
 
 
-numInteractionsPerDb = 200
+numInteractionsPerDb = 1000
+numTrainDbs = 10
 
 
-#
-# read in the simulated interactions
-#
+
+
+def read_database_file(filename):
+    database = {}
+    
+    with open(filename) as csvfile:
+        reader = csv.DictReader(csvfile)
+        fieldnames = reader.fieldnames
+        
+        for row in reader:
+            database[row["camera_ID"]] = row
+    
+    return database, fieldnames
+
 
 def read_simulated_interactions(filename, keepActions=None):
     interactions = []
@@ -39,6 +53,7 @@ def read_simulated_interactions(filename, keepActions=None):
     
     shkpUttToDbEntryRange = {}
     
+    """
     fieldnames = ["TRIAL",
                   "TURN_COUNT",
                   
@@ -55,17 +70,16 @@ def read_simulated_interactions(filename, keepActions=None):
                   "OUTPUT_SHOPKEEPER_LOCATION",
                   "SHOPKEEPER_TOPIC",
                   "SHOPKEEPER_SPEECH"]
-    
-    
+    """
     
     with open(filename) as csvfile:
         reader = csv.DictReader(csvfile)
         
         for row in reader:
             
-            if int(row["TRIAL"]) >= numInteractionsPerDb:
-                # only read in this many interactions
-                break
+            #if int(row["TRIAL"]) >= numInteractionsPerDb:
+            #    # only read in this many interactions
+            #    break
             
             if (keepActions == None) or (row["OUTPUT_SHOPKEEPER_ACTION"] in keepActions): # and row["SHOPKEEPER_TOPIC"] == "price"):
                 
@@ -73,7 +87,7 @@ def read_simulated_interactions(filename, keepActions=None):
                 row["SHOPKEEPER_SPEECH"] = row["SHOPKEEPER_SPEECH"].lower()
                 
                 interactions.append(row)
-                 
+            
             
             if row["SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"] != "":
                 shkpUttToDbEntryRange[row["SHOPKEEPER_SPEECH"]] = [int(i) for i in row["SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"].split("~")]
@@ -81,7 +95,37 @@ def read_simulated_interactions(filename, keepActions=None):
     return interactions, shkpUttToDbEntryRange, gtDbCamera, gtDbAttribute
 
 
-print ("loading the interactions...")
+
+
+#
+# load the databases
+#
+print("loading the databases...")
+
+filenames = os.listdir(databaseDir)
+filenames.sort()
+
+databaseFilenamesAll = [databaseDir+"/"+fn for fn in filenames if "handmade" in fn]
+databaseFilenames = databaseFilenamesAll[:numTrainDbs+1]
+
+
+databases = []
+databaseIds = []
+dbFieldnames = None # these should be the same for all DBs
+
+for dbFn in databaseFilenames:
+    
+    db, dbFieldnames = read_database_file(dbFn)
+    databaseIds.append(dbFn.split("_")[-1].split(".")[0])
+    databases.append(db)
+
+numDatabases = len(databases)
+
+
+#
+# read in the simulated interactions
+#
+print("loading the interactions...")
 
 filenames = os.listdir(interactionDir)
 filenames.sort()
@@ -110,18 +154,16 @@ for i in range(len(interactionFilenames)):
 #
 # read in the crowdsourced utterances
 #
-resultFilenames = os.listdir(resultCsvDir)
-resultFilenames = [resultCsvDir+fn for fn in resultFilenames]
+print("loading the crowdsourced utterances...")
 
 resultHits = []
 
-for fn in resultFilenames:
-    with open(fn) as csvfile:
-        reader = csv.DictReader(csvfile)
-        resultFieldnames = reader.fieldnames
-        
-        for row in reader:
-            resultHits.append(row)
+with open(shkpUttFilename) as csvfile:
+    reader = csv.DictReader(csvfile)
+    resultFieldnames = reader.fieldnames
+    
+    for row in reader:
+        resultHits.append(row)
 
 
 # sort the utterances into a dict so it's easy to find them
@@ -158,24 +200,9 @@ resultUtterancesWithoutReplacement = copy.deepcopy(resultUtterances)
 #
 # replace the originally simulated shopkeeper utterances with the crowdsourced utterances
 # 
-
-def sampleShkpUtt(shkpAction, cam, top):
-    
-    if (len(resultUtterancesWithoutReplacement[shkpAction][cam][top]) == 0): # the sample pool is empty
-        
-        if (len(resultUtterances[shkpAction][cam][top]) == 0): # there are now crowdsourced utterances for this action
-            
-            return None
-        
-        else: # replenish the sampling pool
-            resultUtterancesWithoutReplacement[shkpAction][cam][top] = copy.deepcopy(resultUtterances[shkpAction][cam][top])
-            
-    
-    
-
-
 fieldnames = ["TRIAL",
               "DATABASE_ID", # new field
+              "DATABASE_CONTENTS", # new field
               "TURN_COUNT",
               "CURRENT_CAMERA_OF_CONVERSATION",
               "PREVIOUS_CAMERAS_OF_CONVERSATION",
@@ -192,8 +219,7 @@ fieldnames = ["TRIAL",
               "SHOPKEEPER_SPEECH",
               "OUTPUT_SPATIAL_STATE",
               "OUTPUT_STATE_TARGET",
-              "SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"
-              ]
+              "SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"]
 
 
 modifiedInteractions = [[] for i in range(len(interactions))]
@@ -201,32 +227,59 @@ modifiedInteractions = [[] for i in range(len(interactions))]
 
 for i in range(len(interactions)):
     dbId = databaseIds[i]
-    
     inters = interactions[i]
     
     for j in range(len(inters)):
-        
         modTurn = copy.deepcopy(inters[j])
         modTurn["DATABASE_ID"] = dbId
-        
         
         shkpAction = modTurn["OUTPUT_SHOPKEEPER_ACTION"]
         cam = modTurn["CURRENT_CAMERA_OF_CONVERSATION"]
         
         if shkpAction == "S_NOT_SURE":
-            top= modTurn["CUSTOMER_TOPIC"]
+            top = modTurn["CUSTOMER_TOPIC"]
         else:
-            top= modTurn["SHOPKEEPER_TOPIC"]
+            top = modTurn["SHOPKEEPER_TOPIC"]
         
+        print(shkpAction)
+                
         
-        if (shkpAction == "S_INTRODUCES_CAMERA"
-            or shkpAction == "S_INTRODUCES_FEATURE"
-            or shkpAction == "S_ANSWERS_QUESTION_ABOUT_FEATURE"
-            or shkpAction == "S_NOT_SURE"):
+        if (shkpAction == "S_INTRODUCES_CAMERA" or shkpAction == "S_INTRODUCES_FEATURE" or shkpAction == "S_ANSWERS_QUESTION_ABOUT_FEATURE" or shkpAction == "S_NOT_SURE"):
+            print("hello!")
             
-            # sample with replacement, and refresh the utterances when they run out
-            pass
+            # sample without replacement
+            uttList = resultUtterancesWithoutReplacement[shkpAction][cam][top][dbId] # copy by reference
+            listLen = len(uttList)
+            randIndex = random.randrange(listLen)
+            newShkpUtt = uttList.pop(randIndex)
+            
+            modTurn["SHOPKEEPER_SPEECH"] = newShkpUtt
+            modTurn["SHOPKEEPER_SPEECH"] = newShkpUtt
+            
+            if len(uttList) == 0:
+                print("all gone")
+                resultUtterancesWithoutReplacement[shkpAction][cam][top][dbId] = copy.deepcopy(resultUtterances[shkpAction][cam][top][dbId])
         
+        
+        if (shkpAction == "S_INTRODUCES_CAMERA" or shkpAction == "S_INTRODUCES_FEATURE" or shkpAction == "S_ANSWERS_QUESTION_ABOUT_FEATURE"):
+            
+            if shkpAction == "S_INTRODUCES_CAMERA":
+                top = "camera_name"
+            
+            
+            modTurn["DATABASE_CONTENTS"] = databases[i][cam][top]
+            
+            # add the substring range if there is an exact match to the DB contents in the shkp utterance
+            subStringStartIndex = modTurn["SHOPKEEPER_SPEECH"].find(modTurn["DATABASE_CONTENTS"])
+            
+            if subStringStartIndex != -1:
+                modTurn["SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"] = "{}~{}".format(subStringStartIndex, subStringStartIndex+len(modTurn["DATABASE_CONTENTS"]))
+            else:
+                modTurn["SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"] = "NA"
+        
+        
+       
+       
         
         modifiedInteractions[i].append(modTurn)
 
@@ -234,7 +287,8 @@ for i in range(len(interactions)):
 #
 # save the modified interactions
 #
-today = tools.time_now()
+
+today = tools.time_now()[:10]
 
 
 for i in range(len(modifiedInteractions)):
@@ -242,7 +296,7 @@ for i in range(len(modifiedInteractions)):
     inters = modifiedInteractions[i]
     dbId = databaseIds[i]
     
-    with open(sessionDir+"/{}_simulated_data_{}_database_{}.csv".format(today, numInteractionsPerDb, dbId), "w", newline="") as csvfile:
+    with open(sessionDir+"/{}_simulated_data_csshkputts_{}_database_0-{}.csv".format(today, numInteractionsPerDb, dbId), "w", newline="") as csvfile:
         
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         
