@@ -1,0 +1,1631 @@
+ACTION,TOPIC,CAMERA_OF_CONVERSATION,UTTERANCE
+S_ANSWERS_QUESTION_ABOUT_FEATURE,artistic_effects_what,CAMERA_X,so basically when you take a picture of something then you can give a filter so it looks like a painting or like a drawing.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,autofocus_points,CAMERA_X,This one has {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,black,CAMERA_X,This one comes in {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,bulb_mode,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,bulb_mode_what,CAMERA_X,bulb mode so you just press the shutter once and then you can leave it as long as you can and it takes all the exposure and then if you press it again it will turn off.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,camera_type,CAMERA_X,This is a {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,color,CAMERA_X,This one comes in {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,DSLR,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,ease_of_use,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,effects,CAMERA_X,This one has {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,expensive,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,exposure,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,exposure_what,CAMERA_X,"exposure is how long you leave the shutter open. The longer itÅEEÄÅEEs open, the more light can come in."
+S_ANSWERS_QUESTION_ABOUT_FEATURE,full_frame,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,glamour_retouch_effects_what,CAMERA_X,"when you're taking a picture of yourself, it can brighten your skin or widen your eyes."
+S_ANSWERS_QUESTION_ABOUT_FEATURE,high_performance,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,image_quality,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,ISO,CAMERA_X,This one has {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,ISO_what,CAMERA_X,"ISO is needed if you want to shoot in the dark, The higher the iso the better the quality of image when it's shooting in the dark."
+S_ANSWERS_QUESTION_ABOUT_FEATURE,lenses,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,lenses_sell,,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,long_exposure,CAMERA_X,This one can take long exposures up to {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,low_light_performance,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,manual_settings,,This one has {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,megapixels,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,megapixels_what,CAMERA_X,the megapixel tells you how much detail can be captured in the photograph.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,mirrorless,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,mirrorless_what,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,motion,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,movement,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,optical_zoom,CAMERA_X,This one has {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,optical_zoom_what,CAMERA_X,Optical zoom allows you to get a close up of whatever you're taking a picture of.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,pink,CAMERA_X,This one comes in {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,point_and_shoot,CAMERA_X,#
+S_ANSWERS_QUESTION_ABOUT_FEATURE,preset_modes,CAMERA_X,This one has {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,preset_modes_what,CAMERA_X,"Basically preset modes are automatic settings for shooting in certain conditions, like if you are at the beach or taking a portrait."
+S_ANSWERS_QUESTION_ABOUT_FEATURE,price,CAMERA_X,This one costs {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,red,CAMERA_X,This one comes in {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,resolution,CAMERA_X,This one has {} resolution.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,sensor_size,CAMERA_X,This one has a {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,sensor_size_what,CAMERA_X,the sensor size is how big the frame of you take each picture.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,settings,CAMERA_X,This one has {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,weight,CAMERA_X,This one weighs {}.
+S_ANSWERS_QUESTION_ABOUT_FEATURE,white,CAMERA_X,This one comes in {}.
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,is there anything else I can help you with today?
+S_GOODBYE,,,have a great day.
+S_GOODBYE,,,anytime have a good evening
+S_GOODBYE,,,anytime have a good evening
+S_GOODBYE,,,have a good afternoon
+S_GOODBYE,,,have a good afternoon
+S_GOODBYE,,,have a good afternoon
+S_GOODBYE,,,have a good afternoon
+S_GOODBYE,,,have a good afternoon
+S_GOODBYE,,,have a good afternoon
+S_GOODBYE,,,have a good afternoon
+S_GOODBYE,,,have a good afternoon
+S_GOODBYE,,,have a good afternoon
+S_GOODBYE,,,have a good afternoon
+S_GOODBYE,,,have a good afternoon
+S_GOODBYE,,,have a good afternoon
+S_GOODBYE,,,have a good afternoon
+S_GOODBYE,,,have a good afternoon
+S_GOODBYE,,,have a good afternoon
+S_GOODBYE,,,have a good afternoon
+S_GOODBYE,,,have a good afternoon
+S_GOODBYE,,,have a good afternoon
+S_GOODBYE,,,have a good afternoon
+S_GOODBYE,,,have a good afternoon
+S_GOODBYE,,,have a good afternoon
+S_GOODBYE,,,have a good afternoon
+S_GOODBYE,,,have a good afternoon
+S_GOODBYE,,,have a good afternoon
+S_GOODBYE,,,have a good afternoon 
+S_GOODBYE,,,have a good afternoon 
+S_GOODBYE,,,have a great afternoon come in anytime and we can give you some more information sir
+S_GOODBYE,,,have a great afternoon come in anytime and we can give you some more information sir
+S_GOODBYE,,,have a great day
+S_GOODBYE,,,have a great day
+S_GOODBYE,,,no worries please come again
+S_GOODBYE,,,no worries please come again
+S_GOODBYE,,,okay we'll see you tomorrow have a good evening thank you
+S_GOODBYE,,,okay we'll see you tomorrow have a good evening thank you
+S_GOODBYE,,,please come again
+S_GOODBYE,,,please come again
+S_GOODBYE,,,see you soon
+S_GOODBYE,,,see you soon
+S_GOODBYE,,,see you soon
+S_GOODBYE,,,see you soon
+S_GOODBYE,,,See you then have a great afternoon thank you
+S_GOODBYE,,,See you then have a great afternoon thank you
+S_GOODBYE,,,see you then thank you see you soon
+S_GOODBYE,,,see you then thank you see you soon
+S_GOODBYE,,,thank you have a good evening
+S_GOODBYE,,,thank you have a good evening
+S_GOODBYE,,,thank you please come again
+S_GOODBYE,,,thank you please come again
+S_GOODBYE,,,thank you please come this way
+S_GOODBYE,,,thank you please come this way
+S_GOODBYE,,,We'll see you then have a good evening
+S_GOODBYE,,,We'll see you then have a good evening
+S_GOODBYE,,,Yes definitely please come again
+S_GOODBYE,,,Yes definitely please come again
+S_GOODBYE,,,yes please come again
+S_GOODBYE,,,yes please come again
+S_GOODBYE,,,you too see you soon thank you
+S_GOODBYE,,,you too see you soon thank you
+S_GREET_RESPONSE,,,how can I help you today?
+S_GREET_RESPONSE,,,can I help you today
+S_GREET_RESPONSE,,,can I help you today
+S_GREET_RESPONSE,,,certainly how can I help
+S_GREET_RESPONSE,,,certainly how can I help
+S_GREET_RESPONSE,,,hi how can I help
+S_GREET_RESPONSE,,,hi how can I help
+S_GREET_RESPONSE,,,hi how can I help
+S_GREET_RESPONSE,,,hi how can I help
+S_GREET_RESPONSE,,,hi how can i help you
+S_GREET_RESPONSE,,,hi how can i help you
+S_GREET_RESPONSE,,,hi how can I help?
+S_GREET_RESPONSE,,,hi how can I help?
+S_GREET_RESPONSE,,,how can I help
+S_GREET_RESPONSE,,,how can I help
+S_GREET_RESPONSE,,,how can I help
+S_GREET_RESPONSE,,,how can I help
+S_GREET_RESPONSE,,,how can I help
+S_GREET_RESPONSE,,,how can I help
+S_GREET_RESPONSE,,,how can I help
+S_GREET_RESPONSE,,,how can I help
+S_GREET_RESPONSE,,,how can I help
+S_GREET_RESPONSE,,,how can I help
+S_GREET_RESPONSE,,,how can I help
+S_GREET_RESPONSE,,,how can I help
+S_GREET_RESPONSE,,,how can I help
+S_GREET_RESPONSE,,,how can I help
+S_GREET_RESPONSE,,,how can I help
+S_GREET_RESPONSE,,,how can I help
+S_GREET_RESPONSE,,,how can I help ya
+S_GREET_RESPONSE,,,how can I help ya
+S_GREET_RESPONSE,,,how can I help you today
+S_GREET_RESPONSE,,,how can I help you today
+S_GREET_RESPONSE,,,how can I help you today
+S_GREET_RESPONSE,,,how can I help you today
+S_GREET_RESPONSE,,,how can I help you today
+S_GREET_RESPONSE,,,how can I help you today
+S_GREET_RESPONSE,,,how can I help you today
+S_GREET_RESPONSE,,,how can I help you today
+S_GREET_RESPONSE,,,how can I help you today
+S_GREET_RESPONSE,,,how can I help you today
+S_GREET_RESPONSE,,,how can I help you today
+S_GREET_RESPONSE,,,how can I help you today
+S_GREET_RESPONSE,,,how can I help you today
+S_GREET_RESPONSE,,,how can I help you today
+S_GREET_RESPONSE,,,how can I help you today
+S_GREET_RESPONSE,,,how can I help you today
+S_GREET_RESPONSE,,,how can I help you today
+S_GREET_RESPONSE,,,how can I help you today
+S_GREET_RESPONSE,,,how can I help you today
+S_GREET_RESPONSE,,,how can I help you today
+S_GREET_RESPONSE,,,how can I help you today
+S_GREET_RESPONSE,,,how can I help you today
+S_GREET_RESPONSE,,,how can I help you today I'm looking for
+S_GREET_RESPONSE,,,how can I help you today I'm looking for
+S_GREET_RESPONSE,,,how may I help you
+S_GREET_RESPONSE,,,how may I help you
+S_GREET_RESPONSE,,,sure how can I help
+S_GREET_RESPONSE,,,sure how can I help
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you
+S_GREET_RESPONSE,,,yes how can I help you today
+S_GREET_RESPONSE,,,yes how can I help you today
+S_GREET_RESPONSE,,,yes how can I help you today
+S_GREET_RESPONSE,,,yes how can I help you today
+S_GREET_RESPONSE,,,yes how can I help you today
+S_GREET_RESPONSE,,,yes how can I help you today
+S_GREET_RESPONSE,,,yes how can I help you today
+S_GREET_RESPONSE,,,yes how can I help you today
+S_GREET_RESPONSE,,,yes how can I help you today
+S_GREET_RESPONSE,,,yes how can I help you today
+S_GREET_RESPONSE,,,yes how may I help you
+S_GREET_RESPONSE,,,yes how may I help you
+S_GREET_RESPONSE,,,yes how may I help you
+S_GREET_RESPONSE,,,yes how may I help you
+S_GREET_RESPONSE,,,yes how may I help you today
+S_GREET_RESPONSE,,,yes how may I help you today
+S_GREET_RESPONSE,,,yes how may I help you yes
+S_GREET_RESPONSE,,,yes how may I help you yes
+S_GREETS,,,can I help you?
+S_GREETS,,,can I help you
+S_GREETS,,,can I help you
+S_GREETS,,,can I help you
+S_GREETS,,,can I help you
+S_GREETS,,,can I help you
+S_GREETS,,,can I help you
+S_GREETS,,,can I help you
+S_GREETS,,,can i help you
+S_GREETS,,,can i help you
+S_GREETS,,,can I help you
+S_GREETS,,,can I help you
+S_GREETS,,,can I help you
+S_GREETS,,,can I help you
+S_GREETS,,,can I help you
+S_GREETS,,,can I help you
+S_GREETS,,,can I help you
+S_GREETS,,,can I just check if you write the copy that goes with that you're the journalist who writes a story
+S_GREETS,,,can I just check if you write the copy that goes with that you're the journalist who writes a story
+S_GREETS,,,do you need any artsy effect
+S_GREETS,,,do you need any artsy effect
+S_GREETS,,,do you need any help
+S_GREETS,,,do you need any help
+S_GREETS,,,do you need anything
+S_GREETS,,,do you need anything
+S_GREETS,,,do you need help with anything there
+S_GREETS,,,do you need help with anything there
+S_GREETS,,,good afternoon
+S_GREETS,,,good afternoon
+S_GREETS,,,good afternoon
+S_GREETS,,,good afternoon
+S_GREETS,,,good afternoon
+S_GREETS,,,good afternoon
+S_GREETS,,,good afternoon
+S_GREETS,,,good afternoon
+S_GREETS,,,good afternoon
+S_GREETS,,,good afternoon
+S_GREETS,,,good afternoon
+S_GREETS,,,good afternoon
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can i help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can i help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help
+S_GREETS,,,good afternoon how can I help today
+S_GREETS,,,good afternoon how can I help today
+S_GREETS,,,good afternoon how can I help today
+S_GREETS,,,good afternoon how can I help today
+S_GREETS,,,good afternoon how can I help today
+S_GREETS,,,good afternoon how can I help today
+S_GREETS,,,good afternoon how can I help today
+S_GREETS,,,good afternoon how can I help today
+S_GREETS,,,good afternoon how can I help today
+S_GREETS,,,good afternoon how can I help today
+S_GREETS,,,good afternoon how can I help today
+S_GREETS,,,good afternoon how can I help today
+S_GREETS,,,good afternoon how can I help today
+S_GREETS,,,good afternoon how can I help today
+S_GREETS,,,good afternoon how can I help you
+S_GREETS,,,good afternoon how can I help you
+S_GREETS,,,good afternoon how can I help you
+S_GREETS,,,good afternoon how can I help you
+S_GREETS,,,good afternoon how can I help you
+S_GREETS,,,good afternoon how can I help you
+S_GREETS,,,good afternoon how can I help you
+S_GREETS,,,good afternoon how can I help you
+S_GREETS,,,good afternoon how can I help you
+S_GREETS,,,good afternoon how can I help you
+S_GREETS,,,good afternoon how can I help you 
+S_GREETS,,,good afternoon how can I help you 
+S_GREETS,,,good afternoon how can I help you today
+S_GREETS,,,good afternoon how can I help you today
+S_GREETS,,,good afternoon how can I help you today
+S_GREETS,,,good afternoon how can I help you today
+S_GREETS,,,good afternoon how can I help you today
+S_GREETS,,,good afternoon how can I help you today
+S_GREETS,,,hello do you need any help there
+S_GREETS,,,hello do you need any help there
+S_GREETS,,,hi
+S_GREETS,,,hi
+S_GREETS,,,hi
+S_GREETS,,,hi
+S_GREETS,,,hi how's it going
+S_GREETS,,,hi how's it going
+S_GREETS,,,hi how's it going
+S_GREETS,,,hi how's it going
+S_GREETS,,,hi there
+S_GREETS,,,hi there
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you
+S_GREETS,,,how can I help you?
+S_GREETS,,,how can I help you?
+S_GREETS,,,how may I help you today
+S_GREETS,,,how may I help you today
+S_GREETS,,,I don't think you should drop it
+S_GREETS,,,I don't think you should drop it
+S_GREETS,,,is there anything I can help
+S_GREETS,,,is there anything I can help
+S_GREETS,,,is there anything I can help free today
+S_GREETS,,,is there anything I can help free today
+S_GREETS,,,is there anything I can help you
+S_GREETS,,,is there anything I can help you
+S_GREETS,,,is there anything i can help you with
+S_GREETS,,,is there anything i can help you with
+S_GREETS,,,it's good afternoon how can I help
+S_GREETS,,,it's good afternoon how can I help
+S_GREETS,,,may I help you
+S_GREETS,,,may I help you
+S_GREETS,,,may I help you
+S_GREETS,,,may I help you
+S_GREETS,,,may I help you
+S_GREETS,,,may I help you
+S_GREETS,,,may I help you
+S_GREETS,,,may I help you
+S_GREETS,,,may I help you
+S_GREETS,,,may I help you
+S_GREETS,,,may I help you
+S_GREETS,,,may I help you
+S_GREETS,,,may I help you
+S_GREETS,,,may I help you
+S_GREETS,,,may I help you today
+S_GREETS,,,may I help you today
+S_GREETS,,,what can I do for you
+S_GREETS,,,what can I do for you
+S_GREETS,,,yes what can I do for you
+S_GREETS,,,yes what can I do for you
+S_GREETS,,,yes what can I do for you today
+S_GREETS,,,yes what can I do for you today
+S_INTRODUCES_CAMERA,,CAMERA_X,Let me show you this. Here we have the {}.
+S_INTRODUCES_FEATURE,autofocus_points,CAMERA_X,This one has {}.
+S_INTRODUCES_FEATURE,camera_type,CAMERA_X,This is a {}.
+S_INTRODUCES_FEATURE,color,CAMERA_X,This one comes in {}.
+S_INTRODUCES_FEATURE,effects,CAMERA_X,This one has {}.
+S_INTRODUCES_FEATURE,ISO,CAMERA_X,This one has {}.
+S_INTRODUCES_FEATURE,long_exposure,CAMERA_X,This one can take long exposures up to {}.
+S_INTRODUCES_FEATURE,optical_zoom,CAMERA_X,This one has {}.
+S_INTRODUCES_FEATURE,preset_modes,CAMERA_X,This one has {}.
+S_INTRODUCES_FEATURE,price,CAMERA_X,This one costs {}.
+S_INTRODUCES_FEATURE,resolution,CAMERA_X,This one has {} resolution.
+S_INTRODUCES_FEATURE,sensor_size,CAMERA_X,This one has a {}.
+S_INTRODUCES_FEATURE,settings,CAMERA_X,This one has {}.
+S_INTRODUCES_FEATURE,weight,CAMERA_X,This one weighs {}.
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you have any more questions please let me know.
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,any other questions
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,any other questions
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,do you have any question
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,do you have any question
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,do you have anything else to ask please let me know
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,do you have anything else to ask please let me know
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,feel free to browse if you have any questions I'll just be over it
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,feel free to browse if you have any questions I'll just be over it
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,feel free to browse if you have any questions I'm here please feel free to ask
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,feel free to browse if you have any questions I'm here please feel free to ask
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you have any more questions please let me know
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you have any more questions please let me know
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you have any other questions just please call me
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you have any other questions just please call me
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you have any other questions please feel free to ask
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you have any other questions please feel free to ask
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you have any other questions please let me know
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you have any other questions please let me know
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you have any other questions please let me know
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you have any other questions please let me know
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you have any questions just let me know
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you have any questions just let me know
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you have any questions please feel free to ask and please feel free to use the cameras as well
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you have any questions please feel free to ask and please feel free to use the cameras as well
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you have anything else to ask please let me know I'll get the service counter
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you have anything else to ask please let me know I'll get the service counter
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you have more questions I will be at the service counter
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you have more questions I will be at the service counter
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you need any more help let me know
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you need any more help let me know
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you need anything else I'll be at the service center
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you need anything else I'll be at the service center
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you need anything else I'll be at the service counter
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you need anything else I'll be at the service counter
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you need anything else I'll be at the service counter
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you need anything else I'll be at the service counter
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you need anything else I'll be in the service culture
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you need anything else I'll be in the service culture
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,If you need anything else I'll be there
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,If you need anything else I'll be there
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,If you need anything else just let me know
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,If you need anything else just let me know
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you need anything else let me know
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you need anything else let me know
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you need anything else please call me
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you need anything else please call me
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you need anything else please let me know
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you need anything else please let me know
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you need anything else please let me know
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you need anything else please let me know
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you need anything else please please let me know
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you need anything else please please let me know
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you need anything I will be at the service counter
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,if you need anything I will be at the service counter
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,I'll be at the service counter
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,I'll be at the service counter
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,let me know if you have any other questions
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,let me know if you have any other questions
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,let me know if you have any questions
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,let me know if you have any questions
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,let me know if you need any more help
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,let me know if you need any more help
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,let me know if you need anything else
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,let me know if you need anything else
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,no problem if you have any other questions I'll just be over here please feel free to ask
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,no problem if you have any other questions I'll just be over here please feel free to ask
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,Ok ask me if you need any more help
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,Ok ask me if you need any more help
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,"okay if you'd like to look around the other models that are available, they are all in this corner please feel free to browse if you have any other questions I'll just be here"
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,"okay if you'd like to look around the other models that are available, they are all in this corner please feel free to browse if you have any other questions I'll just be here"
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,okay thanks have a good sign if you have any questions please just ask okay thank you
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,okay thanks have a good sign if you have any questions please just ask okay thank you
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,only have a look around feel free to ask any other questions I'll just be here
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,only have a look around feel free to ask any other questions I'll just be here
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,please call me at the service counter if you need any more help
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,please call me at the service counter if you need any more help
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,please let me know if I can help you
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,please let me know if I can help you
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,please let me know if you have any other questions
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,please let me know if you have any other questions
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,please let me know if you have any questions
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,please let me know if you have any questions
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,please let me know if you have anything else to ask
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,please let me know if you have anything else to ask
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,please let me know if you need any help
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,please let me know if you need any help
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,Please let me know if you need any help
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,Please let me know if you need any help
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,please let me know if you need any help
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,please let me know if you need any help
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,please let me know if you need any more help
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,please let me know if you need any more help
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,please let me know if you need any more help thank you
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,please let me know if you need any more help thank you
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,so you have anymore questions just let me know
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,so you have anymore questions just let me know
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,you know if you have any question to us
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,you know if you have any question to us
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,you're welcome if you have anything else just let me know
+S_LET_ME_KNOW_IF_YOU_NEED_HELP,,,you're welcome if you have anything else just let me know
+S_NO,,,no.
+S_NO,,,no
+S_NO,,,no
+S_NO,,,no
+S_NO,,,no
+S_NO,,,no
+S_NO,,,no
+S_NO,,,no I'm sorry
+S_NO,,,no I'm sorry
+S_NONE,,,
+S_NOT_SURE,,,I'm not really sure about that.
+S_RETURNS_TO_COUNTER,,,
+S_THANK_YOU,,,thank you very much.
+S_THANK_YOU,,,anytime thanks for your time have a good afternoon
+S_THANK_YOU,,,anytime thanks for your time have a good afternoon
+S_THANK_YOU,,,excellent thank you for your business
+S_THANK_YOU,,,excellent thank you for your business
+S_THANK_YOU,,,fantastic thanks a lot
+S_THANK_YOU,,,fantastic thanks a lot
+S_THANK_YOU,,,good thanks yourself
+S_THANK_YOU,,,good thanks yourself
+S_THANK_YOU,,,great thanks for your time have a great afternoon
+S_THANK_YOU,,,great thanks for your time have a great afternoon
+S_THANK_YOU,,,Have a great afternoon thanks for time
+S_THANK_YOU,,,Have a great afternoon thanks for time
+S_THANK_YOU,,,I'm great thanks I enjoy working its a really good place to be
+S_THANK_YOU,,,I'm great thanks I enjoy working its a really good place to be
+S_THANK_YOU,,,look forward to seeing you again thank you for your time
+S_THANK_YOU,,,look forward to seeing you again thank you for your time
+S_THANK_YOU,,,no problem thank you for your time see you again soon
+S_THANK_YOU,,,no problem thank you for your time see you again soon
+S_THANK_YOU,,,no problem we'll see you soon thanks for your time
+S_THANK_YOU,,,no problem we'll see you soon thanks for your time
+S_THANK_YOU,,,no problem we'll see you soon thanks your time
+S_THANK_YOU,,,no problem we'll see you soon thanks your time
+S_THANK_YOU,,,no worries thank you for your time I look forward to seeing you again
+S_THANK_YOU,,,no worries thank you for your time I look forward to seeing you again
+S_THANK_YOU,,,no worries thanks for your time have a good afternoon
+S_THANK_YOU,,,no worries thanks for your time have a good afternoon
+S_THANK_YOU,,,ok thanks a lot for your time
+S_THANK_YOU,,,ok thanks a lot for your time
+S_THANK_YOU,,,okay I'll just come on in we might see you on Saturday alright thank you very much
+S_THANK_YOU,,,okay I'll just come on in we might see you on Saturday alright thank you very much
+S_THANK_YOU,,,okay thank you for your time have a good afternoon to you
+S_THANK_YOU,,,okay thank you for your time have a good afternoon to you
+S_THANK_YOU,,,okay thank you have a good afternoon
+S_THANK_YOU,,,okay thank you have a good afternoon
+S_THANK_YOU,,,okay thanks for your time
+S_THANK_YOU,,,okay thanks for your time
+S_THANK_YOU,,,okay thanks for your time we will organise that and have a good afternoon
+S_THANK_YOU,,,okay thanks for your time we will organise that and have a good afternoon
+S_THANK_YOU,,,okay thanks love you time
+S_THANK_YOU,,,okay thanks love you time
+S_THANK_YOU,,,okay you look forward to seeing you again thanks so much for your time
+S_THANK_YOU,,,okay you look forward to seeing you again thanks so much for your time
+S_THANK_YOU,,,take your time have a good afternoon I see you
+S_THANK_YOU,,,take your time have a good afternoon I see you
+S_THANK_YOU,,,thank you
+S_THANK_YOU,,,thank you
+S_THANK_YOU,,,thank you
+S_THANK_YOU,,,thank you
+S_THANK_YOU,,,thank you
+S_THANK_YOU,,,thank you
+S_THANK_YOU,,,thank you
+S_THANK_YOU,,,thank you
+S_THANK_YOU,,,thank you
+S_THANK_YOU,,,thank you
+S_THANK_YOU,,,thank you
+S_THANK_YOU,,,thank you
+S_THANK_YOU,,,thank you
+S_THANK_YOU,,,thank you
+S_THANK_YOU,,,thank you
+S_THANK_YOU,,,thank you
+S_THANK_YOU,,,thank you
+S_THANK_YOU,,,thank you
+S_THANK_YOU,,,thank you
+S_THANK_YOU,,,thank you
+S_THANK_YOU,,,thank you
+S_THANK_YOU,,,thank you
+S_THANK_YOU,,,thank you for a good afternoon
+S_THANK_YOU,,,thank you for a good afternoon
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming
+S_THANK_YOU,,,thank you for coming to our store
+S_THANK_YOU,,,thank you for coming to our store
+S_THANK_YOU,,,thank you for coming to our store
+S_THANK_YOU,,,thank you for coming to our store
+S_THANK_YOU,,,thank you for coming to our store
+S_THANK_YOU,,,thank you for coming to our store
+S_THANK_YOU,,,thank you for coming to our store
+S_THANK_YOU,,,thank you for coming to our store
+S_THANK_YOU,,,thank you for coming to our store
+S_THANK_YOU,,,thank you for coming to our store
+S_THANK_YOU,,,thank you for coming to our store
+S_THANK_YOU,,,thank you for coming to our store
+S_THANK_YOU,,,thank you for coming to our store today
+S_THANK_YOU,,,thank you for coming to our store today
+S_THANK_YOU,,,thank you for dropping by
+S_THANK_YOU,,,thank you for dropping by
+S_THANK_YOU,,,thank you for dropping by
+S_THANK_YOU,,,thank you for dropping by
+S_THANK_YOU,,,thank you for dropping by
+S_THANK_YOU,,,thank you for dropping by
+S_THANK_YOU,,,thank you for dropping by
+S_THANK_YOU,,,thank you for dropping by
+S_THANK_YOU,,,thank you for visiting our store
+S_THANK_YOU,,,thank you for visiting our store
+S_THANK_YOU,,,thank you for your time
+S_THANK_YOU,,,thank you for your time
+S_THANK_YOU,,,thank you for your time
+S_THANK_YOU,,,thank you for your time
+S_THANK_YOU,,,thank you for your time
+S_THANK_YOU,,,thank you for your time
+S_THANK_YOU,,,thank you for your time
+S_THANK_YOU,,,thank you for your time
+S_THANK_YOU,,,thank you for your time
+S_THANK_YOU,,,thank you for your time
+S_THANK_YOU,,,thank you for your time before seeing you again
+S_THANK_YOU,,,thank you for your time before seeing you again
+S_THANK_YOU,,,thank you for your time bye
+S_THANK_YOU,,,thank you for your time bye
+S_THANK_YOU,,,thank you for your time have a good afternoon
+S_THANK_YOU,,,thank you for your time have a good afternoon
+S_THANK_YOU,,,thank you for your time have a good afternoon
+S_THANK_YOU,,,thank you for your time have a good afternoon
+S_THANK_YOU,,,thank you for your time have a good afternoon
+S_THANK_YOU,,,thank you for your time have a good afternoon
+S_THANK_YOU,,,thank you for your time have a good afternoon
+S_THANK_YOU,,,thank you for your time have a good afternoon
+S_THANK_YOU,,,thank you for your time have a good afternoon
+S_THANK_YOU,,,thank you for your time have a good afternoon
+S_THANK_YOU,,,thank you for your time have a good afternoon
+S_THANK_YOU,,,thank you for your time have a good afternoon
+S_THANK_YOU,,,thank you for your time have a good afternoon
+S_THANK_YOU,,,thank you for your time have a good afternoon
+S_THANK_YOU,,,thank you for your time have a good afternoon
+S_THANK_YOU,,,thank you for your time have a good afternoon
+S_THANK_YOU,,,thank you for your time have a good afternoon
+S_THANK_YOU,,,thank you for your time have a good afternoon
+S_THANK_YOU,,,thank you for your time have a good afternoon
+S_THANK_YOU,,,thank you for your time have a good afternoon
+S_THANK_YOU,,,thank you for your time have a good afternoon
+S_THANK_YOU,,,thank you for your time have a good afternoon
+S_THANK_YOU,,,thank you for your time have a good afternoon
+S_THANK_YOU,,,thank you for your time have a good afternoon
+S_THANK_YOU,,,thank you for your time have a good afternoon you too
+S_THANK_YOU,,,thank you for your time have a good afternoon you too
+S_THANK_YOU,,,thank you for your time have a good evening thank you
+S_THANK_YOU,,,thank you for your time have a good evening thank you
+S_THANK_YOU,,,thank you for your time have a great afternoon
+S_THANK_YOU,,,thank you for your time have a great afternoon
+S_THANK_YOU,,,thank you for your time I'll see you tomorrow
+S_THANK_YOU,,,thank you for your time I'll see you tomorrow
+S_THANK_YOU,,,thank you for your time please come again
+S_THANK_YOU,,,thank you for your time please come again
+S_THANK_YOU,,,thank you have a good afternoon
+S_THANK_YOU,,,thank you have a good afternoon
+S_THANK_YOU,,,thank you have a good afternoon
+S_THANK_YOU,,,thank you have a good afternoon
+S_THANK_YOU,,,thank you have a good afternoon
+S_THANK_YOU,,,thank you have a good afternoon
+S_THANK_YOU,,,thank you have a good afternoon
+S_THANK_YOU,,,thank you have a good afternoon
+S_THANK_YOU,,,thank you have a good afternoon
+S_THANK_YOU,,,thank you have a good afternoon
+S_THANK_YOU,,,thank you have a good afternoon
+S_THANK_YOU,,,thank you have a good afternoon
+S_THANK_YOU,,,thank you have a good afternoon
+S_THANK_YOU,,,thank you have a good afternoon
+S_THANK_YOU,,,thank you have good afternoon
+S_THANK_YOU,,,thank you have good afternoon
+S_THANK_YOU,,,thank you so much
+S_THANK_YOU,,,thank you so much
+S_THANK_YOU,,,thank you very much
+S_THANK_YOU,,,thank you very much
+S_THANK_YOU,,,thanks a lot for your time coming anytime
+S_THANK_YOU,,,thanks a lot for your time coming anytime
+S_THANK_YOU,,,thanks a lot for your time have a good afternoon
+S_THANK_YOU,,,thanks a lot for your time have a good afternoon
+S_THANK_YOU,,,thanks a lot for your time have a good afternoon
+S_THANK_YOU,,,thanks a lot for your time have a good afternoon
+S_THANK_YOU,,,thanks a lot for your time have a good afternoon
+S_THANK_YOU,,,thanks a lot for your time have a good afternoon
+S_THANK_YOU,,,thanks a lot for your time look forward to seeing you again
+S_THANK_YOU,,,thanks a lot for your time look forward to seeing you again
+S_THANK_YOU,,,thanks for coming
+S_THANK_YOU,,,thanks for coming
+S_THANK_YOU,,,thanks for dropping by
+S_THANK_YOU,,,thanks for dropping by
+S_THANK_YOU,,,Thanks for time
+S_THANK_YOU,,,Thanks for time
+S_THANK_YOU,,,thanks for time have a good afternoon
+S_THANK_YOU,,,thanks for time have a good afternoon
+S_THANK_YOU,,,thanks for your time
+S_THANK_YOU,,,thanks for your time
+S_THANK_YOU,,,thanks for your time
+S_THANK_YOU,,,thanks for your time
+S_THANK_YOU,,,thanks for your time come back and have a great afternoon
+S_THANK_YOU,,,thanks for your time come back and have a great afternoon
+S_THANK_YOU,,,thanks for your time have a good afternoon
+S_THANK_YOU,,,thanks for your time have a good afternoon
+S_THANK_YOU,,,thanks for your time have a good afternoon
+S_THANK_YOU,,,thanks for your time have a good afternoon
+S_THANK_YOU,,,thanks for your time have a good afternoon
+S_THANK_YOU,,,thanks for your time have a good afternoon
+S_THANK_YOU,,,thanks for your time have a good afternoon
+S_THANK_YOU,,,thanks for your time have a good afternoon
+S_THANK_YOU,,,thanks for your time have a good afternoon
+S_THANK_YOU,,,thanks for your time have a good afternoon
+S_THANK_YOU,,,thanks for your time have a good afternoon
+S_THANK_YOU,,,thanks for your time have a good afternoon
+S_THANK_YOU,,,thanks for your time have a good afternoon
+S_THANK_YOU,,,thanks for your time have a good afternoon
+S_THANK_YOU,,,thanks for your time have a good afternoon
+S_THANK_YOU,,,thanks for your time have a good afternoon
+S_THANK_YOU,,,thanks for your time have a good afternoon
+S_THANK_YOU,,,thanks for your time have a good afternoon
+S_THANK_YOU,,,thanks for your time have a good afternoon
+S_THANK_YOU,,,thanks for your time have a good afternoon
+S_THANK_YOU,,,thanks for your time have a good afternoon
+S_THANK_YOU,,,thanks for your time have a good afternoon
+S_THANK_YOU,,,thanks for your time have a good afternoon before seeing you again
+S_THANK_YOU,,,thanks for your time have a good afternoon before seeing you again
+S_THANK_YOU,,,thanks for your time have a good afternoon to you too
+S_THANK_YOU,,,thanks for your time have a good afternoon to you too
+S_THANK_YOU,,,thanks for your time have a great afternoon
+S_THANK_YOU,,,thanks for your time have a great afternoon
+S_THANK_YOU,,,thanks for your time have a great afternoon
+S_THANK_YOU,,,thanks for your time have a great afternoon
+S_THANK_YOU,,,Thanks for your time have a great afternoon
+S_THANK_YOU,,,Thanks for your time have a great afternoon
+S_THANK_YOU,,,thanks for your time have a great afternoon
+S_THANK_YOU,,,thanks for your time have a great afternoon
+S_THANK_YOU,,,thanks for your time have a great afternoon
+S_THANK_YOU,,,thanks for your time have a great afternoon
+S_THANK_YOU,,,thanks for your time if you have any other questions later on come back anytime thank you
+S_THANK_YOU,,,thanks for your time if you have any other questions later on come back anytime thank you
+S_THANK_YOU,,,thanks for your time please have a good afternoon
+S_THANK_YOU,,,thanks for your time please have a good afternoon
+S_THANK_YOU,,,thanks for your time see you again
+S_THANK_YOU,,,thanks for your time see you again
+S_THANK_YOU,,,thanks for your time see you tomorrow
+S_THANK_YOU,,,thanks for your time see you tomorrow
+S_THANK_YOU,,,Thanks for your time will see you soon
+S_THANK_YOU,,,Thanks for your time will see you soon
+S_THANK_YOU,,,thanks have a great afternoon
+S_THANK_YOU,,,thanks have a great afternoon
+S_THANK_YOU,,,thanks love your time have a good afternoon
+S_THANK_YOU,,,thanks love your time have a good afternoon
+S_THANK_YOU,,,thanks your time
+S_THANK_YOU,,,thanks your time
+S_THANK_YOU,,,thanks your time
+S_THANK_YOU,,,thanks your time
+S_THANK_YOU,,,thanks your time have a good afternoon
+S_THANK_YOU,,,thanks your time have a good afternoon
+S_THANK_YOU,,,thanks your time have a good afternoon
+S_THANK_YOU,,,thanks your time have a good afternoon
+S_THANK_YOU,,,to thank you for your time
+S_THANK_YOU,,,to thank you for your time
+S_THANK_YOU,,,you too thank you for your time
+S_THANK_YOU,,,you too thank you for your time
+S_TRY_IT_OUT,,,feel free to take some picture with it if you like.
+S_TRY_IT_OUT,,,Certainly take a few pictures now if you like
+S_TRY_IT_OUT,,,Certainly take a few pictures now if you like
+S_TRY_IT_OUT,,,feel free to take some picture with it if you like
+S_TRY_IT_OUT,,,feel free to take some picture with it if you like
+S_TRY_IT_OUT,,,feel free to take some pictures for them
+S_TRY_IT_OUT,,,feel free to take some pictures for them
+S_TRY_IT_OUT,,,free to pick the camera please take some pictures if you like
+S_TRY_IT_OUT,,,free to pick the camera please take some pictures if you like
+S_TRY_IT_OUT,,,pick it up and see how it feels in your hands
+S_TRY_IT_OUT,,,pick it up and see how it feels in your hands
+S_TRY_IT_OUT,,,pick it up and take a few pictures if you like
+S_TRY_IT_OUT,,,pick it up and take a few pictures if you like
+S_TRY_IT_OUT,,,pick it up and take some pictures of the place
+S_TRY_IT_OUT,,,pick it up and take some pictures of the place
+S_TRY_IT_OUT,,,"pick it up and take some pictures with it, please"
+S_TRY_IT_OUT,,,"pick it up and take some pictures with it, please"
+S_TRY_IT_OUT,,,pick it up and take some shots with it
+S_TRY_IT_OUT,,,pick it up and take some shots with it
+S_TRY_IT_OUT,,,pick it up and try taking a few pictures
+S_TRY_IT_OUT,,,pick it up and try taking a few pictures
+S_TRY_IT_OUT,,,pick it up take a few pictures with it if you like to see how it feels
+S_TRY_IT_OUT,,,pick it up take a few pictures with it if you like to see how it feels
+S_TRY_IT_OUT,,,"please come and have a look, you can take some pictures with it too if you like"
+S_TRY_IT_OUT,,,"please come and have a look, you can take some pictures with it too if you like"
+S_TRY_IT_OUT,,,please go ahead
+S_TRY_IT_OUT,,,please go ahead
+S_TRY_IT_OUT,,,please pick it up and say
+S_TRY_IT_OUT,,,please pick it up and say
+S_TRY_IT_OUT,,,please pick it up and see if you might like to take a picture with it
+S_TRY_IT_OUT,,,please pick it up and see if you might like to take a picture with it
+S_TRY_IT_OUT,,,Please pick it up and take a few pictures
+S_TRY_IT_OUT,,,Please pick it up and take a few pictures
+S_TRY_IT_OUT,,,Please pick it up and take a few pictures if you like
+S_TRY_IT_OUT,,,Please pick it up and take a few pictures if you like
+S_TRY_IT_OUT,,,"please pick it up and take a picture, just have a little play with it if you like"
+S_TRY_IT_OUT,,,"please pick it up and take a picture, just have a little play with it if you like"
+S_TRY_IT_OUT,,,please pick it up and take some pictures
+S_TRY_IT_OUT,,,please pick it up and take some pictures
+S_TRY_IT_OUT,,,Please pick it up and take some pictures with it
+S_TRY_IT_OUT,,,Please pick it up and take some pictures with it
+S_TRY_IT_OUT,,,please pick it up and try
+S_TRY_IT_OUT,,,please pick it up and try
+S_TRY_IT_OUT,,,please pick up take a couple pictures if you like
+S_TRY_IT_OUT,,,please pick up take a couple pictures if you like
+S_TRY_IT_OUT,,,please take a couple pictures with it
+S_TRY_IT_OUT,,,please take a couple pictures with it
+S_TRY_IT_OUT,,,please take a few pictures 
+S_TRY_IT_OUT,,,please take a few pictures 
+S_TRY_IT_OUT,,,please take a few pictures with it
+S_TRY_IT_OUT,,,please take a few pictures with it
+S_TRY_IT_OUT,,,please take a few pictures with it if you like
+S_TRY_IT_OUT,,,please take a few pictures with it if you like
+S_TRY_IT_OUT,,,please take a picture of it
+S_TRY_IT_OUT,,,please take a picture of it
+S_TRY_IT_OUT,,,please take a picture with it if you like
+S_TRY_IT_OUT,,,please take a picture with it if you like
+S_TRY_IT_OUT,,,please take a picture with it see how it works
+S_TRY_IT_OUT,,,please take a picture with it see how it works
+S_TRY_IT_OUT,,,please take some pictures with that you can check the quality for yourself
+S_TRY_IT_OUT,,,please take some pictures with that you can check the quality for yourself
+S_TRY_IT_OUT,,,Please take what you like
+S_TRY_IT_OUT,,,Please take what you like
+S_TRY_IT_OUT,,,sure have some trial shots
+S_TRY_IT_OUT,,,sure have some trial shots
+S_TRY_IT_OUT,,,"sure pick it up, take some pictures"
+S_TRY_IT_OUT,,,"sure pick it up, take some pictures"
+S_TRY_IT_OUT,,,Sure you can just Pick it up and also take trial shot if you want
+S_TRY_IT_OUT,,,Sure you can just Pick it up and also take trial shot if you want
+S_TRY_IT_OUT,,,"sure, please do"
+S_TRY_IT_OUT,,,"sure, please do"
+S_TRY_IT_OUT,,,"sure, take a few pictures"
+S_TRY_IT_OUT,,,"sure, take a few pictures"
+S_TRY_IT_OUT,,,take a few more pictures if you like
+S_TRY_IT_OUT,,,take a few more pictures if you like
+S_TRY_IT_OUT,,,take a picture
+S_TRY_IT_OUT,,,take a picture
+S_TRY_IT_OUT,,,take some pictures with
+S_TRY_IT_OUT,,,take some pictures with
+S_TRY_IT_OUT,,,try taking a picture with it
+S_TRY_IT_OUT,,,try taking a picture with it
+S_TRY_IT_OUT,,,try taking couple pictures if you like
+S_TRY_IT_OUT,,,try taking couple pictures if you like
+S_TRY_IT_OUT,,,we can set that up now and you could  try taking a few pictures
+S_TRY_IT_OUT,,,we can set that up now and you could  try taking a few pictures
+S_TRY_IT_OUT,,,would you like to pick it up and see how it feels in your hand
+S_TRY_IT_OUT,,,would you like to pick it up and see how it feels in your hand
+S_TRY_IT_OUT,,,you might like to pick it up and try taking a few shots
+S_TRY_IT_OUT,,,you might like to pick it up and try taking a few shots
+S_TRY_IT_OUT,,,you're free to take some pictures with it if you like
+S_TRY_IT_OUT,,,you're free to take some pictures with it if you like
+S_YES,,,yes.
+S_YES,,,certainly
+S_YES,,,certainly
+S_YES,,,certainly
+S_YES,,,certainly
+S_YES,,,certainly
+S_YES,,,certainly
+S_YES,,,of course
+S_YES,,,of course
+S_YES,,,of course
+S_YES,,,of course
+S_YES,,,of course
+S_YES,,,of course
+S_YES,,,okay sure
+S_YES,,,okay sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,sure
+S_YES,,,we do
+S_YES,,,we do
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes
+S_YES,,,yes 
+S_YES,,,yes 
+S_YES,,,Yes certainly
+S_YES,,,Yes certainly
+S_YES,,,yes energy
+S_YES,,,yes energy
+S_YES,,,yes I think so
+S_YES,,,yes I think so
+S_YES,,,yes I think so
+S_YES,,,yes I think so
+S_YES,,,yes it does
+S_YES,,,yes it does
+S_YES,,,yes it does
+S_YES,,,yes it does
+S_YES,,,yes it does
+S_YES,,,yes it does
+S_YES,,,yes it does
+S_YES,,,yes it does
+S_YES,,,yes it does
+S_YES,,,yes it does
+S_YES,,,yes it does
+S_YES,,,yes it does
+S_YES,,,yes it does
+S_YES,,,yes it does
+S_YES,,,yes it does
+S_YES,,,yes it does
+S_YES,,,yes it does
+S_YES,,,yes it does
+S_YES,,,yes it does
+S_YES,,,yes it does
+S_YES,,,yes it does
+S_YES,,,yes it does
+S_YES,,,yes of course
+S_YES,,,yes of course
+S_YES,,,yes sure
+S_YES,,,yes sure
+S_YES,,,yes sure
+S_YES,,,yes sure
+S_YES,,,yes sure
+S_YES,,,yes sure
+S_YES,,,yes sure
+S_YES,,,yes sure
+S_YES,,,yes sure
+S_YES,,,yes sure
+S_YOURE_WELCOME,,,anytime come in have a chat we can give me more information about the camera thanks for your time
+S_YOURE_WELCOME,,,anytime come in have a chat we can give me more information about the camera thanks for your time
+S_YOURE_WELCOME,,,anytime have a good afternoon
+S_YOURE_WELCOME,,,anytime have a good afternoon
+S_YOURE_WELCOME,,,anytime have a good afternoon
+S_YOURE_WELCOME,,,anytime have a good afternoon
+S_YOURE_WELCOME,,,anytime have a good afternoon
+S_YOURE_WELCOME,,,anytime have a good afternoon
+S_YOURE_WELCOME,,,anytime have a good afternoon
+S_YOURE_WELCOME,,,anytime have a good afternoon
+S_YOURE_WELCOME,,,anytime have a good afternoon
+S_YOURE_WELCOME,,,anytime have a good afternoon
+S_YOURE_WELCOME,,,anytime have a good afternoon
+S_YOURE_WELCOME,,,anytime have a good afternoon
+S_YOURE_WELCOME,,,come back anytime have a good afternoon
+S_YOURE_WELCOME,,,come back anytime have a good afternoon
+S_YOURE_WELCOME,,,come back anytime thank you have a good afternoon
+S_YOURE_WELCOME,,,come back anytime thank you have a good afternoon
+S_YOURE_WELCOME,,,great look forward to seeing you again
+S_YOURE_WELCOME,,,great look forward to seeing you again
+S_YOURE_WELCOME,,,I look forward to seeing you then have a great afternoon thank you
+S_YOURE_WELCOME,,,I look forward to seeing you then have a great afternoon thank you
+S_YOURE_WELCOME,,,no problem
+S_YOURE_WELCOME,,,no problem
+S_YOURE_WELCOME,,,no problem
+S_YOURE_WELCOME,,,no problem
+S_YOURE_WELCOME,,,no problem
+S_YOURE_WELCOME,,,no problem
+S_YOURE_WELCOME,,,no problem
+S_YOURE_WELCOME,,,no problem
+S_YOURE_WELCOME,,,no problem
+S_YOURE_WELCOME,,,no problem
+S_YOURE_WELCOME,,,no problem 
+S_YOURE_WELCOME,,,no problem 
+S_YOURE_WELCOME,,,no problem any other questions come in anytime and we can have a chat thanks for your time 
+S_YOURE_WELCOME,,,no problem any other questions come in anytime and we can have a chat thanks for your time 
+S_YOURE_WELCOME,,,no problem any other questions I'll just be here come back anytime have a good afternoon
+S_YOURE_WELCOME,,,no problem any other questions I'll just be here come back anytime have a good afternoon
+S_YOURE_WELCOME,,,no problem anytime
+S_YOURE_WELCOME,,,no problem anytime
+S_YOURE_WELCOME,,,no problem anytime have a good afternoon
+S_YOURE_WELCOME,,,no problem anytime have a good afternoon
+S_YOURE_WELCOME,,,no problem come back anytime and we can take some pictures for the cameras and compare them for you
+S_YOURE_WELCOME,,,no problem come back anytime and we can take some pictures for the cameras and compare them for you
+S_YOURE_WELCOME,,,no problem come back anytime and you can give it more testing over it make sure we put a pink one for you
+S_YOURE_WELCOME,,,no problem come back anytime and you can give it more testing over it make sure we put a pink one for you
+S_YOURE_WELCOME,,,no problem come back anytime have a good afternoon
+S_YOURE_WELCOME,,,no problem come back anytime have a good afternoon
+S_YOURE_WELCOME,,,no problem come back anytime it'll be great to see you again thank you
+S_YOURE_WELCOME,,,no problem come back anytime it'll be great to see you again thank you
+S_YOURE_WELCOME,,,No problem come back anytime we could see you again have a good afternoon
+S_YOURE_WELCOME,,,No problem come back anytime we could see you again have a good afternoon
+S_YOURE_WELCOME,,,no problem come back anytime with anything we can help you with will be here I will keep a camera setup for the next few days for you
+S_YOURE_WELCOME,,,no problem come back anytime with anything we can help you with will be here I will keep a camera setup for the next few days for you
+S_YOURE_WELCOME,,,no problem come back anytime you like N
+S_YOURE_WELCOME,,,no problem come back anytime you like N
+S_YOURE_WELCOME,,,no problem come in anytime we can show you more features thanks your time
+S_YOURE_WELCOME,,,no problem come in anytime we can show you more features thanks your time
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon
+S_YOURE_WELCOME,,,no problem have a good afternoon come back anytime thank you
+S_YOURE_WELCOME,,,no problem have a good afternoon come back anytime thank you
+S_YOURE_WELCOME,,,no problem have a great afternoon
+S_YOURE_WELCOME,,,no problem have a great afternoon
+S_YOURE_WELCOME,,,no problem I'll just be over here have a good afternoon
+S_YOURE_WELCOME,,,no problem I'll just be over here have a good afternoon
+S_YOURE_WELCOME,,,no problem it when you're ready come back and we can package one up for you
+S_YOURE_WELCOME,,,no problem it when you're ready come back and we can package one up for you
+S_YOURE_WELCOME,,,no problem look forward to seeing it tomorrow
+S_YOURE_WELCOME,,,no problem look forward to seeing it tomorrow
+S_YOURE_WELCOME,,,no problem look forward to seeing you again
+S_YOURE_WELCOME,,,no problem look forward to seeing you again
+S_YOURE_WELCOME,,,no problem look forward to seeing you again
+S_YOURE_WELCOME,,,no problem look forward to seeing you again
+S_YOURE_WELCOME,,,no problem see you again
+S_YOURE_WELCOME,,,no problem see you again
+S_YOURE_WELCOME,,,no problem see you again
+S_YOURE_WELCOME,,,no problem see you again
+S_YOURE_WELCOME,,,no problem we'll see you again have a good afternoon
+S_YOURE_WELCOME,,,no problem we'll see you again have a good afternoon
+S_YOURE_WELCOME,,,no problem we'll see you again soon thank you
+S_YOURE_WELCOME,,,no problem we'll see you again soon thank you
+S_YOURE_WELCOME,,,no problem we'll see you next time have a good afternoon
+S_YOURE_WELCOME,,,no problem we'll see you next time have a good afternoon
+S_YOURE_WELCOME,,,no problems come back anytime have a good afternoon thank you YouTube
+S_YOURE_WELCOME,,,no problems come back anytime have a good afternoon thank you YouTube
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries
+S_YOURE_WELCOME,,,no worries thank you for coming
+S_YOURE_WELCOME,,,no worries thank you for coming
+S_YOURE_WELCOME,,,sure no problem
+S_YOURE_WELCOME,,,sure no problem
+S_YOURE_WELCOME,,,thank you i look forward to seeing you again
+S_YOURE_WELCOME,,,thank you i look forward to seeing you again
+S_YOURE_WELCOME,,,thank you look forward to seeing you again
+S_YOURE_WELCOME,,,thank you look forward to seeing you again
+S_YOURE_WELCOME,,,thank you look forward to seeing you again have a great afternoon
+S_YOURE_WELCOME,,,thank you look forward to seeing you again have a great afternoon
+S_YOURE_WELCOME,,,thanks love you time come in and have a chat anytime
+S_YOURE_WELCOME,,,thanks love you time come in and have a chat anytime
+S_YOURE_WELCOME,,,that's no problem ask all  the questions you need too that's fine
+S_YOURE_WELCOME,,,that's no problem ask all  the questions you need too that's fine
+S_YOURE_WELCOME,,,this is designed to stop that problem
+S_YOURE_WELCOME,,,this is designed to stop that problem
+S_YOURE_WELCOME,,,welcome
+S_YOURE_WELCOME,,,welcome
+S_YOURE_WELCOME,,,yes you're welcome
+S_YOURE_WELCOME,,,yes you're welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,you are welcome
+S_YOURE_WELCOME,,,your welcome
+S_YOURE_WELCOME,,,your welcome
+S_YOURE_WELCOME,,,you're very welcome
+S_YOURE_WELCOME,,,you're very welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome
+S_YOURE_WELCOME,,,you're welcome see you later
+S_YOURE_WELCOME,,,you're welcome see you later
+S_YOURE_WELCOME,,,You're welcome thank you for coming
+S_YOURE_WELCOME,,,you're welcome thank you for coming
+S_YOURE_WELCOME,,,you're welcome thank you for coming
+S_YOURE_WELCOME,,,You're welcome thank you for coming
+S_YOURE_WELCOME,,,come back anytime thank you have a good afternoon.
+S_THATS_ALL_WE_HAVE_AVAILABLE,,,That's all we have available at the moment.
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,anything else I can help you with
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,anything else I can help you with
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,fantastic is there anything else I can do
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,fantastic is there anything else I can do
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,fantastic is there anything else I can help you today
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,fantastic is there anything else I can help you today
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,Fantastic is there anything else I can help you with today
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,fantastic is there anything else I can help you with today
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,fantastic is there anything else I can help you with today
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,Fantastic is there anything else I can help you with today
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,is there anything else I can help you with today
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,is there anything else I can help you with today
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,is there anything else I can help you with today?
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,is there anything else I can help you with today?
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,is there anything else I can help you with today?
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,is there anything else I can help you with today?
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,is there anything else I can help you with?
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,is there anything else I can help you with?
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,is there anything I can do for you
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,Is there anything I can do for you
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,Is there anything I can do for you
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,is there anything I can do for you
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,is there anything I can do for you today
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,is there anything I can do for you today
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,is there anything I can do for you today
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,is there anything I can do for you today
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,Is there anything I can do to help you
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,Is there anything I can do to help you
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,Is there anything that I can do for you today
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,is there anything that I can do for you today
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,is there anything that I can do for you today
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,Is there anything that I can do for you today
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,no problem glad I could help anything else I can help you with today
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,no problem glad I could help anything else I can help you with today
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,no problem is there anything else I can help with today?
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,no problem is there anything else I can help with today?
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,No problem is there anything else I can help you with today
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,No problem is there anything else I can help you with today
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,right I'm glad I could help is there anything else I can help you with today
+S_ANYTHING_ELSE_I_CAN_HELP_WITH,,,right I'm glad I could help is there anything else I can help you with today

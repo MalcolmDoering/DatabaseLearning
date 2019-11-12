@@ -1656,7 +1656,9 @@ if __name__ == "__main__":
     
     print("started")
     
-    shopkeeperUtteranceFilename = tools.modelDir+"2019-04-04_shopkeeper_utterance_data.csv"
+    #shopkeeperUtteranceFilename = tools.modelDir+"2019-04-04_shopkeeper_utterance_data.csv"
+    shopkeeperUtteranceFilename = tools.modelDir+"2019-11-12_shopkeeper_utterance_data.csv"
+    
     #customerUtteranceFilename = tools.modelDir+"2019-04-04_customer_utterance_data.csv"
     customerUtteranceFilename = tools.modelDir+"2019-07-03_customer_utterance_data.csv"
     
