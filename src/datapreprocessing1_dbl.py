@@ -24,7 +24,7 @@ dataDirectory = tools.dataDir+"2019-11-12_17-40-29_advancedSimulator9"
 numTrainDbs = 10
 
 dtype = np.int8
-inputSeqCutoffLen = 20
+inputSeqCutoffLen = 10
 
 cameras = ["CAMERA_1", "CAMERA_2", "CAMERA_3"]
 spatialFormations = ["NONE", "WAITING", "FACE_TO_FACE", "PRESENT_X"]
@@ -336,6 +336,8 @@ print("ave interaction len", np.mean(allInteractionLens), np.std(allInteractionL
 
 for i in range(len(interactions)):
     
+    print("processing", i+1, "of", len(interactions), "...")
+    
     inputSequences = []
     count = 0
     
@@ -371,6 +373,5 @@ for i in range(len(interactions)):
     inputSequences = inputSequences.astype(np.float32)
     np.save(sessionDir+"/"+fn, inputSequences)
     
-        
-            
+    print("completed", i+1, "of", len(interactions))
     
