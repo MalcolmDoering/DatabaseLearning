@@ -34,7 +34,7 @@ from utterancevectorizer import UtteranceVectorizer
 
 
 
-DEBUG = True
+DEBUG = False
 
 
 eosChar = "#"
@@ -48,14 +48,14 @@ numTrainDbs = 10
 batchSize = 128
 embeddingSize = 100
 numEpochs = 10000
-evalEvery = 10
+evalEvery = 100
 randomizeTrainingBatches = False
 
 inputSeqLen = 20
-inputDim = 1073
+inputDim = 1088
 
 
-previousSessionDir = None # tools.logDir+"/2019-07-29_18-53-49_actionPrediction15_dbl"
+previousSessionDir = None # tools.logDir+"/2019-08-02_19-27-47_actionPrediction15_dbl"
 
 
 
@@ -481,7 +481,11 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     #dataDirectory = tools.dataDir+"/2019-07-03_15-16-05_advancedSimulator8" # many possible sentences for customer actions (from h-h dataset)
     #dataDirectory = tools.dataDir+"/2019-07-22_handmade_0" # many possible sentences for customer actions (from h-h dataset)
     
-    dataDirectory = tools.dataDir+"2019-07-29_15-47-27_advancedSimulator8" # many possible sentences for customer actions (from h-h dataset), all attributes change
+    #dataDirectory = tools.dataDir+"2019-08-08_18-00-06_advancedSimulator8" # many possible sentences for customer actions (from h-h dataset), all attributes change
+    
+    
+    dataDirectory = tools.dataDir+"2019-09-13_11-52-56_advancedSimulator8" # handmade databases, customer-driven interactions, deterministic introductions
+    
     
     
     
@@ -1061,7 +1065,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     
     
     # write header in csv log file
-    with open(sessionLogFile, "w", newline="") as csvfile:
+    with open(sessionLogFile, "a", newline="") as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(["Epoch",
                          "Teacher Forcing Probability",
@@ -1414,8 +1418,8 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
         
         #teacherForcingProb = 0.6 #1.0 - 1.0 / (1.0 + np.exp( - (e-200.0)/10.0))
         
-        """
-        if e == 1000:
+        
+        if e == 1500:
             print("setting to use the sharpened softmax addressing", flush=True, file=sessionTerminalOutputStream)
             sharpeningCoefficient = 1.0
             
@@ -1427,7 +1431,7 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
             
             print("using train_op_2 (for only the decoding parts of the network and not the addressing parts)", flush=True, file=sessionTerminalOutputStream)
             learner.set_train_op(2)
-        """
+        
         
         
         
@@ -1580,7 +1584,7 @@ if __name__ == "__main__":
     attTemp = 0
     
     
-    run(0, 0, camTemp, attTemp, 0.0, sessionDir)
+    #run(0, 0, camTemp, attTemp, 0.0, sessionDir)
     
     
     for gpu in range(8):
