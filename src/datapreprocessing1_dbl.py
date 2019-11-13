@@ -16,11 +16,11 @@ from utterancevectorizer import UtteranceVectorizer
 
 
 #sessionDir = tools.create_session_dir("datapreprocessing1_dbl")
-sessionDir = tools.dataDir+"2019-09-18_13-15-13_advancedSimulator9_input_sequence_vectors"
+sessionDir = tools.dataDir+"2019-11-12_17-40-29_advancedSimulator9_input_sequence_vectors"
 tools.create_directory(sessionDir)
 
 
-dataDirectory = tools.dataDir+"2019-09-18_13-15-13_advancedSimulator9"
+dataDirectory = tools.dataDir+"2019-11-12_17-40-29_advancedSimulator9"
 numTrainDbs = 10
 
 dtype = np.int8
@@ -68,7 +68,7 @@ def read_simulated_interactions(filename, dbFieldnames, keepActions=None):
             if (keepActions == None) or (row["OUTPUT_SHOPKEEPER_ACTION"] in keepActions): # and row["SHOPKEEPER_TOPIC"] == "price"):
                 
                 row["CUSTOMER_SPEECH"] = row["CUSTOMER_SPEECH"].lower().translate(str.maketrans('', '', string.punctuation))
-                row["SHOPKEEPER_SPEECH"] = row["SHOPKEEPER_SPEECH"].lower()
+                row["SHOPKEEPER_SPEECH"] = row["SHOPKEEPER_SPEECH"].lower().translate(str.maketrans('', '', string.punctuation))
                 
                 interactions.append(row)
                 
@@ -85,9 +85,13 @@ def read_simulated_interactions(filename, dbFieldnames, keepActions=None):
                 gtDbCamera.append(dbRow)
                 gtDbAttribute.append(dbCol)        
             
-            if row["SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"] != "":
+            if row["SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"] != "" and row["SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"] != "NA":
                 shkpUttToDbEntryRange[row["SHOPKEEPER_SPEECH"]] = [int(i) for i in row["SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"].split("~")]
-    
+            
+            elif row["SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"] == "NA":
+                shkpUttToDbEntryRange[row["SHOPKEEPER_SPEECH"]] = "NA"
+            
+            
     return interactions, shkpUttToDbEntryRange, gtDbCamera, gtDbAttribute
 
 
@@ -118,8 +122,8 @@ print ("loading the data...")
 filenames = os.listdir(dataDirectory)
 filenames.sort()
 
-databaseFilenamesAll = [dataDirectory+"/"+fn for fn in filenames if "simulated" not in fn]
-interactionFilenamesAll = [dataDirectory+"/"+fn for fn in filenames if "simulated" in fn]
+databaseFilenamesAll = [dataDirectory+"/"+fn for fn in filenames if "handmade_database" in fn]
+interactionFilenamesAll = [dataDirectory+"/"+fn for fn in filenames if "simulated_data_csshkputts" in fn]
 
 databaseFilenames = databaseFilenamesAll[:numTrainDbs+1]
 interactionFilenames = interactionFilenamesAll[:numTrainDbs+1]
