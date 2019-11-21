@@ -13,4 +13,4 @@ with tf.device('/gpu:0'):
     
     hello = tf.constant("Hello, TensorFlow!")
     sess = tf.Session()
-    print sess.run(hello)
+    print(sess.run(hello))
