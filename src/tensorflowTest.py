@@ -9,8 +9,5 @@ Created on Thu Aug 30 15:37:45 2018
 
 import tensorflow as tf
 
-with tf.device('/gpu:0'):
-    
-    hello = tf.constant("Hello, TensorFlow!")
-    sess = tf.Session()
-    print(sess.run(hello))
+
+sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))

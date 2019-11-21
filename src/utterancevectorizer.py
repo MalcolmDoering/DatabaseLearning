@@ -12,7 +12,9 @@ from sklearn.feature_extraction.text import TfidfTransformer, CountVectorizer
 from scipy.spatial.distance import cosine, cdist, pdist, squareform
 from sklearn.decomposition import TruncatedSVD
 from sklearn.preprocessing import Normalizer
+from sklearn.metrics import pairwise_distances
 from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import MWETokenizer
 import nltk
 import copy
 import csv
@@ -21,6 +23,11 @@ from sklearn.manifold import TSNE
 #from gensim import corpora, matutils, models
 from scipy import sparse
 import pickle as pkl
+import string
+import os
+import math
+from progress.bar import Bar
+import numexpr as ne
 
 import tools
 
@@ -91,6 +98,28 @@ class UtteranceVectorizer(object):
         
         
         self.wnl = WordNetLemmatizer()
+        
+        # make sure that the DB contents symbols are left in and not split up
+        self.tokenizer = nltk.tokenize.MWETokenizer()
+        
+        self.tokenizer.add_mwe(('<', 'camera_ID', '>'))
+        self.tokenizer.add_mwe(('<', 'camera_id', '>'))
+        self.tokenizer.add_mwe(('<', 'camera_name', '>'))
+        self.tokenizer.add_mwe(('<', 'camera_type', '>'))
+        self.tokenizer.add_mwe(('<', 'color', '>'))
+        self.tokenizer.add_mwe(('<', 'weight', '>'))
+        self.tokenizer.add_mwe(('<', 'preset_modes', '>'))
+        self.tokenizer.add_mwe(('<', 'effects', '>'))
+        self.tokenizer.add_mwe(('<', 'price', '>'))
+        self.tokenizer.add_mwe(('<', 'resolution', '>'))
+        self.tokenizer.add_mwe(('<', 'optical_zoom', '>'))
+        self.tokenizer.add_mwe(('<', 'settings', '>'))
+        self.tokenizer.add_mwe(('<', 'autofocus_points', '>'))
+        self.tokenizer.add_mwe(('<', 'sensor_size', '>'))
+        self.tokenizer.add_mwe(('<', 'ISO', '>'))
+        self.tokenizer.add_mwe(('<', 'iso', '>'))
+        self.tokenizer.add_mwe(('<', 'long_exposure', '>'))
+        
         
         stopwordLemmas = []
         for w in self.stopwords:
@@ -256,7 +285,7 @@ class UtteranceVectorizer(object):
         
     def lemmatize_utterance(self, utt):
         uttLemmas = []
-        tokenized = nltk.word_tokenize(utt)
+        tokenized = self.tokenizer.tokenize(nltk.word_tokenize(utt))
         
         for t in tokenized:
             uttLemmas.append(self.lemmatize_word(t))
@@ -363,12 +392,12 @@ class UtteranceVectorizer(object):
     
     
     
-    def get_utterance_vectors(self, uttList, returnAll=False, asArray=True):
+    def get_utterance_vectors(self, uttList, returnAll=False, unigramOnly=False, asArray=True):
         
         uttVecs = []
         
         for utt in uttList:
-            uttVecs.append(self.get_utterance_vector(utt, returnAll))
+            uttVecs.append(self.get_utterance_vector(utt, returnAll, unigramOnly))
         
         if asArray:
             uttVecs = np.asarray(uttVecs)
@@ -539,89 +568,207 @@ def vectorize1():
                     "Utterance":utterancesNoNan[i]}
             
             writer.writerow(data)
+
+
+
+cameras = ["CAMERA_1", "CAMERA_2", "CAMERA_3"]
+
+def read_simulated_interactions(filename, dbFieldnames, numInteractionsPerDb, keepActions=None):
+    interactions = []
+    gtDbCamera = []
+    gtDbAttribute = []
     
     
+    shkpUttToDbEntryRange = {}
+    
+    fieldnames = ["TRIAL",
+                  "TURN_COUNT",
+                  
+                  "CURRENT_CAMERA_OF_CONVERSATION",
+                  "PREVIOUS_CAMERAS_OF_CONVERSATION",
+                  "PREVIOUS_FEATURES_OF_CONVERSATION",
+                  
+                  "CUSTOMER_ACTION",
+                  "CUSTOMER_LOCATION",
+                  "CUSTOMER_TOPIC",
+                  "CUSTOMER_SPEECH",
+                  
+                  "OUTPUT_SHOPKEEPER_ACTION",
+                  "OUTPUT_SHOPKEEPER_LOCATION",
+                  "SHOPKEEPER_TOPIC",
+                  "SHOPKEEPER_SPEECH"]
+    
+    
+    with open(filename) as csvfile:
+        reader = csv.DictReader(csvfile)
+        
+        for row in reader:
+            
+            if int(row["TRIAL"]) >= numInteractionsPerDb:
+                break # only load the first numInteractionsPerDb interactions
+            
+            if (keepActions == None) or (row["OUTPUT_SHOPKEEPER_ACTION"] in keepActions): # and row["SHOPKEEPER_TOPIC"] == "price"):
+                
+                row["CUSTOMER_SPEECH"] = row["CUSTOMER_SPEECH"].lower().translate(str.maketrans('', '', string.punctuation))
+                row["SHOPKEEPER_SPEECH"] = row["SHOPKEEPER_SPEECH"].lower().translate(str.maketrans('', '', string.punctuation))
+                
+                interactions.append(row)
+                
+                try:
+                    dbRow = cameras.index(row["CURRENT_CAMERA_OF_CONVERSATION"])
+                except:
+                    dbRow = -1
+                
+                try:
+                    dbCol = dbFieldnames.index(row["SHOPKEEPER_TOPIC"])
+                except:
+                    dbCol = -1
+                
+                gtDbCamera.append(dbRow)
+                gtDbAttribute.append(dbCol)        
+            
+            if row["SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"] != "" and row["SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"] != "NA":
+                shkpUttToDbEntryRange[row["SHOPKEEPER_SPEECH"]] = [int(i) for i in row["SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"].split("~")]
+            
+            elif row["SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"] == "NA":
+                shkpUttToDbEntryRange[row["SHOPKEEPER_SPEECH"]] = "NA"
+            
+            
+    return interactions, shkpUttToDbEntryRange, gtDbCamera, gtDbAttribute
+
+
+def read_database_file(filename):
+    database = []
+    
+    with open(filename) as csvfile:
+        reader = csv.DictReader(csvfile)
+        fieldnames = reader.fieldnames
+        
+        for row in reader:
+            
+            for key in row:
+                row[key] = row[key].lower()
+            
+            database.append(row)
+    
+    return database, fieldnames
 
 
 
 if __name__ == '__main__':
     
-    sessionDir = tools.create_session_dir("utteranceVectorizer - 50000_simulated_interactions_2018-4-26")
+    sessionDir = tools.create_session_dir("utteranceVectorizer_databaseLearning")
+    
+    dataDirectory = tools.dataDir+"2019-11-12_17-40-29_advancedSimulator9"
+    numTrainDbs = 10
+    numInteractionsPerDb = 200
+    
+    participant = "shopkeeper" 
     
     
     #
     # read in the utterance data
     #
-    print("loading interaction data...")
+    print ("loading the data...")
     
-    participant = "shopkeeper" 
+    filenames = os.listdir(dataDirectory)
+    filenames.sort()
     
-    utterances = []
-    uniqueUtteranceToCount = {}
+    databaseFilenamesAll = [dataDirectory+"/"+fn for fn in filenames if "handmade_database" in fn]
+    interactionFilenamesAll = [dataDirectory+"/"+fn for fn in filenames if "withsymbols" in fn]
+    
+    databaseFilenames = databaseFilenamesAll[:numTrainDbs+1]
+    interactionFilenames = interactionFilenamesAll[:numTrainDbs+1]
+    
+    
+    databases = []
+    databaseIds = []
+    dbFieldnames = None # these should be the same for all DBs
+    
+    for dbFn in databaseFilenames:
+        db, dbFieldnames = read_database_file(dbFn)
+        
+        databaseIds.append(dbFn.split("_")[-1].split(".")[0])
+        
+        databases.append(db)
+    
+    numDatabases = len(databases)
+    
+    interactions = []
+    datasetSizes = []
+    gtDatabaseCameras = []
+    gtDatabaseAttributes = []
+    
+    allCustUtts = []
+    allShkpUtts = []
+    
+    shkpUttToDbEntryRange = {}
+    
+    for i in range(len(interactionFilenames)):
+        iFn = interactionFilenames[i]
+        
+        inters, sutder, gtDbCamera, gtDbAttribute = read_simulated_interactions(iFn, dbFieldnames, numInteractionsPerDb)#, keepActions=["S_ANSWERS_QUESTION_ABOUT_FEATURE"]) # S_INTRODUCES_CAMERA S_INTRODUCES_FEATURE
+        
+        #if i < numTrainDbs:
+        #    # reduce the amount of training data because we have increased the number of training databases (assumes 1000 interactions per DB)
+        #    inters = inters[: int(2 * len(inters) / numTrainDbs)] # two is the minimum number of training databases 
+        #    gtDbCamera = gtDbCamera[: int(2 * len(gtDbCamera) / numTrainDbs)]
+        #    gtDbAttribute = gtDbAttribute[: int(2 * len(gtDbAttribute) / numTrainDbs)]
+        
+        
+        interactions.append(inters)
+        datasetSizes.append(len(inters))
+        
+        gtDatabaseCameras.append(gtDbCamera)
+        gtDatabaseAttributes.append(gtDbAttribute)
+        
+        allCustUtts += [row["CUSTOMER_SPEECH"] for row in inters]
+        allShkpUtts += [row["SHOPKEEPER_SPEECH_WITH_SYMBOLS"] for row in inters]
+    
+    
+    
+    if participant == "shopkeeper":
+        utterances = allShkpUtts
+    elif participant == "customer":
+        utterances = allCustUtts
+    else:
+        print("WARNING:", participant, "is not a valid participant!")
+        utterances = []
+    
+    
+    uniqueUtterances = list(set(utterances))
     keywords = []
     
-    with open(tools.dataDir+"50000_simulated_interactions_2018-4-26.csv", "rb") as csvfile: 
-        reader = csv.DictReader(csvfile)
-        
-        for row in reader:
-            
-            if participant == "shopkeeper":
-                if row["SHOPKEEPER_SPEECH"] != "" and row["SHOPKEEPER_SPEECH"] != "NONE":
-                    
-                    utt = row["SHOPKEEPER_SPEECH"]
-                    
-                    utterances.append(utt)
-                    if row["SHOPKEEPER_KEYWORDS"] != "" and row["SHOPKEEPER_KEYWORDS"] != "NONE" and row["SHOPKEEPER_KEYWORDS"] != "NO_KEYWORD":
-                        keywords += row["SHOPKEEPER_KEYWORDS"].split(";")
-                    
-                    if utt not in uniqueUtteranceToCount:
-                        uniqueUtteranceToCount[utt] = 0
-                    uniqueUtteranceToCount[utt] += 1
-                    
-            elif participant == "customer":
-                if row["CUSTOMER_SPEECH"] != "" and row["CUSTOMER_SPEECH"] != "NONE":   
-                    
-                    utt = row["CUSTOMER_SPEECH"]
-                    
-                    utterances.append(row["CUSTOMER_SPEECH"])
-                    if row["CUSTOMER_KEYWORDS"] != "" and row["CUSTOMER_KEYWORDS"] != "NONE" and row["CUSTOMER_KEYWORDS"] != "NO_KEYWORD":
-                        keywords += row["CUSTOMER_KEYWORDS"].split(";")
-                    
-                    if utt not in uniqueUtteranceToCount:
-                        uniqueUtteranceToCount[utt] = 0
-                    uniqueUtteranceToCount[utt] += 1
-                    
-    
-    print("loaded", len(utterances), "utterances.")
-    print(len(uniqueUtteranceToCount), "unique utterances")
-    
+    print("loaded", len(utterances), participant, "utterances.")
+    print(len(uniqueUtterances), "unique utterances")
     
     
     #
     # sample utterances to reduce the number to N
     #
-    N = 25000
+    """
+    N = 40000
     
-    #uniqueUtts = uniqueUtteranceToCount.keys()
-    #sampleProbs = [count/float(sum(uniqueUtteranceToCount.values())) for count in uniqueUtteranceToCount.values()]
+    #uniqueUtts = uniqueUtterances.keys()
+    #sampleProbs = [count/float(sum(uniqueUtterances.values())) for count in uniqueUtterances.values()]
     
-    numToSample = N - len(uniqueUtteranceToCount)
+    numToSample = N - len(uniqueUtterances)
     sampledUtterances = []
     
     # make sure each utterance appears at least once
-    sampledUtterances += list(uniqueUtteranceToCount.keys())
+    sampledUtterances += list(uniqueUtterances)
     
     # make sure that less common utterances are well represented (because these include mem-dep utterances)
-    #for utt, count in uniqueUtteranceToCount.items():
+    #for utt, count in uniqueUtterances.items():
     #    if count <= 5:
     #        sampledUtterances += [utt] * 5
-            
-            
     
     # sample
     sampledUtterances += np.random.choice(utterances, size=numToSample).tolist()
     
     utterances = sampledUtterances
+    """
+    
     
     #
     # vectorize the utterances
@@ -641,23 +788,33 @@ if __name__ == '__main__':
     
     
     print("pickling the utterance vectorizer...")
-    pkl.dump(uttVectorizer, open(sessionDir+"/{}_utterance_vectorizer.pkl".format(participant) ,"w"))
+    pkl.dump(uttVectorizer, open(sessionDir+"/{}_utterance_vectorizer.pkl".format(participant) ,"wb"))
     
     
     vectors = uttVectorizer.get_utterance_vectors(utterances)
-    #vectors = uttVectorizer.get_lsa_vectors(utterances)
+    uniqueVectors = uttVectorizer.get_utterance_vectors(uniqueUtterances)
     
     vectorsNoNan = []
     utterancesNoNan = []
     
+    uniqueVectorsNoNan = []
+    uniqueUtterancesNoNan = []
+    
     for i in range(len(utterances)):
-        
         if not vectors[i,:].any():
-            print("removing:", utterances[i])
-        
+            #print("removing:", utterances[i])
+            pass
         else:
             vectorsNoNan.append(vectors[i,:])
             utterancesNoNan.append(utterances[i])
+    
+    for i in range(len(uniqueUtterances)):
+        if not uniqueVectors[i,:].any():
+            #print("removing:", uniqueUtterances[i])
+            pass
+        else:
+            uniqueVectorsNoNan.append(uniqueVectors[i,:])
+            uniqueUtterancesNoNan.append(uniqueUtterances[i])
     
     
     #
@@ -665,30 +822,45 @@ if __name__ == '__main__':
     #
     print("computing distances...")
     
-    # compute distances between each unique pair of utterances
-    uttToUttToDist = {}
+    # compute distances between each unique pair of utterances    
+    uniqueVectorsNoNan = np.asarray(uniqueVectorsNoNan)
+    #uniqueDistMatrix = pairwise_distances(uniqueVectorsNoNan, metric="cosine", n_jobs=6)
     
-    for utt1 in list(uniqueUtteranceToCount.keys()):
-        uttToUttToDist[utt1] = dict.fromkeys(list(uniqueUtteranceToCount.keys()))
         
-        uttVec1 = uttVectorizer.get_utterance_vector(utt1)
-        
-        for utt2 in list(uniqueUtteranceToCount.keys()):
-            
-            uttVec2 = uttVectorizer.get_utterance_vector(utt2)
-            
-            uttToUttToDist[utt1][utt2] = cdist(uttVec1.reshape(1, uttVec1.shape[0]), uttVec2.reshape(1, uttVec2.shape[0]), "cosine")
+    print("creating full distance matrix...")
     
+    distMatrix = pairwise_distances(vectorsNoNan, metric="cosine", n_jobs=6)
+    #distMatrix = np.zeros((len(utterancesNoNan), len(utterancesNoNan)))
     
-    distMatrix = np.ones((len(utterancesNoNan), len(utterancesNoNan)))
+    """
+    # the reason the code is written this way is to make it run faster...
+    uniqueUttNoNanToIndex = {} # shows where to find the utterances in the uniqueUtterancesNoNan list
+    uttNoNanToIndices = {} # shows where to find the utterance in the utterancesNoNan list
+    
+    for utt in uniqueUtterancesNoNan:
+        uniqueUttNoNanToIndex[utt] = uniqueUtterancesNoNan.index(utt)
+        uttNoNanToIndices[utt] = []
     
     for i in range(len(utterancesNoNan)):
-        for j in range(len(utterancesNoNan)):
-            distMatrix[i,j] = uttToUttToDist[utterancesNoNan[i]][utterancesNoNan[j]]
+        uttNoNanToIndices[utterancesNoNan[i]].append(i)
     
     
-    vectorsNoNan = np.asarray(vectorsNoNan)
-    #distMatrix = squareform(pdist(vectorsNoNan, "cosine"))
+    
+    count = 0
+    numToCompute = math.pow(len(uniqueUtterancesNoNan), 2) / 2
+    
+    
+    for k in range(len(uniqueUtterancesNoNan)-1):
+        for l in range(k+1, len(uniqueUtterancesNoNan)):
+            
+            utt1 = uniqueUtterancesNoNan[k]
+            utt2 = uniqueUtterancesNoNan[l]
+            
+            distMatrix[uttNoNanToIndices[utt1]+uttNoNanToIndices[utt2], uttNoNanToIndices[utt2]+uttNoNanToIndices[utt1]] = uniqueDistMatrix[uniqueUttNoNanToIndex[utt1], uniqueUttNoNanToIndex[utt2]]            
+            
+            count += 1
+            print("completed {} of {} ({:.2})".format(count, numToCompute, count/numToCompute))
+    """ 
     
     
     #
@@ -696,22 +868,23 @@ if __name__ == '__main__':
     #
     print("saving...")
     
+    vectorsNoNan = np.asarray(vectorsNoNan)
+    
     print("num no nan utts:", len(utterancesNoNan))
     print("dimensionality:", vectorsNoNan.shape[1])
     
-    condition = "50000_simulated_interactions_2018-4-26 {} - tri stm - 1 wgt kw - mc2 - stopwords 1".format(participant)
+    condition = "20191121_simulated_data_csshkputts_withsymbols_200 {} - tri stm - 1 wgt kw - mc2 - stopwords 1".format(participant)
     
     np.savetxt(sessionDir+"/utterance cos dists - {:}.txt".format(condition), distMatrix, fmt="%.4f")
     
     #np.savetxt(sessionDir+"/utterance vectors - {:}.txt".format(condition), vectorsNoNan, fmt="%d")
     
     
-    with open(sessionDir+"/utterance data - {:}.csv".format(condition), "wb") as csvfile:
+    with open(sessionDir+"/utterance data - {:}.csv".format(condition), "w", newline="") as csvfile:
         
         fieldnames = ["Utterance ID", "Timestamp", "Trial ID", "Condition", "Utterance"]
         
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        
         writer.writeheader()
         
         for i in range(len(utterancesNoNan)):

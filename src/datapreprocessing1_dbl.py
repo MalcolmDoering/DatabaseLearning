@@ -23,6 +23,8 @@ tools.create_directory(sessionDir)
 dataDirectory = tools.dataDir+"2019-11-12_17-40-29_advancedSimulator9"
 numTrainDbs = 10
 
+numInteractionsPerDb = 200
+
 dtype = np.int8
 inputSeqCutoffLen = 10
 
@@ -33,7 +35,7 @@ locations = ["DOOR", "MIDDLE", "SERVICE_COUNTER", "CAMERA_1", "CAMERA_2", "CAMER
 
 
 
-def read_simulated_interactions(filename, dbFieldnames, keepActions=None):
+def read_simulated_interactions(filename, dbFieldnames, numInteractionsPerDb, keepActions=None):
     interactions = []
     gtDbCamera = []
     gtDbAttribute = []
@@ -64,6 +66,9 @@ def read_simulated_interactions(filename, dbFieldnames, keepActions=None):
         reader = csv.DictReader(csvfile)
         
         for row in reader:
+            
+            if int(row["TRIAL"]) >= numInteractionsPerDb:
+                break # only load the first numInteractionsPerDb interactions
             
             if (keepActions == None) or (row["OUTPUT_SHOPKEEPER_ACTION"] in keepActions): # and row["SHOPKEEPER_TOPIC"] == "price"):
                 
@@ -155,7 +160,7 @@ shkpUttToDbEntryRange = {}
 for i in range(len(interactionFilenames)):
     iFn = interactionFilenames[i]
     
-    inters, sutder, gtDbCamera, gtDbAttribute = read_simulated_interactions(iFn, dbFieldnames)#, keepActions=["S_ANSWERS_QUESTION_ABOUT_FEATURE"]) # S_INTRODUCES_CAMERA S_INTRODUCES_FEATURE
+    inters, sutder, gtDbCamera, gtDbAttribute = read_simulated_interactions(iFn, dbFieldnames, numInteractionsPerDb)#, keepActions=["S_ANSWERS_QUESTION_ABOUT_FEATURE"]) # S_INTRODUCES_CAMERA S_INTRODUCES_FEATURE
     
     #if i < numTrainDbs:
     #    # reduce the amount of training data because we have increased the number of training databases (assumes 1000 interactions per DB)
