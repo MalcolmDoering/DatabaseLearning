@@ -17,6 +17,7 @@ from sklearn.metrics import accuracy_score
 import nltk
 from nltk.stem import WordNetLemmatizer
 from tabulate import tabulate
+import re
 
 import tools
 
@@ -27,10 +28,13 @@ dataDirectory = tools.dataDir+"2019-11-12_17-40-29_advancedSimulator9"
 numTrainDbs = 10
 numInteractionsPerDb = 200
 
+maxDistLenRatio = 19/30
+useLemmatization = False
+
 cameras = ["CAMERA_1", "CAMERA_2", "CAMERA_3"]
 
 
-punctuation = r"""!"#%&'()*+,-./:;<=>?@[\]^_`{|}~""" # took $ out of punctuation
+punctuation = r"""!"#%&'()*+,:;<=>?@[\]^_`{|}~""" # leave in $ . / -
 
 
 def read_simulated_interactions(filename, dbFieldnames, numInteractionsPerDb, keepActions=None):
@@ -70,7 +74,17 @@ def read_simulated_interactions(filename, dbFieldnames, numInteractionsPerDb, ke
             if (keepActions == None) or (row["OUTPUT_SHOPKEEPER_ACTION"] in keepActions): # and row["SHOPKEEPER_TOPIC"] == "price"):
                 
                 row["CUSTOMER_SPEECH"] = row["CUSTOMER_SPEECH"].lower().translate(str.maketrans('', '', punctuation))
+                
                 row["SHOPKEEPER_SPEECH"] = row["SHOPKEEPER_SPEECH"].lower().translate(str.maketrans('', '', punctuation))
+                #row["SHOPKEEPER_SPEECH"] = re.sub(r"\.(?!\d)", "", row["SHOPKEEPER_SPEECH"]) # remove periods not followed by a digit
+                row["SHOPKEEPER_SPEECH"] = row["SHOPKEEPER_SPEECH"].replace("-", " ") # replace - with a space when it occurs between chars
+                
+                
+                
+                row["DATABASE_CONTENTS"] = row["DATABASE_CONTENTS"].lower().translate(str.maketrans('', '', punctuation))
+                row["DATABASE_CONTENTS"] = row["DATABASE_CONTENTS"].replace("camera", "")
+                row["DATABASE_CONTENTS"] = row["DATABASE_CONTENTS"].replace("-", " ") # replace - with a space when it occurs between chars
+                
                 
                 interactions.append(row)
                 
@@ -107,7 +121,9 @@ def read_database_file(filename):
         for row in reader:
             
             for key in row:
-                row[key] = row[key].lower()
+                row[key] = row[key].lower().translate(str.maketrans('', '', punctuation))
+                row[key] = row[key].replace("camera", "")
+                row[key] = row[key].replace("-", " ") # replace - with a space when it occurs between chars
             
             database.append(row)
     
@@ -115,11 +131,11 @@ def read_database_file(filename):
 
 
 
-def tokenize_utterance(utt, lemmatize=False):
+def tokenize_utterance(utt):
     utt = utt.lower().translate(str.maketrans('', '', punctuation))
     tokenized = nltk.word_tokenize(utt)
     
-    if lemmatize:
+    if useLemmatization:
         lemmatized = []
         
         for t in tokenized:
@@ -210,7 +226,7 @@ for i in range(len(interactions)):
     for j in range(len(interactions[i])):
         shkpUtt = interactions[i][j]["SHOPKEEPER_SPEECH"]
         if shkpUtt not in uttToTokenized:
-            uttToTokenized[shkpUtt] = tokenize_utterance(shkpUtt, lemmatize=True)
+            uttToTokenized[shkpUtt] = tokenize_utterance(shkpUtt)
 
 for i in range(len(databases)):
     for r in range(len(databases[i])):
@@ -218,7 +234,7 @@ for i in range(len(databases)):
             dbContents = databases[i][r][key]
             
             if dbContents not in uttToTokenized:
-                uttToTokenized[dbContents] = tokenize_utterance(dbContents, lemmatize=True)
+                uttToTokenized[dbContents] = tokenize_utterance(dbContents)
 
 
 
@@ -299,7 +315,7 @@ for combo in uniqueUttDbCombos:
             
             # the substring search function requires a max distance parameter
             # TODO: what's the best way to set this?
-            maxDist = int(np.floor(len(candDbContentsTokens)/2))
+            maxDist = int(np.floor(len(candDbContentsTokens)*maxDistLenRatio))
             
             
             # get the candidate shkp utt substring matches
@@ -517,7 +533,10 @@ print()
 #
 # choose best matches from among the potential matches (reduce number of false positives
 #
+print("finding the best matches among the potential matches...")
 comboToBestMatches = {}
+
+numCombosCompleted = 0
 
 for combo in comboToStringMatches:
     potentialMatches = copy.deepcopy(comboToStringMatches[combo])
@@ -555,6 +574,7 @@ for combo in comboToStringMatches:
     
     
     while len(potentialMatches) > 0:
+        #print(len(potentialMatches))
         # take the match with the shortest distance
         nearestDist = min([m["POTENTIAL_MATCH_DISTANCE"] for m in potentialMatches])
         nearestMatches = [m for m in potentialMatches if m["POTENTIAL_MATCH_DISTANCE"] == nearestDist]
@@ -563,32 +583,45 @@ for combo in comboToStringMatches:
         tieBreakerLen = max([len(m["POTENTIAL_MATCH_SUBSTRING"]) for m in nearestMatches])
         tieBreakerMatches = [m for m in nearestMatches if len(m["POTENTIAL_MATCH_SUBSTRING"]) == tieBreakerLen]
         
-        #tieBreakerMatches = nearestMatches
         
-        if len(tieBreakerMatches) > 0:
-            # if there are still ties, arbitrarily choose one of the matches
-            bestMatches.append(tieBreakerMatches[0])
-        else:
-            break
+        #if len(tieBreakerMatches) > 0:
         
-        # if there are other remaining matches, remove all those that overlap with the current best matches and continue searching
-        toRemove = []
+        # if there are still ties, arbitrarily choose one of the matches
+        nextBestMatch = tieBreakerMatches[0]
         
-        for match in bestMatches:
-            startA = match["POTENTIAL_MATCH_START_INDEX"]
-            endA = match["POTENTIAL_MATCH_START_INDEX"]
+        # make sure it doesn't overlap with any of the other best matches
+        if len(bestMatches) > 0:
+            isOverlapping = False
             
-            for remainingMatch in potentialMatches:
-                startB = remainingMatch["POTENTIAL_MATCH_START_INDEX"]
-                endB = remainingMatch["POTENTIAL_MATCH_START_INDEX"]
+            startA = nextBestMatch["POTENTIAL_MATCH_START_INDEX"]
+            endA = nextBestMatch["POTENTIAL_MATCH_END_INDEX"]
+            
+            for match in bestMatches:
+                startB = match["POTENTIAL_MATCH_START_INDEX"]
+                endB = match["POTENTIAL_MATCH_END_INDEX"]
                 
-                if startA <= endB and startB <= endA:
-                    toRemove.append(remainingMatch)
+                if startA <= (endB-1) and startB <= (endA-1):
+                    isOverlapping = True
+            
+            if not isOverlapping:
+                # add it to the list of best matches
+                bestMatches.append(nextBestMatch)
+                potentialMatches.remove(nextBestMatch)
+                #print("adding match")
+            else:
+                # if it does overlap, remove it from the potential matches and continue searching
+                potentialMatches.remove(nextBestMatch)
+                #print("removing best match")
         
-        for tr in toRemove:
-            potentialMatches.remove(tr)
-    
+        else:
+            bestMatches.append(nextBestMatch)
+            potentialMatches.remove(nextBestMatch)
+            #print("adding match")
+        
     comboToBestMatches[combo] = bestMatches
+    
+    numCombosCompleted += 1
+    #print("completed", numCombosCompleted, "of", len(comboToStringMatches))
 
 #
 # compute the accuracy of the string search results
@@ -609,6 +642,7 @@ for combo in uniqueUttDbCombos:
     gtDbContents = combo[4]
     gtShkpAction = combo[5]
     
+    # set the target
     if gtShkpAction == "S_INTRODUCES_FEATURE" or gtShkpAction == "S_INTRODUCES_CAMERA" or gtShkpAction == "S_ANSWERS_QUESTION_ABOUT_FEATURE":
         # if it's one of these actions, the target result is to find a match to the GT database contents
         tarOut = gtDbContents
@@ -618,15 +652,19 @@ for combo in uniqueUttDbCombos:
         tarOut = "NO_MATCH"
     
     
-    
+    # set the result
     if gtShkpAction == "S_INTRODUCES_FEATURE" or gtShkpAction == "S_INTRODUCES_CAMERA" or gtShkpAction == "S_ANSWERS_QUESTION_ABOUT_FEATURE":
-        for match in comboToBestMatches[combo]:
-            # if the correct match is among the best matches, count the combo as having a correct match
-            #if tarOut == str(match["CANDIDATE_CAMERA_INDEX"]) + str(match["CANDIDATE_ATTRIBUTE_INDEX"]):
-            #    out = str(match["CANDIDATE_CAMERA_INDEX"]) + str(match["CANDIDATE_ATTRIBUTE_INDEX"])
-            if tarOut == match["CANDIDATE_DATABASE_CONTENTS"]:   
-                out = match["CANDIDATE_DATABASE_CONTENTS"]
-    
+        if len(comboToBestMatches[combo]) > 0:        
+            out = "FOUND_MATCH"
+            for match in comboToBestMatches[combo]:
+                # if the correct match is among the best matches, count the combo as having a correct match
+                if tarOut == match["CANDIDATE_DATABASE_CONTENTS"]: #.lower().translate(str.maketrans('', '', punctuation)):   
+                    out = match["CANDIDATE_DATABASE_CONTENTS"] #.lower().translate(str.maketrans('', '', punctuation))
+        
+        else:
+            out = "NO_MATCH"
+            
+            
     else:
         if len(comboToBestMatches[combo]) > 0:
             out = "SHOULD_NOT_HAVE_FOUND_MATCH"
@@ -690,6 +728,49 @@ print()
 
 
 #
+# replace the substring matches in the shopkeeper utterances with an attribute symbol
+#
+comboToSymbolString = {}
+
+for combo in comboToBestMatches:
+    #if " ".join(uttToTokenized[combo[0]]).startswith("this fujifilm finepix xp130 is a waterproof digital camera that comes in white dark silver yellow lime or sky blue"):
+    #    print("hello")
+    
+    if len(comboToBestMatches[combo]) > 0:
+        shkpUttTokenSeq = copy.deepcopy(uttToTokenized[combo[0]])
+        
+        matches = comboToBestMatches[combo]
+        matches.sort(key=lambda x: x["POTENTIAL_MATCH_START_INDEX"], reverse=True) # start replacing substring from the end
+        
+        for match in matches:
+            s = match["POTENTIAL_MATCH_START_INDEX"]
+            e = match["POTENTIAL_MATCH_END_INDEX"]
+            potMatTokenSeq = shkpUttTokenSeq[s:e]
+            
+            if shkpUttTokenSeq[s:e] != potMatTokenSeq:
+                print("WARNING: Cannot find substring '{}' in string '{}'".format(potMatTokenSeq, shkpUttTokenSeq))
+            
+            symbol = "<{}>".format(dbFieldnames[match["CANDIDATE_ATTRIBUTE_INDEX"]])
+            
+            shkpUttTokenSeq = shkpUttTokenSeq[:s] + [symbol] + shkpUttTokenSeq[e:]
+        
+            
+        symbolString = " ".join(shkpUttTokenSeq)
+        
+        if combo in comboToSymbolString:
+            print("WARNING: Overwriting previous symbol string!")
+            print("PREVIOUS:", comboToSymbolString[combo])
+            print("NEW:", symbolString)
+            
+        comboToSymbolString[combo] = symbolString
+        
+        #print(symbolString.encode("utf-8"))
+    else:
+        shkpUtt = combo[0]
+        comboToSymbolString[combo] = shkpUtt
+        pass
+
+#
 # print the final results...
 #
 fieldnames = ["SHOPKEEPER_SPEECH",
@@ -717,4 +798,89 @@ with open(sessionDir + "/potential_substring_matches.csv", "w", newline="") as c
     for combo in comboToBestMatches:
         for match in comboToBestMatches[combo]:
             writer.writerow(match)
+
+
+
+#
+# save the symbol strings into the interaction csv files
+#
+for i in range(len(interactionFilenames)):
+    filename = interactionFilenames[i]
+    
+    modifiedInteraction = []
+    
+    with open(filename) as csvfile:
+        reader = csv.DictReader(csvfile)
+        fieldnames = reader.fieldnames
+        
+        for row in reader:
+            if int(row["TRIAL"]) >= numInteractionsPerDb:
+                break
+            
+            shkpUtt = row["SHOPKEEPER_SPEECH"].lower().translate(str.maketrans('', '', punctuation))
+            #shkpUtt = re.sub(r"\.(?!\d)", "", shkpUtt) # remove periods not followed by a digit
+            shkpUtt = shkpUtt.replace("-", " ") # replace - with a space when it occurs between chars
+            
+            dbId = row["DATABASE_ID"]
+            
+            gtDbContents = row["DATABASE_CONTENTS"].lower().translate(str.maketrans('', '', punctuation))
+            gtDbContents = gtDbContents.replace("camera", "")
+            gtDbContents = gtDbContents.replace("-", " ") # replace - with a space when it occurs between chars
+            
+            try:
+                gtDbCamera = cameras.index(row["CURRENT_CAMERA_OF_CONVERSATION"])
+            except:
+                gtDbCamera = -1
+            
+            try:
+                gtDbAttribute = dbFieldnames.index(row["SHOPKEEPER_TOPIC"])
+            except:
+                gtDbAttribute = -1
+            
+            gtShkpAction = row["OUTPUT_SHOPKEEPER_ACTION"]
+            
+            if gtShkpAction == "S_INTRODUCES_CAMERA":
+                gtDbCamera = cameras.index(row["OUTPUT_STATE_TARGET"])
+                gtDbAttribute = dbFieldnames.index("camera_name")
+            
+            combo = (shkpUtt, dbId, gtDbCamera, gtDbAttribute, gtDbContents, gtShkpAction)
+            
+            
+            if shkpUtt != "":
+                matches = comboToBestMatches[combo]
+                matches.sort(key=lambda x: x["POTENTIAL_MATCH_START_INDEX"], reverse=True)
+                matchSubstrings = [m["POTENTIAL_MATCH_SUBSTRING"] for m in matches]
+                matchDbIndices = [(m["CANDIDATE_CAMERA_INDEX"], m["CANDIDATE_ATTRIBUTE_INDEX"]) for m in matches]
+                matchDbContents = [m["CANDIDATE_DATABASE_CONTENTS"] for m in matches]
+                
+                row["SHOPKEEPER_SPEECH_WITH_SYMBOLS"] = comboToSymbolString[combo]
+                row["SYMBOL_MATCH_SUBSTRINGS"] = matchSubstrings
+                row["SYMBOL_CANDIDATE_DATABASE_INDICES"] = matchDbIndices
+                row["SYMBOL_CANDIDATE_DATABASE_CONTENTS"] = matchDbContents
+                
+            else:
+                row["SHOPKEEPER_SPEECH_WITH_SYMBOLS"] = ""
+                row["SYMBOL_MATCH_SUBSTRINGS"] = []
+                row["SYMBOL_CANDIDATE_DATABASE_INDICES"] = []
+                row["SYMBOL_CANDIDATE_DATABASE_CONTENTS"] = []
+            
+            modifiedInteraction.append(row)
+        
+
+    modifiedFilename = filename.split("/")[-1]
+    modifiedFilename = modifiedFilename[:37] + "withsymbols_" + str(numInteractionsPerDb) + modifiedFilename[41:]
+    
+    fieldnames.append("SHOPKEEPER_SPEECH_WITH_SYMBOLS")
+    fieldnames.append("SYMBOL_MATCH_SUBSTRINGS")
+    fieldnames.append("SYMBOL_CANDIDATE_DATABASE_INDICES")
+    fieldnames.append("SYMBOL_CANDIDATE_DATABASE_CONTENTS")
+    
+        
+    with open(sessionDir+"/" +modifiedFilename, "w", newline="") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in modifiedInteraction:
+            writer.writerow(row)
+
+
 

@@ -100,7 +100,7 @@ with open(dataFilename) as csvfile:
         
         # fix the problem of displaying the wrong DB contents for introducing cameras
         if row["Input.OUTPUT_SHOPKEEPER_ACTION"] == "S_INTRODUCES_CAMERA":
-            row["Input.DB_CONTENTS"] = databases[int(dbId)][cam]["camera_type"]
+            row["Input.DB_CONTENTS"] = databases[int(dbId)][cam]["camera_name"]
         
         
         hits.append(row)
@@ -241,24 +241,38 @@ with open(sessionDir + "/unique_field_value_set_counts.csv", "w", newline="") as
 #
 # create visualizations
 #
-fig, axs = plt.subplots(2, 1)
+#fig, axs = plt.subplots(2, 1)
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax1 = fig.add_subplot(211)
+ax2 = fig.add_subplot(212)
+
 
 x = range(len(uniqueUttsSortedByCount))
 y = [u[1] for u in uniqueUttsSortedByCount]
 
-axs[0].plot(x, y, '.', color='black');
-
+ax1.set_xlabel("Unique utterance ID")
+ax1.plot(x, y, '.', color='black');
 
 
 x = range(len(uniqueFieldValSetsSortedByCounts))
 y = [u[1] for u in uniqueFieldValSetsSortedByCounts]
 
-axs[1].plot(x, y, '.', color='black');
+ax2.set_xlabel("Unique utt-act-cam-feat-db combination ID")
+ax2.plot(x, y, '.', color='black');
 
 
+# Turn off axis lines and ticks of the big subplot
+ax.spines['top'].set_color('none')
+ax.spines['bottom'].set_color('none')
+ax.spines['left'].set_color('none')
+ax.spines['right'].set_color('none')
+ax.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
 
+# shared labels
+ax.set_ylabel("Number of Occurrences")
 
-#plt.show()
+plt.show()
 
 
 
