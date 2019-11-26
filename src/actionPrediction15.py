@@ -44,15 +44,17 @@ goChar = "~"
 cameras = ["CAMERA_1", "CAMERA_2", "CAMERA_3"]
 
 
-numTrainDbs = 2
-batchSize = 64 #128
-embeddingSize = 10
-numEpochs = 10 #000
-evalEvery = 5 #100
+numTrainDbs = 10
+batchSize = 64
+embeddingSize = 100
+numEpochs = 5000
+evalEvery = 50
 randomizeTrainingBatches = False
 
+numInteractionsPerDb = 200
+
 inputSeqLen = 10 #20
-inputDim = 2402
+inputDim = 2285
 
 
 previousSessionDir = None # tools.logDir+"/2019-08-02_19-27-47_actionPrediction15_dbl"
@@ -333,7 +335,7 @@ def read_database_file(filename):
     return database, fieldnames
 
 
-def read_simulated_interactions(filename, dbFieldnames, keepActions=None):
+def read_simulated_interactions(filename, dbFieldnames, numInteractionsPerDb, keepActions=None):
     interactions = []
     gtDbCamera = []
     gtDbAttribute = []
@@ -364,6 +366,9 @@ def read_simulated_interactions(filename, dbFieldnames, keepActions=None):
         reader = csv.DictReader(csvfile)
         
         for row in reader:
+            
+            if int(row["TRIAL"]) >= numInteractionsPerDb:
+                break # only load the first numInteractionsPerDb interactions
             
             if (keepActions == None) or (row["OUTPUT_SHOPKEEPER_ACTION"] in keepActions): # and row["SHOPKEEPER_TOPIC"] == "price"):
                 
@@ -534,13 +539,13 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     for i in range(len(interactionFilenames)):
         iFn = interactionFilenames[i]
         
-        inters, sutder, gtDbCamera, gtDbAttribute = read_simulated_interactions(iFn, dbFieldnames)#, keepActions=["S_ANSWERS_QUESTION_ABOUT_FEATURE"]) # S_INTRODUCES_CAMERA S_INTRODUCES_FEATURE
+        inters, sutder, gtDbCamera, gtDbAttribute = read_simulated_interactions(iFn, dbFieldnames, numInteractionsPerDb)#, keepActions=["S_ANSWERS_QUESTION_ABOUT_FEATURE"]) # S_INTRODUCES_CAMERA S_INTRODUCES_FEATURE
         
-        if i < numTrainDbs:
-            # reduce the amount of training data because we have increased the number of training databases (assumes 1000 interactions per DB)
-            inters = inters[: int(2 * len(inters) / numTrainDbs)] # two is the minimum number of training databases 
-            gtDbCamera = gtDbCamera[: int(2 * len(gtDbCamera) / numTrainDbs)]
-            gtDbAttribute = gtDbAttribute[: int(2 * len(gtDbAttribute) / numTrainDbs)]
+        #if i < numTrainDbs:
+        #    # reduce the amount of training data because we have increased the number of training databases (assumes 1000 interactions per DB)
+        #    inters = inters[: int(2 * len(inters) / numTrainDbs)] # two is the minimum number of training databases 
+        #    gtDbCamera = gtDbCamera[: int(2 * len(gtDbCamera) / numTrainDbs)]
+        #    gtDbAttribute = gtDbAttribute[: int(2 * len(gtDbAttribute) / numTrainDbs)]
         
         
         interactions.append(inters)
@@ -1093,6 +1098,8 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                       "TRIAL",
                       "TURN_COUNT",
                       
+                      "DATABASE_ID",
+                      
                       "CURRENT_CAMERA_OF_CONVERSATION",
                       "PREVIOUS_CAMERAS_OF_CONVERSATION",
                       "PREVIOUS_FEATURES_OF_CONVERSATION",
@@ -1108,9 +1115,11 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
                       "OUTPUT_SHOPKEEPER_LOCATION",
                       "SHOPKEEPER_TOPIC",
                       "SHOPKEEPER_SPEECH",
+                      "DATABASE_CONTENTS",
                       "OUTPUT_SPATIAL_STATE",
                       "OUTPUT_STATE_TARGET",
                       "SHOPKEEPER_SPEECH_DB_ENTRY_RANGE",
+                      
                       
                       "PRED_OUTPUT_SHOPKEEPER_LOCATION",
                       "PRED_OUTPUT_SPATIAL_STATE",
@@ -1581,7 +1590,7 @@ if __name__ == "__main__":
     attTemp = 0
     
     
-    run(0, 0, camTemp, attTemp, 0.0, sessionDir)
+    #run(0, 0, camTemp, attTemp, 0.0, sessionDir)
     
     
     for gpu in range(8):
