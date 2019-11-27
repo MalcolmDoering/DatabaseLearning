@@ -1,0 +1,488 @@
+'''
+Created on Jul 24, 2019
+
+@author: robovie
+
+
+copied from datapreprocessing1_dbl
+but use shopkeeper clusters and string search camera indices for training targets
+'''
+
+
+import csv
+import numpy as np
+import string
+import os
+import ast
+
+import tools
+from utterancevectorizer import UtteranceVectorizer
+
+
+dataDirectory = tools.dataDir+"2019-11-12_17-40-29_advancedSimulator9"
+
+#sessionDir = tools.create_session_dir("datapreprocessing1_dbl")
+sessionDir = dataDirectory+"_input_sequence_vectors"
+tools.create_directory(sessionDir)
+
+
+shopkeeperSpeechClusterFilename = tools.modelDir + "20191121_simulated_data_csshkputts_withsymbols_200 shopkeeper - tri stm - 1 wgt kw - mc2 - stopwords 1- speech_clusters.csv"
+
+
+numTrainDbs = 10
+numInteractionsPerDb = 200
+dtype = np.int8
+inputSeqCutoffLen = 10
+
+cameras = ["CAMERA_1", "CAMERA_2", "CAMERA_3"]
+spatialFormations = ["NONE", "WAITING", "FACE_TO_FACE", "PRESENT_X"]
+stateTargets = ["NONE", "CAMERA_1", "CAMERA_2", "CAMERA_3"]
+locations = ["DOOR", "MIDDLE", "SERVICE_COUNTER", "CAMERA_1", "CAMERA_2", "CAMERA_3"]
+
+
+
+def read_simulated_interactions(filename, dbFieldnames, numInteractionsPerDb, keepActions=None):
+    interactions = []
+    gtDbCamera = []
+    gtDbAttribute = []
+    
+    
+    shkpUttToDbEntryRange = {}
+    
+    fieldnames = ["TRIAL",
+                  "TURN_COUNT",
+                  
+                  "CURRENT_CAMERA_OF_CONVERSATION",
+                  "PREVIOUS_CAMERAS_OF_CONVERSATION",
+                  "PREVIOUS_FEATURES_OF_CONVERSATION",
+                  
+                  "CUSTOMER_ACTION",
+                  "CUSTOMER_LOCATION",
+                  "CUSTOMER_TOPIC",
+                  "CUSTOMER_SPEECH",
+                  
+                  "OUTPUT_SHOPKEEPER_ACTION",
+                  "OUTPUT_SHOPKEEPER_LOCATION",
+                  "SHOPKEEPER_TOPIC",
+                  "SHOPKEEPER_SPEECH"]
+    
+    
+    
+    with open(filename) as csvfile:
+        reader = csv.DictReader(csvfile)
+        
+        for row in reader:
+            
+            if int(row["TRIAL"]) >= numInteractionsPerDb:
+                break # only load the first numInteractionsPerDb interactions
+            
+            if (keepActions == None) or (row["OUTPUT_SHOPKEEPER_ACTION"] in keepActions): # and row["SHOPKEEPER_TOPIC"] == "price"):
+                
+                row["CUSTOMER_SPEECH"] = row["CUSTOMER_SPEECH"].lower().translate(str.maketrans('', '', string.punctuation))
+                row["SHOPKEEPER_SPEECH"] = row["SHOPKEEPER_SPEECH"].lower().translate(str.maketrans('', '', string.punctuation))
+                
+                interactions.append(row)
+                
+                try:
+                    dbRow = cameras.index(row["CURRENT_CAMERA_OF_CONVERSATION"])
+                except:
+                    dbRow = -1
+                
+                try:
+                    dbCol = dbFieldnames.index(row["SHOPKEEPER_TOPIC"])
+                except:
+                    dbCol = -1
+                
+                gtDbCamera.append(dbRow)
+                gtDbAttribute.append(dbCol)        
+            
+            if row["SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"] != "" and row["SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"] != "NA":
+                shkpUttToDbEntryRange[row["SHOPKEEPER_SPEECH"]] = [int(i) for i in row["SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"].split("~")]
+            
+            elif row["SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"] == "NA":
+                shkpUttToDbEntryRange[row["SHOPKEEPER_SPEECH"]] = "NA"
+            
+            
+            row["SYMBOL_MATCH_SUBSTRINGS"] = ast.literal_eval(row["SYMBOL_MATCH_SUBSTRINGS"])
+            row["SYMBOL_CANDIDATE_DATABASE_INDICES"] = ast.literal_eval(row["SYMBOL_CANDIDATE_DATABASE_INDICES"])
+            row["SYMBOL_CANDIDATE_DATABASE_CONTENTS"] = ast.literal_eval(row["SYMBOL_CANDIDATE_DATABASE_CONTENTS"])
+            
+            
+    return interactions, shkpUttToDbEntryRange, gtDbCamera, gtDbAttribute
+
+
+def read_database_file(filename):
+    database = []
+    
+    with open(filename) as csvfile:
+        reader = csv.DictReader(csvfile)
+        fieldnames = reader.fieldnames
+        
+        for row in reader:
+            
+            for key in row:
+                row[key] = row[key].lower()
+            
+            database.append(row)
+    
+    return database, fieldnames
+
+
+
+
+#
+# load the interaction data
+#
+print ("loading the data...")
+
+filenames = os.listdir(dataDirectory)
+filenames.sort()
+
+databaseFilenamesAll = [dataDirectory+"/"+fn for fn in filenames if "handmade_database" in fn]
+interactionFilenamesAll = [dataDirectory+"/"+fn for fn in filenames if "withsymbols" in fn]
+
+databaseFilenames = databaseFilenamesAll[:numTrainDbs+1]
+interactionFilenames = interactionFilenamesAll[:numTrainDbs+1]
+
+
+databases = []
+databaseIds = []
+dbFieldnames = None # these should be the same for all DBs
+
+for dbFn in databaseFilenames:
+    db, dbFieldnames = read_database_file(dbFn)
+    
+    databaseIds.append(dbFn.split("_")[-1].split(".")[0])
+    
+    databases.append(db)
+
+numDatabases = len(databases)
+
+interactions = []
+datasetSizes = []
+gtDatabaseCameras = []
+gtDatabaseAttributes = []
+
+allCustUtts = []
+allShkpUtts = []
+
+shkpUttToDbEntryRange = {}
+
+for i in range(len(interactionFilenames)):
+    iFn = interactionFilenames[i]
+    
+    inters, sutder, gtDbCamera, gtDbAttribute = read_simulated_interactions(iFn, dbFieldnames, numInteractionsPerDb)#, keepActions=["S_ANSWERS_QUESTION_ABOUT_FEATURE"]) # S_INTRODUCES_CAMERA S_INTRODUCES_FEATURE
+    
+    #if i < numTrainDbs:
+    #    # reduce the amount of training data because we have increased the number of training databases (assumes 1000 interactions per DB)
+    #    inters = inters[: int(2 * len(inters) / numTrainDbs)] # two is the minimum number of training databases 
+    #    gtDbCamera = gtDbCamera[: int(2 * len(gtDbCamera) / numTrainDbs)]
+    #    gtDbAttribute = gtDbAttribute[: int(2 * len(gtDbAttribute) / numTrainDbs)]
+    
+    
+    interactions.append(inters)
+    datasetSizes.append(len(inters))
+    
+    gtDatabaseCameras.append(gtDbCamera)
+    gtDatabaseAttributes.append(gtDbAttribute)
+    
+    allCustUtts += [row["CUSTOMER_SPEECH"] for row in inters]
+    allShkpUtts += [row["SHOPKEEPER_SPEECH"] for row in inters]
+    
+    
+    # combine the three dictionaries into one
+    shkpUttToDbEntryRange = {**shkpUttToDbEntryRange, **sutder}
+
+
+#
+# load the shopkeeper speech clusters
+#
+shkpUttToSpeechClustId, shkpSpeechClustIdToRepUtt, junkSpeechClusterIds = tools.load_shopkeeper_speech_clusters(shopkeeperSpeechClusterFilename)
+print(len(shkpSpeechClustIdToRepUtt), "shopkeeper speech clusters")
+
+
+#
+# find set of output shopkeeper action clusters
+# an action consists of the shopkeeper speech cluster + OUTPUT_SHOPKEEPER_LOCATION, OUTPUT_SPATIAL_STATE, and OUTPUT_STATE_TARGET
+#
+#tupleToSpatialClustId = {}
+#spatialClustIdToTuple = {}
+
+tupleToShkpActionId = {}
+shkpActionIdToTuple = {}
+
+for i in range(len(interactions)):
+    for j in range(len(interactions[i])):
+        
+        shkpSpeech = interactions[i][j]["SHOPKEEPER_SPEECH_WITH_SYMBOLS"].lower()
+        shkpSpeechClustId = shkpUttToSpeechClustId[shkpSpeech]
+        outShkpLoc = interactions[i][j]["OUTPUT_SHOPKEEPER_LOCATION"]
+        outShkpSpatSt = interactions[i][j]["OUTPUT_SPATIAL_STATE"]
+        outShkpStTarg = interactions[i][j]["OUTPUT_STATE_TARGET"]
+        
+        shkpActionTuple = (shkpSpeechClustId, outShkpLoc, outShkpSpatSt, outShkpStTarg)
+        
+        if shkpActionTuple not in tupleToShkpActionId:
+            tupleToShkpActionId[shkpActionTuple] = len(tupleToShkpActionId)
+        
+        shkpActionIdToTuple[tupleToShkpActionId[shkpActionTuple]] = shkpActionTuple
+        
+        interactions[i][j]["OUTPUT_SHOPKEEPER_ACTION_CLUSTER_ID"] = tupleToShkpActionId[shkpActionTuple]
+        interactions[i][j]["OUTPUT_SHOPKEEPER_ACTION_CLUSTER_TUPLE"] = shkpActionTuple
+
+print(len(shkpActionIdToTuple), "shopkeeper action clusters")
+
+
+# save the actions 
+with open(sessionDir+"/shopkeeper_action_clusters.csv", "w", newline="") as csvfile:
+        
+    fieldnames = ["ACTION_CLUSTER_ID", "SPEECH_CLUSTER_ID", "OUTPUT_SHOPKEEPER_LOCATION", "OUTPUT_SPATIAL_STATE", "OUTPUT_STATE_TARGET"]
+    
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    writer.writeheader()
+    
+    for actionId in shkpActionIdToTuple:
+        row = {"ACTION_CLUSTER_ID":actionId, 
+               "SPEECH_CLUSTER_ID":shkpActionIdToTuple[actionId][0], 
+               "OUTPUT_SHOPKEEPER_LOCATION":shkpActionIdToTuple[actionId][1], 
+               "OUTPUT_SPATIAL_STATE":shkpActionIdToTuple[actionId][2], 
+               "OUTPUT_STATE_TARGET":shkpActionIdToTuple[actionId][3]
+               }
+        
+        writer.writerow(row)
+
+
+
+#
+# find the DB camera indices to be used for training targets
+# options are CAMERA_1, CAMERA_2, CAMERA_3, NONE
+#
+for i in range(len(interactions)):
+    for j in range(len(interactions[i])):
+        dbIndices = interactions[i][j]["SYMBOL_CANDIDATE_DATABASE_INDICES"]
+        
+        # by default use the NONE index
+        camIndex = 4
+                
+        # if there is only one index tuple, then use the camera index from that
+        # if there are multiple index tuples, then use the camera index that occurs most frequently
+        if len(dbIndices) > 0:
+            camIndices = [x[0] for x in dbIndices]
+            camIndex = max(set(camIndices), key=camIndices.count)
+        
+        interactions[i][j]["OUTPUT_CAMERA_INDEX"] = camIndex
+
+
+#
+# vectorize the customer utterances
+#
+print("vectorizing customer utterances...")
+
+custUttVectorizer = UtteranceVectorizer(allCustUtts,
+                                        minCount=2, 
+                                        keywordWeight=1.0, 
+                                        keywordSet=[], 
+                                        unigramsAndKeywordsOnly=True, 
+                                        tfidf=False,
+                                        useStopwords=False,
+                                        lsa=False)
+
+custUttToVec = {}
+
+for cUtt in allCustUtts:
+    if cUtt not in custUttToVec:
+        custUttToVec[cUtt] = custUttVectorizer.get_utterance_vector(cUtt, unigramOnly=True)
+        #custUttToVec[cUtt] = custUttVectorizer.get_lsa_vector(cUtt)
+
+
+#
+# vectorize the shopkeeper utterances
+#
+print("vectorizing shopkeeper utterances...")
+
+#uniqueShkpUtts = list(set(allShkpUtts))
+
+shkpUttVectorizer = UtteranceVectorizer(allShkpUtts,
+                                        minCount=0,
+                                        keywordWeight=1.0,
+                                        keywordSet=[], 
+                                        unigramsAndKeywordsOnly=True, 
+                                        tfidf=False,
+                                        useStopwords=False,
+                                        lsa=False)
+
+shkpUttToVec = {}
+
+for sUtt in allShkpUtts:
+    if sUtt not in shkpUttToVec:
+        shkpUttToVec[sUtt] = shkpUttVectorizer.get_utterance_vector(sUtt, unigramOnly=True)
+        #shkpUttToVec[sUtt] = shkpUttVectorizer.get_lsa_vector(sUtt)
+
+
+
+#
+# vectorize spatial formations and locations
+#
+print("creating spatial formation and location vectors...")
+
+spatFormToVec = {}
+
+for i in range(len(spatialFormations)):
+    vec = np.zeros(len(spatialFormations), dtype=dtype)
+    vec[i] = 1
+    spatFormToVec[spatialFormations[i]] = vec
+
+
+stateTargToVec= {}
+
+for i in range(len(stateTargets)):
+    vec = np.zeros(len(stateTargets), dtype=dtype)
+    vec[i] = 1
+    stateTargToVec[stateTargets[i]] = vec
+
+
+locToVec = {}
+
+for i in range(len(locations)):
+    vec = np.zeros(len(locations), dtype=dtype)
+    vec[i] = 1
+    locToVec[locations[i]] = vec
+
+
+#
+# vectorize each turn
+#
+print("vectorizing each turn...")
+
+for i in range(len(interactions)):
+    for j in range(len(interactions[i])):
+        
+        if int(interactions[i][j]["TURN_COUNT"]) != 1:
+            prevShkpUtt = interactions[i][j-1]["SHOPKEEPER_SPEECH"]
+            prevShkpLoc = interactions[i][j-1]["OUTPUT_SHOPKEEPER_LOCATION"]
+        else:
+            prevShkpUtt = ""
+            prevShkpLoc = "SERVICE_COUNTER"
+        
+        spatForm = interactions[i][j]["SPATIAL_STATE"]
+        stateTarg = interactions[i][j]["STATE_TARGET"]
+        
+        custUtt = interactions[i][j]["CUSTOMER_SPEECH"]
+        custLoc = interactions[i][j]["CUSTOMER_LOCATION"]
+        
+        
+        prevShkpUttVec = shkpUttToVec[prevShkpUtt]
+        prevShkpLocVec = locToVec[prevShkpLoc]
+        prevSpatFormVec = spatFormToVec[spatForm]
+        prevStateTargVec = stateTargToVec[stateTarg]
+        custUttVec = custUttToVec[custUtt]
+        custLocVec = locToVec[custLoc]
+        
+        jointStateVector = np.concatenate((prevShkpUttVec,
+                                           prevShkpLocVec,
+                                           prevSpatFormVec,
+                                           prevStateTargVec,
+                                           custUttVec,
+                                           custLocVec))
+        
+        interactions[i][j]["JOINT_STATE_VECTOR"] = jointStateVector 
+    
+
+print(len(prevShkpUttVec), "shopkeeper utterance vector length")
+print(len(prevShkpLocVec), "shopkeeper location vector length")
+print(len(prevSpatFormVec), "spatial state vector length")
+print(len(prevStateTargVec), "state target vector length")
+print(len(custUttVec), "customer utterance vector length")
+print(len(custLocVec), "customer location vector length")
+
+
+#
+# create input sequences
+#
+print("creating input sequences...")
+
+# find the start and end indices of each interaction
+startEndIndices = []
+allInteractionLens = []
+
+
+for i in range(len(interactions)):
+    sei = []
+    
+    for j in range(len(interactions[i])):
+        
+        if int(interactions[i][j]["TURN_COUNT"]) == 1:
+            startIndex = j
+        
+        elif (j == (len(interactions[i])-1)) or (interactions[i][j]["TRIAL"] != interactions[i][j+1]["TRIAL"]):
+            endIndex = j + 1
+            sei.append((startIndex, endIndex))
+            allInteractionLens.append(endIndex-startIndex)
+    
+    startEndIndices.append(sei)
+
+
+maxInterLen = max(allInteractionLens)
+inputSeqCutoffLen = min(maxInterLen, inputSeqCutoffLen)
+jsvDim = len(interactions[0][0]["JOINT_STATE_VECTOR"])
+
+print(np.mean(allInteractionLens), np.std(allInteractionLens), "average interaction length")
+
+
+for i in range(len(interactions)):
+    
+    print("processing", i+1, "of", len(interactions), "...")
+    
+    inputSequences = []
+    outputActionIds = []
+    outputCameraIndices = []
+    count = 0
+    
+    for sei in startEndIndices[i]:
+        inSeq = []
+        
+        for j in range(sei[0], sei[1]):
+            inSeq.append(interactions[i][j]["JOINT_STATE_VECTOR"])
+            
+            
+            # add the pre padding
+            padding = [np.zeros(jsvDim, dtype=dtype)] * (maxInterLen - len(inSeq))
+            inSeqTemp = padding + inSeq
+            
+            inSeqTemp = inSeqTemp[-inputSeqCutoffLen:]
+            
+            #if len(inSeqTemp) != maxInterLen:
+            #    print("hello", len(inSeqTemp), len(inSeq), len(padding))
+            #    pass
+            
+            inSeqTemp = np.stack(inSeqTemp, axis=0)
+            
+            # append to the input sequence for this turn and continue
+            inputSequences.append(inSeqTemp)
+            
+            # append the outputs
+            outputActionIds.append(interactions[i][j]["OUTPUT_SHOPKEEPER_ACTION_CLUSTER_ID"])
+            outputCameraIndices.append(interactions[i][j]["OUTPUT_CAMERA_INDEX"])
+            
+            count += 1
+            #print("{} / {}".format(count, len(interactions[i])))
+    
+    
+    fn = interactionFilenamesAll[i].split("/")[-1][:-4] + "_input_sequence_vectors_sl{}_dim{}".format(inputSeqCutoffLen, jsvDim)
+    inputSequences = np.stack(inputSequences, axis=0)
+    inputSequences = inputSequences.astype(np.float32)
+    np.save(sessionDir+"/"+fn, inputSequences)
+    
+    fn = interactionFilenamesAll[i].split("/")[-1][:-4] + "_output_action_ids"
+    outputActionIds = np.asarray(outputActionIds)
+    np.save(sessionDir+"/"+fn, outputActionIds)
+    
+    fn = interactionFilenamesAll[i].split("/")[-1][:-4] + "_output_camera_indices"
+    outputCameraIndices = np.asarray(outputCameraIndices)
+    np.save(sessionDir+"/"+fn, outputCameraIndices)
+    
+    
+    print("completed", i+1, "of", len(interactions))
+    
+print(sum(len(x) for x in interactions), "total data points")
+    
