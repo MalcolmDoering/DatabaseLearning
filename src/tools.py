@@ -143,6 +143,59 @@ def read_crossvalidation_splits(numFolds):
     return dataSplits
 
 
+def load_shopkeeper_speech_clusters(shopkeeperSpeechClusterFilename):
+    shkpUttToSpeechClustId = {}
+    shkpSpeechClustIdToRepUtt = {}
+    junkSpeechClusterIds = []
+    
+    
+    with open(shopkeeperSpeechClusterFilename, encoding="utf-8") as csvfile:
+            reader = csv.DictReader(csvfile)
+            
+            for row in reader:
+                utt = row["Utterance"].lower()
+                
+                if utt not in shkpUttToSpeechClustId:
+                    shkpUttToSpeechClustId[utt] = int(row["Cluster.ID"])
+                
+                elif utt in shkpUttToSpeechClustId:
+                    if int(row["Cluster.ID"]) != shkpUttToSpeechClustId[utt]:
+                        print("WARNING: Shopkeeper utterance \"{}\" is in multiple speech clusters!".format(utt))
+                
+                if row["Is.Representative"] == "1":
+                    shkpSpeechClustIdToRepUtt[int(row["Cluster.ID"])] = utt
+                
+                if row["Is.Junk"] == "1" and int(row["Cluster.ID"]) not in junkSpeechClusterIds:
+                    junkSpeechClusterIds.append(int(row["Cluster.ID"]))
+    
+    
+    # add a cluster for no speech
+    shkpUttToSpeechClustId[""] = len(shkpSpeechClustIdToRepUtt)
+    shkpSpeechClustIdToRepUtt[shkpUttToSpeechClustId[""]] = ""
+    
+    return shkpUttToSpeechClustId, shkpSpeechClustIdToRepUtt, junkSpeechClusterIds
+
+
+def load_shopkeeper_action_clusters(shopkeeperActionClusterFilename):
+    shkpActionIdToTuple = {}
+    tupleToShkpActionId = {}
+    
+    with open(shopkeeperActionClusterFilename, encoding="utf-8") as csvfile:
+        reader = csv.DictReader(csvfile)
+        
+        for row in reader:
+            actionClusterId = int(row["ACTION_CLUSTER_ID"])
+            
+            shkpActionIdToTuple[actionClusterId] = (int(row["SPEECH_CLUSTER_ID"]),
+                                                    row["OUTPUT_SHOPKEEPER_LOCATION"],
+                                                    row["OUTPUT_SPATIAL_STATE"],
+                                                    row["OUTPUT_STATE_TARGET"])
+            
+            tupleToShkpActionId[shkpActionIdToTuple[actionClusterId]] = actionClusterId
+            
+    return shkpActionIdToTuple, tupleToShkpActionId
+                
+
 if __name__ == '__main__':
     pass
 
