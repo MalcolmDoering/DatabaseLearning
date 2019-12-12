@@ -11,7 +11,7 @@ from scipy.stats import entropy
 
 
 
-projectDir = "/home/malcolm/eclipse-workspace/DatabaseLearning/"
+projectDir = "C:/Users/robovie/eclipse-workspace/DatabaseLearning/"
 
 dataDir = projectDir + "data/"
 
@@ -19,7 +19,7 @@ modelDir = projectDir + "models/"
 
 #logDir = "/home/erica/malcolmlog"
 #logDir = "/home/malcolm/eclipse-log"
-logDir = "/home/malcolm/eclipse-log"
+logDir = "E:/eclipse-log"
 
 punctuation = r"""!"#%&()*+,:;<=>?@[\]^_`{|}~""" # leave in $ . / - '
 
@@ -157,8 +157,9 @@ def read_crossvalidation_splits(numFolds):
 def load_shopkeeper_speech_clusters(shopkeeperSpeechClusterFilename):
     shkpUttToSpeechClustId = {}
     shkpSpeechClustIdToRepUtt = {}
-    junkSpeechClusterIds = []
     
+    goodSpeechClusterIds = []
+    junkSpeechClusterIds = []
     
     with open(shopkeeperSpeechClusterFilename, encoding="utf-8") as csvfile:
             reader = csv.DictReader(csvfile)
@@ -173,11 +174,18 @@ def load_shopkeeper_speech_clusters(shopkeeperSpeechClusterFilename):
                     if int(row["Cluster.ID"]) != shkpUttToSpeechClustId[utt]:
                         print("WARNING: Shopkeeper utterance \"{}\" is in multiple speech clusters!".format(utt))
                 
-                if row["Is.Representative"] == "1":
+                if row["IS_NEW_REPRESENTATIVE"] == "1":
                     shkpSpeechClustIdToRepUtt[int(row["Cluster.ID"])] = utt
+                
+                if row["Is.Junk"] == "0" and int(row["Cluster.ID"]) not in goodSpeechClusterIds:
+                    goodSpeechClusterIds.append(int(row["Cluster.ID"]))
                 
                 if row["Is.Junk"] == "1" and int(row["Cluster.ID"]) not in junkSpeechClusterIds:
                     junkSpeechClusterIds.append(int(row["Cluster.ID"]))
+                
+    # if any of the utterances in the cluster are marked as not junk, then treat this as a normal cluster
+    # (junk utterances that were sorted into good clusters still have there original junk marking)
+    junkSpeechClusterIds = [clustId for clustId in junkSpeechClusterIds if clustId not in goodSpeechClusterIds]
     
     
     # add a cluster for no speech

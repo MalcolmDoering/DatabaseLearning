@@ -19,14 +19,14 @@ import tools
 from utterancevectorizer import UtteranceVectorizer
 
 
-dataDirectory = tools.dataDir+"2019-11-12_17-40-29_advancedSimulator9"
+dataDirectory = tools.dataDir+"2019-12-05_14-58-11_advancedSimulator9"
 
 #sessionDir = tools.create_session_dir("datapreprocessing1_dbl")
 sessionDir = dataDirectory+"_input_sequence_vectors"
 tools.create_directory(sessionDir)
 
 
-shopkeeperSpeechClusterFilename = tools.modelDir + "20191121_simulated_data_csshkputts_withsymbols_200 shopkeeper - tri stm - 1 wgt kw - mc2 - stopwords 1- speech_clusters.csv"
+shopkeeperSpeechClusterFilename = tools.modelDir + "20191212 - modified_speech_clusters.csv"
 
 
 numTrainDbs = 10
@@ -78,8 +78,8 @@ def read_simulated_interactions(filename, dbFieldnames, numInteractionsPerDb, ke
             
             if (keepActions == None) or (row["OUTPUT_SHOPKEEPER_ACTION"] in keepActions): # and row["SHOPKEEPER_TOPIC"] == "price"):
                 
-                row["CUSTOMER_SPEECH"] = row["CUSTOMER_SPEECH"].lower().translate(str.maketrans('', '', string.punctuation))
-                row["SHOPKEEPER_SPEECH"] = row["SHOPKEEPER_SPEECH"].lower().translate(str.maketrans('', '', string.punctuation))
+                row["CUSTOMER_SPEECH"] = row["CUSTOMER_SPEECH"].lower().translate(str.maketrans('', '', tools.punctuation))
+                row["SHOPKEEPER_SPEECH"] = row["SHOPKEEPER_SPEECH"].lower().translate(str.maketrans('', '', tools.punctuation))
                 
                 interactions.append(row)
                 
@@ -211,6 +211,8 @@ print(len(shkpSpeechClustIdToRepUtt), "shopkeeper speech clusters")
 tupleToShkpActionId = {}
 shkpActionIdToTuple = {}
 
+uniqueShkpUttsWithSymbols = []
+
 for i in range(len(interactions)):
     for j in range(len(interactions[i])):
         
@@ -219,6 +221,9 @@ for i in range(len(interactions)):
         outShkpLoc = interactions[i][j]["OUTPUT_SHOPKEEPER_LOCATION"]
         outShkpSpatSt = interactions[i][j]["OUTPUT_SPATIAL_STATE"]
         outShkpStTarg = interactions[i][j]["OUTPUT_STATE_TARGET"]
+        
+        if interactions[i][j]["SHOPKEEPER_SPEECH_WITH_SYMBOLS"] not in uniqueShkpUttsWithSymbols:
+            uniqueShkpUttsWithSymbols.append(interactions[i][j]["SHOPKEEPER_SPEECH_WITH_SYMBOLS"])
         
         shkpActionTuple = (shkpSpeechClustId, outShkpLoc, outShkpSpatSt, outShkpStTarg)
         
@@ -231,7 +236,7 @@ for i in range(len(interactions)):
         interactions[i][j]["OUTPUT_SHOPKEEPER_ACTION_CLUSTER_TUPLE"] = shkpActionTuple
 
 print(len(shkpActionIdToTuple), "shopkeeper action clusters")
-
+print(len(uniqueShkpUttsWithSymbols), "unique shopkeeper utterances (with symbols)")
 
 # save the actions 
 with open(sessionDir+"/shopkeeper_action_clusters.csv", "w", newline="") as csvfile:
@@ -300,7 +305,7 @@ for cUtt in allCustUtts:
 #
 print("vectorizing shopkeeper utterances...")
 
-#uniqueShkpUtts = list(set(allShkpUtts))
+uniqueShkpUtts = list(set(allShkpUtts))
 
 shkpUttVectorizer = UtteranceVectorizer(allShkpUtts,
                                         minCount=0,
