@@ -28,6 +28,7 @@ import os
 import math
 from progress.bar import Bar
 import numexpr as ne
+import json
 
 import tools
 
@@ -609,8 +610,8 @@ def read_simulated_interactions(filename, dbFieldnames, numInteractionsPerDb, ke
             
             if (keepActions == None) or (row["OUTPUT_SHOPKEEPER_ACTION"] in keepActions): # and row["SHOPKEEPER_TOPIC"] == "price"):
                 
-                row["CUSTOMER_SPEECH"] = row["CUSTOMER_SPEECH"].lower().translate(str.maketrans('', '', string.punctuation))
-                row["SHOPKEEPER_SPEECH"] = row["SHOPKEEPER_SPEECH"].lower().translate(str.maketrans('', '', string.punctuation))
+                row["CUSTOMER_SPEECH"] = row["CUSTOMER_SPEECH"].lower().translate(str.maketrans('', '', tools.punctuation))
+                row["SHOPKEEPER_SPEECH"] = row["SHOPKEEPER_SPEECH"].lower().translate(str.maketrans('', '', tools.punctuation))
                 
                 interactions.append(row)
                 
@@ -659,7 +660,7 @@ if __name__ == '__main__':
     
     sessionDir = tools.create_session_dir("utteranceVectorizer_databaseLearning")
     
-    dataDirectory = tools.dataDir+"2019-11-12_17-40-29_advancedSimulator9"
+    dataDirectory = tools.dataDir+"2019-12-05_14-58-11_advancedSimulator9"
     numTrainDbs = 10
     numInteractionsPerDb = 200
     
@@ -744,6 +745,84 @@ if __name__ == '__main__':
     
     
     #
+    # load the keywords
+    #
+    keywordsDir = dataDirectory+"/keywords/"
+    
+    # read the csv
+    uniqueShkpUttsWithSymbols = []
+    
+    with open(keywordsDir+"unique_shopkeeper_speech_with_symbols.csv") as csvfile:
+        reader = csv.DictReader(csvfile)
+        
+        for row in reader:
+            uniqueShkpUttsWithSymbols.append(row["SHOPKEEPER_SPEECH_WITH_SYMBOLS"])
+    
+    # read the json keyword files
+    keywordsForUniqueShkpUttsWithSymbols = [None] * len(uniqueShkpUttsWithSymbols)
+    
+    keywordsFilenames = filenames = [fn for fn in os.listdir(keywordsDir) if "keywords" in fn]
+    
+    for fn in keywordsFilenames:
+        index = int(fn.split("_")[0])
+        kwList = []
+        
+        with open(keywordsDir+fn) as f:
+            contents = f.read()
+            contents = eval(contents)
+            
+            if contents != "NA":
+                for kw in contents["keywords"]:
+                    kwList.append(kw["text"])
+        
+        keywordsForUniqueShkpUttsWithSymbols[index] = kwList
+    
+    
+    keywordCounts = {}
+    shkpUttToKeywords = {}
+    
+    for i in range(len(keywordsForUniqueShkpUttsWithSymbols)):
+        kwList = keywordsForUniqueShkpUttsWithSymbols[i]
+        
+        shkpUtt = uniqueShkpUttsWithSymbols[i].lower()
+        
+        shkpUttToKeywords[shkpUtt] = []
+        
+        for kw in kwList:
+            for w in kw.split():
+                w = w.lower()
+                
+                if w not in keywordCounts:
+                    keywordCounts[w] = 0
+                keywordCounts[w] += 1
+                
+                shkpUttToKeywords[shkpUtt].append(w)
+    
+    importantKeywords = []
+    for w, count in keywordCounts.items():
+        if count >= 2:
+            importantKeywords.append(w) 
+    
+    
+    #
+    # create the keyword vectors
+    #
+    shkpUttToKwVec = {}
+    
+    for utt, kws in shkpUttToKeywords.items():
+        vec = np.zeros(len(importantKeywords))
+        
+        for w in kws:
+            try:
+                i = importantKeywords.index(w)
+                vec[i] = 1.0
+            except:
+                pass
+        
+        shkpUttToKwVec[utt] = vec
+    
+    
+    #
     # sample utterances to reduce the number to N
     #
     """
@@ -798,7 +877,7 @@ if __name__ == '__main__':
     utterancesNoNan = []
     
     uniqueVectorsNoNan = []
-    uniqueUtterancesNoNan = []
+    #uniqueUtterancesNoNan = []
     
     for i in range(len(utterances)):
         if not vectors[i,:].any():
@@ -808,6 +887,7 @@ if __name__ == '__main__':
             vectorsNoNan.append(vectors[i,:])
             utterancesNoNan.append(utterances[i])
     
+    """
     for i in range(len(uniqueUtterances)):
         if not uniqueVectors[i,:].any():
             #print("removing:", uniqueUtterances[i])
@@ -815,6 +895,13 @@ if __name__ == '__main__':
         else:
             uniqueVectorsNoNan.append(uniqueVectors[i,:])
             uniqueUtterancesNoNan.append(uniqueUtterances[i])
+    """
+    
+    #
+    # add on the keyword vectors
+    #
+    for i in range(len(utterancesNoNan)):
+        vectorsNoNan[i] = np.concatenate((vectorsNoNan[i], shkpUttToKwVec[utterancesNoNan[i].lower()]))
     
     
     #
@@ -873,7 +960,7 @@ if __name__ == '__main__':
     print("num no nan utts:", len(utterancesNoNan))
     print("dimensionality:", vectorsNoNan.shape[1])
     
-    condition = "20191121_simulated_data_csshkputts_withsymbols_200 {} - tri stm - 1 wgt kw - mc2 - stopwords 1".format(participant)
+    condition = "20191212_simulated_data_csshkputts_withsymbols_200 {} - tri stm - 1 wgt kw - mc2 - stopwords 1".format(participant)
     
     np.savetxt(sessionDir+"/utterance cos dists - {:}.txt".format(condition), distMatrix, fmt="%.4f")
     
