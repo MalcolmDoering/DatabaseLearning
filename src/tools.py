@@ -21,6 +21,8 @@ modelDir = projectDir + "models/"
 #logDir = "/home/malcolm/eclipse-log"
 logDir = "E:/eclipse-log"
 
+punctuation = r"""!"#%&()*+,:;<=>?@[\]^_`{|}~""" # leave in $ . / - '
+
 
 def time_now():
     return time.strftime("%Y-%m-%d_%H-%M-%S")
