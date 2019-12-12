@@ -7,30 +7,17 @@ Created on Feb 13, 2017
 
 
 import numpy as np
-from sklearn.feature_extraction.text import TfidfTransformer, CountVectorizer
-from scipy.spatial.distance import cosine, cdist, pdist, squareform
+from sklearn.feature_extraction.text import TfidfTransformer
+from scipy.spatial.distance import pdist, squareform
 from sklearn.decomposition import TruncatedSVD
-from sklearn.preprocessing import Normalizer
 from sklearn.metrics import pairwise_distances
 from nltk.stem import WordNetLemmatizer
-from nltk.tokenize import MWETokenizer
 import nltk
-import copy
 import csv
-#import editdistance
-from sklearn.manifold import TSNE
-#from gensim import corpora, matutils, models
-from scipy import sparse
 import pickle as pkl
-import string
 import os
-import math
-from progress.bar import Bar
-import numexpr as ne
-import json
 import multiprocessing
 import time
-from rake_nltk import Rake
 
 
 import tools
