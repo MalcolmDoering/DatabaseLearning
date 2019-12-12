@@ -7,7 +7,6 @@ Created on Feb 13, 2017
 
 
 import numpy as np
-from nltk.stem.porter import *
 from sklearn.feature_extraction.text import TfidfTransformer, CountVectorizer
 from scipy.spatial.distance import cosine, cdist, pdist, squareform
 from sklearn.decomposition import TruncatedSVD
@@ -26,12 +25,15 @@ import pickle as pkl
 import string
 import os
 import math
-from progress.bar import Bar
-import numexpr as ne
+import multiprocessing
+import time
+from rake_nltk import Rake
 
 import tools
 
 
+
+numCpus = multiprocessing.cpu_count()
 
 
 """
@@ -120,6 +122,25 @@ class UtteranceVectorizer(object):
         self.tokenizer.add_mwe(('<', 'iso', '>'))
         self.tokenizer.add_mwe(('<', 'long_exposure', '>'))
         
+        self.dbSymbols = []
+        self.dbSymbols.append("<_camera_ID_>")
+        self.dbSymbols.append("<_camera_id_>")
+        self.dbSymbols.append("<_camera_name_>")
+        self.dbSymbols.append("<_camera_type_>")
+        self.dbSymbols.append("<_color_>")
+        self.dbSymbols.append("<_weight_>")
+        self.dbSymbols.append("<_preset_modes_>")
+        self.dbSymbols.append("<_effects_>")
+        self.dbSymbols.append("<_price_>")
+        self.dbSymbols.append("<_resolution_>")
+        self.dbSymbols.append("<_optical_zoom_>")
+        self.dbSymbols.append("<_settings_>")
+        self.dbSymbols.append("<_autofocus_points_>")
+        self.dbSymbols.append("<_sensor_size_>")
+        self.dbSymbols.append("<_ISO_>")
+        self.dbSymbols.append("<_iso_>")
+        self.dbSymbols.append("<_long_exposure_>")
+        
         
         stopwordLemmas = []
         for w in self.stopwords:
@@ -195,10 +216,11 @@ class UtteranceVectorizer(object):
                 if word.startswith("$"):
                     word = word[1:]
                 
-                if word.isdigit():
+                if tools.is_number(word):
                     if word not in self.numbers:
                         self.numbers[word] = 0
-                    self.numbers[word] += 1    
+                    self.numbers[word] += 1
+        
         
         #
         # create the vectorization dict by removing all words that are in stopwords and occur infrequently
@@ -247,6 +269,9 @@ class UtteranceVectorizer(object):
         
         if self.useNumbers:
             self.numIndices += len(self.numberToIndex)
+        
+        
+        self.numIndices += len(self.dbSymbols)
         
         
         #
@@ -364,7 +389,7 @@ class UtteranceVectorizer(object):
                     wStripped = w.strip("$")
                     if wStripped in self.numberToIndex:
                         uttVec[self.numberToIndex[wStripped]] = 1.0 * self.keywordWeight
-                
+
                 
                 if i < length-1:
                     bigram = uttLemmas[i] + ":" + uttLemmas[i+1]
@@ -599,7 +624,7 @@ def read_simulated_interactions(filename, dbFieldnames, numInteractionsPerDb, ke
                   "SHOPKEEPER_SPEECH"]
     
     
-    with open(filename) as csvfile:
+    with open(filename, encoding="cp932") as csvfile:
         reader = csv.DictReader(csvfile)
         
         for row in reader:
@@ -659,7 +684,7 @@ if __name__ == '__main__':
     
     sessionDir = tools.create_session_dir("utteranceVectorizer_databaseLearning")
     
-    dataDirectory = tools.dataDir+"2019-11-12_17-40-29_advancedSimulator9"
+    dataDirectory = tools.dataDir+"2019-12-05_14-58-11_advancedSimulator9"
     numTrainDbs = 10
     numInteractionsPerDb = 200
     
@@ -787,10 +812,6 @@ if __name__ == '__main__':
                                         lsa=False)
     
     
-    print("pickling the utterance vectorizer...")
-    pkl.dump(uttVectorizer, open(sessionDir+"/{}_utterance_vectorizer.pkl".format(participant) ,"wb"))
-    
-    
     vectors = uttVectorizer.get_utterance_vectors(utterances)
     uniqueVectors = uttVectorizer.get_utterance_vectors(uniqueUtterances)
     
@@ -823,13 +844,13 @@ if __name__ == '__main__':
     print("computing distances...")
     
     # compute distances between each unique pair of utterances    
-    uniqueVectorsNoNan = np.asarray(uniqueVectorsNoNan)
-    #uniqueDistMatrix = pairwise_distances(uniqueVectorsNoNan, metric="cosine", n_jobs=6)
+    #uniqueVectorsNoNan = np.asarray(uniqueVectorsNoNan)
+    #uniqueDistMatrix = pairwise_distances(uniqueVectorsNoNan, metric="cosine", n_jobs=50)
     
         
     print("creating full distance matrix...")
     
-    distMatrix = pairwise_distances(vectorsNoNan, metric="cosine", n_jobs=6)
+    distMatrix = pairwise_distances(vectorsNoNan, metric="cosine", n_jobs=50)
     #distMatrix = np.zeros((len(utterancesNoNan), len(utterancesNoNan)))
     
     """
@@ -873,14 +894,21 @@ if __name__ == '__main__':
     print("num no nan utts:", len(utterancesNoNan))
     print("dimensionality:", vectorsNoNan.shape[1])
     
-    condition = "20191121_simulated_data_csshkputts_withsymbols_200 {} - tri stm - 1 wgt kw - mc2 - stopwords 1".format(participant)
+    date = time.strftime("%Y%m%d")
     
-    np.savetxt(sessionDir+"/utterance cos dists - {:}.txt".format(condition), distMatrix, fmt="%.4f")
-    
-    #np.savetxt(sessionDir+"/utterance vectors - {:}.txt".format(condition), vectorsNoNan, fmt="%d")
+    condition = "{}_simulated_data_csshkputts_withsymbols_200 {} - tri stm - 1 wgt kw - mc2 - stopwords 1".format(date, participant)
     
     
-    with open(sessionDir+"/utterance data - {:}.csv".format(condition), "w", newline="") as csvfile:
+    np.savetxt(sessionDir+"/{} - utterance cos dists.txt".format(condition), distMatrix, fmt="%.4f")
+    
+    np.savetxt(sessionDir+"/{} - utterance vectors.txt".format(condition), vectorsNoNan, fmt="%d")
+    
+    
+    print("pickling the utterance vectorizer...")
+    pkl.dump(uttVectorizer, open(sessionDir+"/{}_utterance_vectorizer.pkl".format(condition) ,"wb"))
+    
+    
+    with open(sessionDir+"/{} - utterance data.csv".format(condition), "w", newline="") as csvfile:
         
         fieldnames = ["Utterance ID", "Timestamp", "Trial ID", "Condition", "Utterance"]
         
@@ -889,7 +917,8 @@ if __name__ == '__main__':
         
         for i in range(len(utterancesNoNan)):
             
-            data = {"Utterance":utterancesNoNan[i]}
+            data = {"Utterance ID": i,
+                    "Utterance":utterancesNoNan[i]}
             
             writer.writerow(data)
     
