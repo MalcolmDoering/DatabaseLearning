@@ -22,6 +22,15 @@ modelDir = projectDir + "models/"
 logDir = "/home/malcolm/eclipse-log"
 
 
+
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+
 def time_now():
     return time.strftime("%Y-%m-%d_%H-%M-%S")
 
