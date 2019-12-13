@@ -197,8 +197,8 @@ for i in range(len(interactionFilenames)):
 #
 # load the shopkeeper speech clusters
 #
-shkpUttToSpeechClustId, shkpSpeechClustIdToRepUtt, junkSpeechClusterIds = tools.load_shopkeeper_speech_clusters(shopkeeperSpeechClusterFilename)
-print(len(shkpSpeechClustIdToRepUtt), "shopkeeper speech clusters")
+shkpUttToSpeechClustId, shkpSpeechClustIdToRepUtt, speechClustIdToShkpUtts, junkSpeechClusterIds = tools.load_shopkeeper_speech_clusters(shopkeeperSpeechClusterFilename)
+print(len(speechClustIdToShkpUtts), "shopkeeper speech clusters")
 
 
 #
@@ -207,7 +207,7 @@ print(len(shkpSpeechClustIdToRepUtt), "shopkeeper speech clusters")
 #
 #tupleToSpatialClustId = {}
 #spatialClustIdToTuple = {}
-
+"""
 tupleToShkpActionId = {}
 shkpActionIdToTuple = {}
 
@@ -255,7 +255,18 @@ with open(sessionDir+"/shopkeeper_action_clusters.csv", "w", newline="") as csvf
                }
         
         writer.writerow(row)
+"""
 
+
+#
+# add shopkeeper speech cluster info to the interaction data
+#
+for i in range(len(interactions)):
+    for j in range(len(interactions[i])):
+        
+        shkpSpeech = interactions[i][j]["SHOPKEEPER_SPEECH_WITH_SYMBOLS"].lower()
+        shkpSpeechClustId = shkpUttToSpeechClustId[shkpSpeech]        
+        interactions[i][j]["OUTPUT_SHOPKEEPER_SPEECH_CLUSTER_ID"] = shkpSpeechClustId
 
 
 #
@@ -439,7 +450,13 @@ for i in range(len(interactions)):
     print("processing", i+1, "of", len(interactions), "...")
     
     inputSequences = []
-    outputActionIds = []
+    #outputActionIds = []
+    
+    outputSpeechClusters = []
+    outputLocations = []
+    outputSpatialStates = []
+    outputStateTargets = []
+    
     outputCameraIndices = []
     count = 0
     
@@ -466,7 +483,16 @@ for i in range(len(interactions)):
             inputSequences.append(inSeqTemp)
             
             # append the outputs
-            outputActionIds.append(interactions[i][j]["OUTPUT_SHOPKEEPER_ACTION_CLUSTER_ID"])
+            #outputActionIds.append(interactions[i][j]["OUTPUT_SHOPKEEPER_ACTION_CLUSTER_ID"])
+            
+            outputSpeechClusters.append(interactions[i][j]["OUTPUT_SHOPKEEPER_SPEECH_CLUSTER_ID"])
+            outputLocations.append(interactions[i][j]["OUTPUT_SHOPKEEPER_LOCATION"])
+            outputSpatialStates.append(interactions[i][j]["OUTPUT_SPATIAL_STATE"])
+            outputStateTargets.append(interactions[i][j]["OUTPUT_STATE_TARGET"])
+            
+            
+            
+            
             outputCameraIndices.append(interactions[i][j]["OUTPUT_CAMERA_INDEX"])
             
             count += 1
@@ -478,9 +504,25 @@ for i in range(len(interactions)):
     inputSequences = inputSequences.astype(np.float32)
     np.save(sessionDir+"/"+fn, inputSequences)
     
-    fn = interactionFilenamesAll[i].split("/")[-1][:-4] + "_output_action_ids"
-    outputActionIds = np.asarray(outputActionIds)
-    np.save(sessionDir+"/"+fn, outputActionIds)
+    #fn = interactionFilenamesAll[i].split("/")[-1][:-4] + "_output_action_ids"
+    #outputActionIds = np.asarray(outputActionIds)
+    #np.save(sessionDir+"/"+fn, outputActionIds)
+    
+    fn = interactionFilenamesAll[i].split("/")[-1][:-4] + "_output_speech_cluster_ids"
+    outputSpeechClusters = np.asarray(outputSpeechClusters)
+    np.save(sessionDir+"/"+fn, outputSpeechClusters)
+    
+    fn = interactionFilenamesAll[i].split("/")[-1][:-4] + "_output_locations"
+    outputLocations = np.asarray(outputLocations)
+    np.save(sessionDir+"/"+fn, outputLocations)
+    
+    fn = interactionFilenamesAll[i].split("/")[-1][:-4] + "_output_spatial_states"
+    outputSpatialStates = np.asarray(outputSpatialStates)
+    np.save(sessionDir+"/"+fn, outputSpatialStates)
+    
+    fn = interactionFilenamesAll[i].split("/")[-1][:-4] + "_output_state_targets"
+    outputStateTargets = np.asarray(outputStateTargets)
+    np.save(sessionDir+"/"+fn, outputStateTargets)
     
     fn = interactionFilenamesAll[i].split("/")[-1][:-4] + "_output_camera_indices"
     outputCameraIndices = np.asarray(outputCameraIndices)
