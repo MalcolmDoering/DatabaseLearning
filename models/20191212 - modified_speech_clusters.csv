@@ -3679,7 +3679,7 @@ Utterance.ID,Timestamp,Trial.ID,Condition,Cluster.ID,IS_NEW_REPRESENTATIVE,Is.Re
 24682,NA,NA,NA,57,0,0,1,a few of this camera 's <preset_modes> .,3681,1,0.450088041473075,0,0,0,0
 24684,NA,NA,NA,19,0,0,1,this camera only has a few <settings> .,3681,1,0.450088041473075,0,0,0,0
 24687,NA,NA,NA,77,0,0,1,the camera is a <camera_type> camera that has <settings> .,3681,1,0.450088041473075,0,0,0,0
-85,NA,NA,NA,11,0,1,1,this one is a <camera_type> camera .,3681,1,0.450088041473075,0,0,0,0
+85,NA,NA,NA,11,0,0,1,this one is a <camera_type> camera .,3681,1,0.450088041473075,0,0,0,0
 51,NA,NA,NA,1,1,0,0,good afternoon how can i help,1955,0,0,1,0.1403,0.970414180946932,1
 61,NA,NA,NA,1,1,0,0,good afternoon how can i help,1955,0,0,1,0.1403,0.970414180946932,1
 67,NA,NA,NA,1,1,0,0,good afternoon how can i help,1955,0,0,1,0.1403,0.970414180946932,1
@@ -11408,7 +11408,7 @@ Utterance.ID,Timestamp,Trial.ID,Condition,Cluster.ID,IS_NEW_REPRESENTATIVE,Is.Re
 24655,NA,NA,NA,68,0,0,1,the camera has 13 picture effects.,234,1,0.371985321521587,1,0.2671,0.91717954430001,1
 24681,NA,NA,NA,20,0,0,1,it has 13 picture effects.,234,1,0.371985321521587,1,0.2671,0.91717954430001,1
 24697,NA,NA,NA,42,0,0,1,this one has 13 picture effects on it.,234,1,0.371985321521587,1,0.2671,0.91717954430001,1
-11509,NA,NA,NA,68,0,1,1,the camera has 12 photo effects.,234,1,0.371985321521587,1,0.2671,0.91717954430001,1
+11509,NA,NA,NA,68,0,0,1,the camera has 12 photo effects.,234,1,0.371985321521587,1,0.2671,0.91717954430001,1
 136,NA,NA,NA,21,0,0,0,<color> are the two colors this camera comes in .,231,0.8328,0.193428341803116,1,0.1899,0.886606653211612,1
 161,NA,NA,NA,21,0,0,0,the camera comes in <color> .,231,0.8328,0.193428341803116,1,0.1899,0.886606653211612,1
 548,NA,NA,NA,21,1,0,0,this camera comes in <color> .,231,0.8328,0.193428341803116,1,0.1899,0.886606653211612,1
@@ -15824,7 +15824,7 @@ Utterance.ID,Timestamp,Trial.ID,Condition,Cluster.ID,IS_NEW_REPRESENTATIVE,Is.Re
 24346,NA,NA,NA,24,0,0,1,having both <settings> on this camera always let you get that perfect shot .,157,1,0.371639747672709,1,0.2829,0.898720012043767,0.9437
 24375,NA,NA,NA,46,0,0,1,with this camera you will experience iso of up to 6400.,157,1,0.371639747672709,1,0.2829,0.898720012043767,0.9437
 24505,NA,NA,NA,43,0,0,1,yes this camear does have <settings> with <settings> if you want to get that perfect shot .,157,1,0.371639747672709,1,0.2829,0.898720012043767,0.9437
-19662,NA,NA,NA,24,0,1,1,you get both <settings> on this camera .,157,1,0.371639747672709,1,0.2829,0.898720012043767,0.9437
+19662,NA,NA,NA,24,0,0,1,you get both <settings> on this camera .,157,1,0.371639747672709,1,0.2829,0.898720012043767,0.9437
 251,NA,NA,NA,44,0,0,0,it features <settings>,156,0.7903,0.136455827129859,1,0.0986,0.931354100056057,1
 424,NA,NA,NA,44,0,0,0,this camera features both <settings> .,156,0.7903,0.136455827129859,1,0.0986,0.931354100056057,1
 538,NA,NA,NA,44,0,0,0,it features <settings> .,156,0.7903,0.136455827129859,1,0.0986,0.931354100056057,1
@@ -17048,7 +17048,7 @@ Utterance.ID,Timestamp,Trial.ID,Condition,Cluster.ID,IS_NEW_REPRESENTATIVE,Is.Re
 24319,NA,NA,NA,15,0,0,1,the camera weighs less than 600 grams.,151,1,0.358417907284776,1,0.3298,0.90172704850859,1
 24414,NA,NA,NA,15,0,0,1,the camera weighs less than 600 grams.,151,1,0.358417907284776,1,0.3298,0.90172704850859,1
 24552,NA,NA,NA,115,0,0,1,this camera is a bit over $100.,151,1,0.358417907284776,1,0.3298,0.90172704850859,1
-15534,NA,NA,NA,15,0,1,1,the camera weighs 565 grams.,151,1,0.358417907284776,1,0.3298,0.90172704850859,1
+15534,NA,NA,NA,15,0,0,1,the camera weighs 565 grams.,151,1,0.358417907284776,1,0.3298,0.90172704850859,1
 9,NA,NA,NA,52,0,0,0,the exposure time is <long_exposure> on this one .,149,1,0.319178822782513,1,0.3719,0.93617561867631,1
 168,NA,NA,NA,52,0,0,0,the exposures on this model can go <long_exposure> .,149,1,0.319178822782513,1,0.3719,0.93617561867631,1
 201,NA,NA,NA,52,0,0,0,the exposures on this can go on forever in bulb mode.,149,1,0.319178822782513,1,0.3719,0.93617561867631,1
@@ -21743,7 +21743,7 @@ Utterance.ID,Timestamp,Trial.ID,Condition,Cluster.ID,IS_NEW_REPRESENTATIVE,Is.Re
 23606,NA,NA,NA,87,0,0,1,the effects on this one include 11 advanced and awesome filters.,112,1,0.367988473294722,1,0.2339,0.929407362856597,0.9553
 24051,NA,NA,NA,23,0,0,1,the presets on this include 14 scene modes.,112,1,0.367988473294722,1,0.2339,0.929407362856597,0.9553
 24663,NA,NA,NA,87,0,0,1,the effects include <effects>,112,1,0.367988473294722,1,0.2339,0.929407362856597,0.9553
-3068,NA,NA,NA,101,0,1,1,the effects on this model include <effects>,112,1,0.367988473294722,1,0.2339,0.929407362856597,0.9553
+3068,NA,NA,NA,101,0,0,1,the effects on this model include <effects>,112,1,0.367988473294722,1,0.2339,0.929407362856597,0.9553
 118,NA,NA,NA,88,1,0,0,the resolution on this model is <resolution> .,108,0.798,0.159859640013846,1,0.2308,0.89351295038662,1
 141,NA,NA,NA,88,0,0,0,the resolution on this camera is <resolution> .,108,0.798,0.159859640013846,1,0.2308,0.89351295038662,1
 307,NA,NA,NA,88,0,0,0,the resolution on this camera is <resolution> .,108,0.798,0.159859640013846,1,0.2308,0.89351295038662,1
@@ -23276,7 +23276,7 @@ Utterance.ID,Timestamp,Trial.ID,Condition,Cluster.ID,IS_NEW_REPRESENTATIVE,Is.Re
 22974,NA,NA,NA,80,0,0,1,<price> is what this model will run you .,85,0.9512,0.355837086834733,1,0.2443,0.911372787445847,1
 23111,NA,NA,NA,103,0,0,1,with this model you 'll get <preset_modes> that have some various unique settings .,85,0.9512,0.355837086834733,1,0.2443,0.911372787445847,1
 24291,NA,NA,NA,57,0,0,1,with this one you get <preset_modes> .,85,0.9512,0.355837086834733,1,0.2443,0.911372787445847,1
-9274,NA,NA,NA,39,0,1,1,with this one you will pay <price> .,85,0.9512,0.355837086834733,1,0.2443,0.911372787445847,1
+9274,NA,NA,NA,39,0,0,1,with this one you will pay <price> .,85,0.9512,0.355837086834733,1,0.2443,0.911372787445847,1
 995,NA,NA,NA,104,1,0,0,it 's a <camera_type> camera .,84,0.6087,0.0916735083189897,1,0.1567,0.84731116964957,1
 1125,NA,NA,NA,104,1,0,0,it 's a <camera_type> camera .,84,0.6087,0.0916735083189897,1,0.1567,0.84731116964957,1
 1153,NA,NA,NA,104,0,0,0,it 's a small <camera_type> camera .,84,0.6087,0.0916735083189897,1,0.1567,0.84731116964957,1
@@ -23523,7 +23523,7 @@ Utterance.ID,Timestamp,Trial.ID,Condition,Cluster.ID,IS_NEW_REPRESENTATIVE,Is.Re
 23282,NA,NA,NA,25,0,0,1,i think you 'd love the price of <price> on this camera given all of its features .,81,1,0.411120108024692,1,0.376,0.916101338538862,1
 24483,NA,NA,NA,8,0,0,1,at just <price> this camera would be a very economical choice for you .,81,1,0.411120108024692,1,0.376,0.916101338538862,1
 24693,NA,NA,NA,69,0,0,1,this <camera_type> camera should help you get those high quality images you 're after .,81,1,0.411120108024692,1,0.376,0.916101338538862,1
-21666,NA,NA,NA,8,0,1,1,at just <price> you 'll be able to easily afford this camera .,81,1,0.411120108024692,1,0.376,0.916101338538862,1
+21666,NA,NA,NA,8,0,0,1,at just <price> you 'll be able to easily afford this camera .,81,1,0.411120108024692,1,0.376,0.916101338538862,1
 2151,NA,NA,NA,107,1,0,0,please let me know if you have any questions,80,0,0,1,0.24,0.938240532462888,1
 3003,NA,NA,NA,107,1,0,0,please let me know if you have any questions,80,0,0,1,0.24,0.938240532462888,1
 4319,NA,NA,NA,107,1,0,0,please let me know if you have any questions,80,0,0,1,0.24,0.938240532462888,1
@@ -23912,7 +23912,7 @@ Utterance.ID,Timestamp,Trial.ID,Condition,Cluster.ID,IS_NEW_REPRESENTATIVE,Is.Re
 23482,NA,NA,NA,111,0,0,1,its preset scenes include sport snow and beach.,77,1,0.39219053315106,1,0.3189,0.939655447243051,1
 24102,NA,NA,NA,57,0,0,1,this camera comes with 13 <preset_modes> including sport snow and beach .,77,1,0.39219053315106,1,0.3189,0.939655447243051,1
 24128,NA,NA,NA,111,0,0,1,you've got your option of using 13 different preset shooting modes including snow beach and sport.,77,1,0.39219053315106,1,0.3189,0.939655447243051,1
-16093,NA,NA,NA,23,0,1,1,it features nine preset modes including beach snow night and portrait.,77,1,0.39219053315106,1,0.3189,0.939655447243051,1
+16093,NA,NA,NA,23,0,0,1,it features nine preset modes including beach snow night and portrait.,77,1,0.39219053315106,1,0.3189,0.939655447243051,1
 268,NA,NA,NA,112,0,0,0,this one can take 8 second exposures.,75,0.9494,0.296102432432431,1,0.3579,0.935234175133886,1
 352,NA,NA,NA,112,0,0,0,this one can <long_exposure> .,75,0.9494,0.296102432432431,1,0.3579,0.935234175133886,1
 360,NA,NA,NA,112,0,0,0,this one takes 8 second exposures.,75,0.9494,0.296102432432431,1,0.3579,0.935234175133886,1
