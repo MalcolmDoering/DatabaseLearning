@@ -10,16 +10,17 @@ import csv
 from scipy.stats import entropy
 
 
+# for Malcolm desktop (robovie)
+#projectDir = "C:/Users/robovie/eclipse-workspace/DatabaseLearning/"
+#logDir = "E:/eclipse-log"
 
-projectDir = "C:/Users/robovie/eclipse-workspace/DatabaseLearning/"
+# for malcolm @ gpgpu1
+projectDir = "/home/malcolm//eclipse-workspace/DatabaseLearning/"
+logDir = "/home/malcolm/eclipse-log"
+
 
 dataDir = projectDir + "data/"
-
 modelDir = projectDir + "models/"
-
-#logDir = "/home/erica/malcolmlog"
-#logDir = "/home/malcolm/eclipse-log"
-logDir = "E:/eclipse-log"
 
 punctuation = r"""!"#%&()*+,:;<=>?@[\]^_`{|}~""" # leave in $ . / - '
 
@@ -156,6 +157,7 @@ def read_crossvalidation_splits(numFolds):
 
 def load_shopkeeper_speech_clusters(shopkeeperSpeechClusterFilename):
     shkpUttToSpeechClustId = {}
+    speechClustIdToShkpUtts = {}
     shkpSpeechClustIdToRepUtt = {}
     
     goodSpeechClusterIds = []
@@ -164,24 +166,34 @@ def load_shopkeeper_speech_clusters(shopkeeperSpeechClusterFilename):
     with open(shopkeeperSpeechClusterFilename, encoding="utf-8") as csvfile:
             reader = csv.DictReader(csvfile)
             
+            
             for row in reader:
                 utt = row["Utterance"].lower()
-                
+                speechClustId = int(row["Cluster.ID"])
+            
                 if utt not in shkpUttToSpeechClustId:
-                    shkpUttToSpeechClustId[utt] = int(row["Cluster.ID"])
+                    shkpUttToSpeechClustId[utt] = speechClustId
                 
                 elif utt in shkpUttToSpeechClustId:
-                    if int(row["Cluster.ID"]) != shkpUttToSpeechClustId[utt]:
+                    if speechClustId != shkpUttToSpeechClustId[utt]:
                         print("WARNING: Shopkeeper utterance \"{}\" is in multiple speech clusters!".format(utt))
                 
+                
+                if speechClustId not in speechClustIdToShkpUtts:
+                    speechClustIdToShkpUtts[speechClustId] = []
+                speechClustIdToShkpUtts[speechClustId].append(utt)
+                
+                
                 if row["IS_NEW_REPRESENTATIVE"] == "1":
-                    shkpSpeechClustIdToRepUtt[int(row["Cluster.ID"])] = utt
+                    shkpSpeechClustIdToRepUtt[speechClustId] = utt
                 
-                if row["Is.Junk"] == "0" and int(row["Cluster.ID"]) not in goodSpeechClusterIds:
-                    goodSpeechClusterIds.append(int(row["Cluster.ID"]))
+                if row["Is.Junk"] == "0" and speechClustId not in goodSpeechClusterIds:
+                    goodSpeechClusterIds.append(speechClustId)
                 
-                if row["Is.Junk"] == "1" and int(row["Cluster.ID"]) not in junkSpeechClusterIds:
-                    junkSpeechClusterIds.append(int(row["Cluster.ID"]))
+                if row["Is.Junk"] == "1" and speechClustId not in junkSpeechClusterIds:
+                    junkSpeechClusterIds.append(speechClustId)
+                
+                
                 
     # if any of the utterances in the cluster are marked as not junk, then treat this as a normal cluster
     # (junk utterances that were sorted into good clusters still have there original junk marking)
@@ -192,7 +204,7 @@ def load_shopkeeper_speech_clusters(shopkeeperSpeechClusterFilename):
     shkpUttToSpeechClustId[""] = len(shkpSpeechClustIdToRepUtt)
     shkpSpeechClustIdToRepUtt[shkpUttToSpeechClustId[""]] = ""
     
-    return shkpUttToSpeechClustId, shkpSpeechClustIdToRepUtt, junkSpeechClusterIds
+    return shkpUttToSpeechClustId, shkpSpeechClustIdToRepUtt, speechClustIdToShkpUtts, junkSpeechClusterIds
 
 
 def load_shopkeeper_action_clusters(shopkeeperActionClusterFilename):
