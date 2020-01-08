@@ -24,7 +24,7 @@ import tools
 
 sessionDir = tools.create_session_dir("stringmatch1")
 
-dataDirectory = tools.dataDir+"2019-11-12_17-40-29_advancedSimulator9"
+dataDirectory = tools.dataDir+"2020-01-08_advancedSimulator9"
 numTrainDbs = 10
 numInteractionsPerDb = 200
 
@@ -34,7 +34,13 @@ useLemmatization = False
 cameras = ["CAMERA_1", "CAMERA_2", "CAMERA_3"]
 
 
-punctuation = r"""!"#%&'()*+,:;<=>?@[\]^_`{|}~""" # leave in $ . / -
+punctuation = tools.punctuation
+
+
+#numberWords = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight",
+#        "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", 
+#        "seventeen", "eighteen", "nineteen", "twenty", "thirty", "forty", "fifty", "sixty", 
+#        "seventy", "eighty", "ninety", "hundred", "thousand", "million", "billion", "trillion"]
 
 
 def read_simulated_interactions(filename, dbFieldnames, numInteractionsPerDb, keepActions=None):
@@ -82,7 +88,18 @@ def read_simulated_interactions(filename, dbFieldnames, numInteractionsPerDb, ke
                 
                 
                 row["DATABASE_CONTENTS"] = row["DATABASE_CONTENTS"].lower().translate(str.maketrans('', '', punctuation))
-                row["DATABASE_CONTENTS"] = row["DATABASE_CONTENTS"].replace("camera", "")
+                row["DATABASE_CONTENTS"] = row["DATABASE_CONTENTS"].replace("-", " ") # replace - with a space when it occurs between chars
+                
+                
+                
+                shkpTop = row["SHOPKEEPER_TOPIC"]
+                
+                if row["OUTPUT_SHOPKEEPER_ACTION"] == "S_INTRODUCES_CAMERA":
+                    shkpTop = "camera_name"
+                
+                row["DATABASE_CONTENTS"] = modify_database_contents(shkpTop, row["DATABASE_CONTENTS"])
+                
+                row["DATABASE_CONTENTS"] = row["DATABASE_CONTENTS"].lower().translate(str.maketrans('', '', punctuation))
                 row["DATABASE_CONTENTS"] = row["DATABASE_CONTENTS"].replace("-", " ") # replace - with a space when it occurs between chars
                 
                 
@@ -122,13 +139,30 @@ def read_database_file(filename):
             
             for key in row:
                 row[key] = row[key].lower().translate(str.maketrans('', '', punctuation))
-                row[key] = row[key].replace("camera", "")
-                row[key] = row[key].replace("-", " ") # replace - with a space when it occurs between chars
+                row[key] = row[key].replace("-", " ") # replace - with a space when it occurs between chars 
+            
+            row["camera_type"] = modify_database_contents("camera_type", row["camera_type"])
+            row["optical_zoom"] = modify_database_contents("optical_zoom", row["optical_zoom"])
+            row["autofocus_points"] = modify_database_contents("autofocus_points", row["autofocus_points"])
+            row["ISO"] = modify_database_contents("ISO", row["ISO"])
             
             database.append(row)
     
     return database, fieldnames
 
+
+def modify_database_contents(attr, contents):
+    if attr == "camera_type":
+        contents = contents.replace("camera", "")
+    elif attr == "optical_zoom":
+        contents = contents.replace("optical zoom", "")
+    elif attr == "autofocus_points":
+        contents = contents.replace("autofocus points", "")
+    elif attr == "ISO" or attr == "iso":
+        contents = contents.replace("ISO", "")
+        contents = contents.replace("iso", "")
+    
+    return contents
 
 
 def tokenize_utterance(utt):
@@ -159,6 +193,25 @@ def lemmatize_word(w):
 def contains_digit(inputString):
     return any(char.isdigit() for char in inputString)
 
+
+def replace_nums_with_digits(tokenSequence):
+    wordToDigit = {"four": "4",
+                   "five": "5",
+                   "six": "6",
+                   "seven": "7",
+                   "eight": "8",
+                   "nine": "9",
+                   "ten": "10"}
+    
+    modifiedTokenSequence = []
+    
+    for w in tokenSequence:
+        if w in wordToDigit:
+            modifiedTokenSequence.append(wordToDigit[w])
+        else:
+            modifiedTokenSequence.append(w)
+    
+    return modifiedTokenSequence
 
 
 #
@@ -801,9 +854,12 @@ with open(sessionDir + "/potential_substring_matches.csv", "w", newline="") as c
 
 
 
+
 #
 # save the symbol strings into the interaction csv files
 #
+allData = []
+
 for i in range(len(interactionFilenames)):
     filename = interactionFilenames[i]
     
@@ -823,10 +879,6 @@ for i in range(len(interactionFilenames)):
             
             dbId = row["DATABASE_ID"]
             
-            gtDbContents = row["DATABASE_CONTENTS"].lower().translate(str.maketrans('', '', punctuation))
-            gtDbContents = gtDbContents.replace("camera", "")
-            gtDbContents = gtDbContents.replace("-", " ") # replace - with a space when it occurs between chars
-            
             try:
                 gtDbCamera = cameras.index(row["CURRENT_CAMERA_OF_CONVERSATION"])
             except:
@@ -843,6 +895,17 @@ for i in range(len(interactionFilenames)):
                 gtDbCamera = cameras.index(row["OUTPUT_STATE_TARGET"])
                 gtDbAttribute = dbFieldnames.index("camera_name")
             
+            
+            if gtDbAttribute != -1:
+                gtDbContents = modify_database_contents(dbFieldnames[gtDbAttribute], row["DATABASE_CONTENTS"])
+            else:
+                gtDbContents = ""
+                
+            gtDbContents = gtDbContents.lower().translate(str.maketrans('', '', punctuation))
+            gtDbContents = gtDbContents.replace("-", " ") # replace - with a space when it occurs between chars
+            
+            
+            
             combo = (shkpUtt, dbId, gtDbCamera, gtDbAttribute, gtDbContents, gtShkpAction)
             
             
@@ -854,12 +917,14 @@ for i in range(len(interactionFilenames)):
                 matchDbContents = [m["CANDIDATE_DATABASE_CONTENTS"] for m in matches]
                 
                 row["SHOPKEEPER_SPEECH_WITH_SYMBOLS"] = comboToSymbolString[combo]
+                row["SHOPKEEPER_SPEECH_STRING_SEARCH_TOKENS"] = uttToTokenized[combo[0]]                
                 row["SYMBOL_MATCH_SUBSTRINGS"] = matchSubstrings
                 row["SYMBOL_CANDIDATE_DATABASE_INDICES"] = matchDbIndices
                 row["SYMBOL_CANDIDATE_DATABASE_CONTENTS"] = matchDbContents
                 
             else:
                 row["SHOPKEEPER_SPEECH_WITH_SYMBOLS"] = ""
+                row["SHOPKEEPER_SPEECH_STRING_SEARCH_TOKENS"] = []
                 row["SYMBOL_MATCH_SUBSTRINGS"] = []
                 row["SYMBOL_CANDIDATE_DATABASE_INDICES"] = []
                 row["SYMBOL_CANDIDATE_DATABASE_CONTENTS"] = []
@@ -871,16 +936,27 @@ for i in range(len(interactionFilenames)):
     modifiedFilename = modifiedFilename[:37] + "withsymbols_" + str(numInteractionsPerDb) + modifiedFilename[41:]
     
     fieldnames.append("SHOPKEEPER_SPEECH_WITH_SYMBOLS")
+    fieldnames.append("SHOPKEEPER_SPEECH_STRING_SEARCH_TOKENS")
     fieldnames.append("SYMBOL_MATCH_SUBSTRINGS")
     fieldnames.append("SYMBOL_CANDIDATE_DATABASE_INDICES")
     fieldnames.append("SYMBOL_CANDIDATE_DATABASE_CONTENTS")
     
-        
+    
     with open(sessionDir+"/" +modifiedFilename, "w", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for row in modifiedInteraction:
             writer.writerow(row)
+            allData.append(row)
 
+
+#
+# also save all the data in one big file for analysis purposes
+#
+with open(sessionDir+"/all_interaction_data.csv", "w", newline="") as csvfile:
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    writer.writeheader()
+    for row in allData:
+        writer.writerow(row)
 
 

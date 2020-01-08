@@ -24,7 +24,7 @@ logDir = "E:/eclipse-log"
 #
 
 # customer data
-condition = "20191121_simulated_data_csshkputts_withsymbols_200 shopkeeper - tri stm - 1 wgt kw - mc2 - stopwords 1"
+condition = "20191219_simulated_data_csshkputts_nosymbols_200 shopkeeper - tri stm - 1 wgt kw - mc2 - stopwords 1"
 
 subUttData <- read.csv(file=paste("C:/Users/robovie/eclipse-workspace/DatabaseLearning/data/utterance vectors/", condition, " - utterance data.csv", sep=""), 
                     header=TRUE, sep=",")
@@ -72,7 +72,7 @@ dendro = hclust(dissim, method = "average");
 
 rawClusters <- cutreeHybrid(dendro,
                             cutHeight = 0.99,
-                            minClusterSize = 5,
+                            minClusterSize = 70,
                             deepSplit = 4,
                             pamStage = TRUE,
                             distM = subDistMatrix, 

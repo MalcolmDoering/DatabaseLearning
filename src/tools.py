@@ -11,12 +11,12 @@ from scipy.stats import entropy
 
 
 # for Malcolm desktop (robovie)
-#projectDir = "C:/Users/robovie/eclipse-workspace/DatabaseLearning/"
-#logDir = "E:/eclipse-log"
+projectDir = "C:/Users/robovie/eclipse-workspace/DatabaseLearning/"
+logDir = "E:/eclipse-log"
 
 # for malcolm @ gpgpu1
-projectDir = "/home/malcolm//eclipse-workspace/DatabaseLearning/"
-logDir = "/home/malcolm/eclipse-log"
+#projectDir = "/home/malcolm//eclipse-workspace/DatabaseLearning/"
+#logDir = "/home/malcolm/eclipse-log"
 
 
 dataDir = projectDir + "data/"

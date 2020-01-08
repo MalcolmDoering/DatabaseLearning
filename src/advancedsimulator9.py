@@ -1155,7 +1155,7 @@ class ShopkeeperAgent(object):
             currIntState.outputShopkeeperAction = "S_INTRODUCES_CAMERA"
             currIntState.currentCameraOfConversation = currCamera
             
-            currIntState.shopkeeperTopic = ""
+            currIntState.shopkeeperTopic = "camera_name"
             
             currIntState.shopkeeperSpeech = ""
             currIntState.outputCustomerLocation = currCamera

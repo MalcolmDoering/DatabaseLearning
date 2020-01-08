@@ -19,9 +19,9 @@ import tools
 
 
 
-interactionDir = tools.dataDir+"2019-11-12_17-40-29_advancedSimulator9"
-shkpUttFilename = tools.dataDir + "2019-11-11_13-54-06_crowdsourcing_results_all_mod.csv"
-databaseDir = tools.dataDir+"2019-09-18_13-15-13_advancedSimulator9"
+interactionDir = tools.dataDir+"2020-01-08_advancedSimulator9"
+shkpUttFilename = tools.dataDir + "2019-11-11_13-54-06_crowdsourcing_results_all_mod_preprocc.csv"
+databaseDir = interactionDir
 
 sessionDir = tools.create_session_dir("injectutterances")
 
@@ -83,13 +83,13 @@ def read_simulated_interactions(filename, keepActions=None):
             
             if (keepActions == None) or (row["OUTPUT_SHOPKEEPER_ACTION"] in keepActions): # and row["SHOPKEEPER_TOPIC"] == "price"):
                 
-                row["CUSTOMER_SPEECH"] = row["CUSTOMER_SPEECH"].lower().translate(str.maketrans('', '', string.punctuation))
-                row["SHOPKEEPER_SPEECH"] = row["SHOPKEEPER_SPEECH"].lower()
+                #row["CUSTOMER_SPEECH"] = row["CUSTOMER_SPEECH"].lower().translate(str.maketrans('', '', string.punctuation))
+                #row["SHOPKEEPER_SPEECH"] = row["SHOPKEEPER_SPEECH"].lower()
                 
                 interactions.append(row)
             
             
-            if row["SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"] != "":
+            if row["SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"] != "" and row["SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"] != "NA":
                 shkpUttToDbEntryRange[row["SHOPKEEPER_SPEECH"]] = [int(i) for i in row["SHOPKEEPER_SPEECH_DB_ENTRY_RANGE"].split("~")]
     
     return interactions, shkpUttToDbEntryRange, gtDbCamera, gtDbAttribute
@@ -238,14 +238,21 @@ for i in range(len(interactions)):
         
         if shkpAction == "S_NOT_SURE":
             top = modTurn["CUSTOMER_TOPIC"]
+        elif shkpAction == "S_INTRODUCES_CAMERA":
+            top = ""
         else:
             top = modTurn["SHOPKEEPER_TOPIC"]
         
+        
         print(shkpAction)
+        print(cam)
+        print(top)
+        print(dbId)
+        print()
                 
         
         if (shkpAction == "S_INTRODUCES_CAMERA" or shkpAction == "S_INTRODUCES_FEATURE" or shkpAction == "S_ANSWERS_QUESTION_ABOUT_FEATURE" or shkpAction == "S_NOT_SURE"):
-            print("hello!")
+            #print("hello!")
             
             # sample without replacement
             uttList = resultUtterancesWithoutReplacement[shkpAction][cam][top][dbId] # copy by reference
