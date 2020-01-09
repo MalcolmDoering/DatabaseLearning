@@ -11,12 +11,12 @@ from scipy.stats import entropy
 
 
 # for Malcolm desktop (robovie)
-projectDir = "C:/Users/robovie/eclipse-workspace/DatabaseLearning/"
-logDir = "E:/eclipse-log"
+#projectDir = "C:/Users/robovie/eclipse-workspace/DatabaseLearning/"
+#logDir = "E:/eclipse-log"
 
 # for malcolm @ gpgpu1
-#projectDir = "/home/malcolm//eclipse-workspace/DatabaseLearning/"
-#logDir = "/home/malcolm/eclipse-log"
+projectDir = "/home/malcolm//eclipse-workspace/DatabaseLearning/"
+logDir = "/data1/malcolm/eclipse-log"
 
 
 dataDir = projectDir + "data/"
@@ -184,7 +184,8 @@ def load_shopkeeper_speech_clusters(shopkeeperSpeechClusterFilename):
                 speechClustIdToShkpUtts[speechClustId].append(utt)
                 
                 
-                if row["IS_NEW_REPRESENTATIVE"] == "1":
+                #if row["IS_NEW_REPRESENTATIVE"] == "1":
+                if row["Is.Representative"] == "1":
                     shkpSpeechClustIdToRepUtt[speechClustId] = utt
                 
                 if row["Is.Junk"] == "0" and speechClustId not in goodSpeechClusterIds:
