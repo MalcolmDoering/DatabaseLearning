@@ -19,14 +19,14 @@ import tools
 from utterancevectorizer import UtteranceVectorizer
 
 
-dataDirectory = tools.dataDir+"2019-12-05_14-58-11_advancedSimulator9"
+dataDirectory = tools.dataDir+"2020-01-08_advancedSimulator9"
 
 #sessionDir = tools.create_session_dir("datapreprocessing1_dbl")
 sessionDir = dataDirectory+"_input_sequence_vectors"
 tools.create_directory(sessionDir)
 
 
-shopkeeperSpeechClusterFilename = tools.modelDir + "20191212 - modified_speech_clusters.csv"
+shopkeeperSpeechClusterFilename = tools.modelDir + "20200109_withsymbols shopkeeper-tristm-3wgtkw-9wgtsym-3wgtnum-mc2-sw2-eucldist- speech_clusters.csv"
 
 
 numTrainDbs = 10
@@ -35,6 +35,8 @@ dtype = np.int8
 inputSeqCutoffLen = 10
 
 cameras = ["CAMERA_1", "CAMERA_2", "CAMERA_3"]
+attributes = ["camera_ID", "camera_name", "camera_type", "color", "weight", "preset_modes", "effects", "price", "resolution", "optical_zoom", "settings", "autofocus_points", "sensor_size", "ISO", "long_exposure"]
+
 spatialFormations = ["NONE", "WAITING", "FACE_TO_FACE", "PRESENT_X"]
 stateTargets = ["NONE", "CAMERA_1", "CAMERA_2", "CAMERA_3"]
 locations = ["DOOR", "MIDDLE", "SERVICE_COUNTER", "CAMERA_1", "CAMERA_2", "CAMERA_3"]
@@ -267,26 +269,37 @@ for i in range(len(interactions)):
         shkpSpeech = interactions[i][j]["SHOPKEEPER_SPEECH_WITH_SYMBOLS"].lower()
         shkpSpeechClustId = shkpUttToSpeechClustId[shkpSpeech]        
         interactions[i][j]["OUTPUT_SHOPKEEPER_SPEECH_CLUSTER_ID"] = shkpSpeechClustId
-
+        
 
 #
-# find the DB camera indices to be used for training targets
-# options are CAMERA_1, CAMERA_2, CAMERA_3, NONE
+# find the DB camera indices and attribute indices to be used for training targets
+#
+# camera options are CAMERA_1, CAMERA_2, CAMERA_3
+# attribute options are camera_ID, camera_name, camera_type, color, weight, preset_modes, effects, price, resolution, optical_zoom, settings, autofocus_points, sensor_size, ISO, long_exposure
+#
+# attr vectors will be 0,1 binary vector that can have more than one 1 label (multilabel classification)
+# cam vectors will be the same, but can only have one possible label
 #
 for i in range(len(interactions)):
     for j in range(len(interactions[i])):
         dbIndices = interactions[i][j]["SYMBOL_CANDIDATE_DATABASE_INDICES"]
         
-        # by default use the NONE index
-        camIndex = 4
-                
+        cameraIndices = []
+        attributeIndices = []
+        
+        for k in range(len(dbIndices)):
+            #cameraIndices.append(dbIndices[k][0])
+            attributeIndices.append(dbIndices[k][1])
+        
         # if there is only one index tuple, then use the camera index from that
         # if there are multiple index tuples, then use the camera index that occurs most frequently
         if len(dbIndices) > 0:
-            camIndices = [x[0] for x in dbIndices]
-            camIndex = max(set(camIndices), key=camIndices.count)
+            allCamIndices = [x[0] for x in dbIndices]
+            camIndex = max(set(allCamIndices), key=allCamIndices.count)
+            cameraIndices.append(camIndex)
         
-        interactions[i][j]["OUTPUT_CAMERA_INDEX"] = camIndex
+        interactions[i][j]["OUTPUT_CAMERA_INDEX"] = cameraIndices
+        interactions[i][j]["OUTPUT_ATTRIBUTE_INDEX"] = attributeIndices
 
 
 #
@@ -458,6 +471,9 @@ for i in range(len(interactions)):
     outputStateTargets = []
     
     outputCameraIndices = []
+    outputAttributeIndices = []
+    #outputDbIndexMasks = []
+    
     count = 0
     
     for sei in startEndIndices[i]:
@@ -485,15 +501,23 @@ for i in range(len(interactions)):
             # append the outputs
             #outputActionIds.append(interactions[i][j]["OUTPUT_SHOPKEEPER_ACTION_CLUSTER_ID"])
             
+            # create the camera and attribute output index target vectors
+            cameraIndexOutputs = np.zeros(len(cameras))
+            for index in interactions[i][j]["OUTPUT_CAMERA_INDEX"]:
+                cameraIndexOutputs[index] = 1
+            
+            attributeIndexOutputs = np.zeros(len(attributes))
+            for index in interactions[i][j]["OUTPUT_ATTRIBUTE_INDEX"]:
+                attributeIndexOutputs[index] = 1
+            
+            
             outputSpeechClusters.append(interactions[i][j]["OUTPUT_SHOPKEEPER_SPEECH_CLUSTER_ID"])
             outputLocations.append(interactions[i][j]["OUTPUT_SHOPKEEPER_LOCATION"])
             outputSpatialStates.append(interactions[i][j]["OUTPUT_SPATIAL_STATE"])
             outputStateTargets.append(interactions[i][j]["OUTPUT_STATE_TARGET"])
             
-            
-            
-            
-            outputCameraIndices.append(interactions[i][j]["OUTPUT_CAMERA_INDEX"])
+            outputCameraIndices.append(cameraIndexOutputs)
+            outputAttributeIndices.append(attributeIndexOutputs)
             
             count += 1
             #print("{} / {}".format(count, len(interactions[i])))
@@ -527,6 +551,10 @@ for i in range(len(interactions)):
     fn = interactionFilenamesAll[i].split("/")[-1][:-4] + "_output_camera_indices"
     outputCameraIndices = np.asarray(outputCameraIndices)
     np.save(sessionDir+"/"+fn, outputCameraIndices)
+    
+    fn = interactionFilenamesAll[i].split("/")[-1][:-4] + "_output_attribute_indices"
+    outputCameraIndices = np.asarray(outputAttributeIndices)
+    np.save(sessionDir+"/"+fn, outputAttributeIndices)
     
     
     print("completed", i+1, "of", len(interactions))

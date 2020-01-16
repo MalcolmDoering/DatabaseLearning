@@ -463,7 +463,6 @@ def run(gpu, seed, camTemp, attTemp, teacherForcingProb, sessionDir):
     #dataDirectory = tools.dataDir+"/2019-07-03_15-16-05_advancedSimulator8" # many possible sentences for customer actions (from h-h dataset)
     #dataDirectory = tools.dataDir+"/2019-07-22_handmade_0" # many possible sentences for customer actions (from h-h dataset)
     
-
     dataDirectory = tools.dataDir+"/2019-07-24_14-58-47_advancedSimulator8" # many possible sentences for customer actions (from h-h dataset), all attributes change
 
     

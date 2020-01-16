@@ -3,13 +3,13 @@ Created on 2019/05/17
 
 @author: malcolm
 
-don't use CopyNet
 
-output shopkeeper action IDs and DB camera indices instead of generating char sequence
+changes to learning3 to workd with actionPrediction19
 '''
 
 
 import tensorflow as tf
+import numpy as np
 
 
 print("tensorflow version", tf.__version__, flush=True)
@@ -32,8 +32,7 @@ class CustomNeuralNetwork(object):
                  numSpatialStates,
                  numStateTargets,
                  batchSize, 
-                 embeddingSize,
-                 camTemp,
+                 embeddingSize_prop,
                  seed,
                  speechClusterWeights,
                  attributeIndexWeights):
@@ -47,8 +46,7 @@ class CustomNeuralNetwork(object):
         self.numSpatialStates = numSpatialStates
         self.numStateTargets = numStateTargets
         self.batchSize = batchSize
-        self.embeddingSize = embeddingSize
-        self.camTemp = camTemp
+        self.embeddingSize = embeddingSize_prop
         self.seed = seed
         self.speechClusterWeights = speechClusterWeights
         self.attributeIndexWeights = attributeIndexWeights
@@ -122,18 +120,18 @@ class CustomNeuralNetwork(object):
             inputs_reshaped = tf.reshape(self.input_sequences, [self.batchSize*self.inputSeqLen, self.inputDim])
             
             inputs_reshaped_condensed = tf.layers.dense(inputs_reshaped,
-                                                        self.embeddingSize,
+                                                        self.embeddingSize_prop,
                                                         activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
             
             inputs_reshaped_condensed = tf.layers.dense(inputs_reshaped_condensed,
-                                                        self.embeddingSize,
+                                                        self.embeddingSize_prop,
                                                         activation=tf.nn.leaky_relu, kernel_initializer=tf.initializers.he_normal())
                                                         
-            inputs_condensed = tf.reshape(inputs_reshaped_condensed, [self.batchSize, self.inputSeqLen, self.embeddingSize])
+            inputs_condensed = tf.reshape(inputs_reshaped_condensed, [self.batchSize, self.inputSeqLen, self.embeddingSize_prop])
             
             
             # then feed the sequence of condensed inputs into an two layer RNN
-            num_units = [self.embeddingSize, self.embeddingSize]
+            num_units = [self.embeddingSize_prop, self.embeddingSize_prop]
             
             cells = [tf.nn.rnn_cell.GRUCell(num_units=n, kernel_initializer=tf.initializers.glorot_normal()) for n in num_units]
             
@@ -262,9 +260,11 @@ class CustomNeuralNetwork(object):
                                                                           weights=speechClusterLossWeights,
                                                                           reduction=tf.losses.Reduction.SUM_OVER_BATCH_SIZE)
             
+            self.attributeIndexLossWeight = 2.5
+            
             self.loss = self.shopkeeper_action_loss
             self.loss += self.camera_index_loss
-            self.loss += (self.attribute_index_loss * 2.5)
+            self.loss += (self.attribute_index_loss * self.attributeIndexLossWeight)
             self.loss += self.location_loss
             self.loss += self.spatial_state_loss
             self.loss += self.state_target_loss
@@ -333,7 +333,64 @@ class CustomNeuralNetwork(object):
         self.sess.run(self.reinit_speech_and_spatial_output_vars_op)
     
     
+    def get_batches(self, numSamples):
+        # note - this will chop off data doesn't factor into a batch of batchSize
+        
+        batchStartEndIndices = []
+        
+        for endIndex in range(self.batchSize, numSamples, self.batchSize):
+            batchStartEndIndices.append((endIndex-self.batchSize, endIndex))
+        
+        return batchStartEndIndices
+    
+    
     def train(self, 
+              inputSequenceVectors,
+              outputActionIds,
+              outputCameraIndices,
+              outputAttributeIndices,
+              outputLocations,
+              outputSpatialStates,
+              outputStateTargets,
+              outputMasks,
+              dbContentLens):
+        
+        batchStartEndIndices = self.get_batches(len(outputActionIds))
+        
+        all_loss = [] 
+        all_shopkeeper_action_loss = [] 
+        all_camera_index_loss = []
+        all_attribute_index_loss = []
+        all_location_loss = []
+        all_spatial_state_loss = [] 
+        all_state_target_loss = []
+        
+        for sei in batchStartEndIndices:
+            
+            loss, shopkeeper_action_loss, camera_index_loss, attribute_index_loss, location_loss, spatial_state_loss, state_target_loss = self._train(
+                inputSequenceVectors[sei[0]:sei[1]],
+                outputActionIds[sei[0]:sei[1]],
+                outputCameraIndices[sei[0]:sei[1]],
+                outputAttributeIndices[sei[0]:sei[1]],
+                outputLocations[sei[0]:sei[1]],
+                outputSpatialStates[sei[0]:sei[1]],
+                outputStateTargets[sei[0]:sei[1]],
+                outputMasks[sei[0]:sei[1]],
+                dbContentLens[sei[0]:sei[1]])
+            
+            all_loss.append(loss) 
+            all_shopkeeper_action_loss.append(shopkeeper_action_loss) 
+            all_camera_index_loss.append(camera_index_loss)
+            all_attribute_index_loss.append(attribute_index_loss)
+            all_location_loss.append(location_loss)
+            all_spatial_state_loss.append(spatial_state_loss) 
+            all_state_target_loss.append(state_target_loss)
+            
+        return all_loss, all_shopkeeper_action_loss, all_camera_index_loss, all_attribute_index_loss, all_location_loss, all_spatial_state_loss, all_state_target_loss
+        
+        
+    
+    def _train(self, 
               inputSequenceVectors,
               outputActionIds,
               outputCameraIndices,
@@ -356,9 +413,12 @@ class CustomNeuralNetwork(object):
                     self.speechClusterWeightsTensor: self.speechClusterWeights,
                     self.attributeIndexWeightsTensor: self.attributeIndexWeights}
         
-        trainingLoss, _ = self.sess.run([self.loss, self.train_op], feed_dict=feedDict)
         
-        return trainingLoss
+        loss, shopkeeper_action_loss, camera_index_loss, attribute_index_loss, location_loss, spatial_state_loss, state_target_loss, _ = self.sess.run([self.loss, self.shopkeeper_action_loss, self.camera_index_loss, self.attribute_index_loss, self.location_loss, self.spatial_state_loss, self.state_target_loss, self.train_op], 
+                                                                                                                                                    feed_dict=feedDict)
+        attribute_index_loss *= self.attributeIndexLossWeight
+        
+        return loss, shopkeeper_action_loss, camera_index_loss, attribute_index_loss, location_loss, spatial_state_loss, state_target_loss
     
     
     def get_loss(self, 
@@ -372,24 +432,41 @@ class CustomNeuralNetwork(object):
               outputMasks,
               dbContentLens):
         
-        feedDict = {self.input_sequences: inputSequenceVectors, 
-                    self.shopkeeper_action_id_targets: outputActionIds, 
-                    self.cam_index_targets: outputCameraIndices,
-                    self.attr_index_targets: outputAttributeIndices,
-                    self.shopkeeper_locations: outputLocations,
-                    self.spatial_states: outputSpatialStates,
-                    self.state_targets: outputStateTargets,
-                    self.output_mask: outputMasks,
-                    self.database_content_lengths: dbContentLens,
-                    self.speechClusterWeightsTensor: self.speechClusterWeights,
-                    self.attributeIndexWeightsTensor: self.attributeIndexWeights}
+        batchStartEndIndices = self.get_batches(len(outputActionIds))
         
-        loss = self.sess.run(self.loss, feed_dict=feedDict)
+        all_loss = [] 
+        all_shopkeeper_action_loss = [] 
+        all_camera_index_loss = []
+        all_attribute_index_loss = []
+        all_location_loss = []
+        all_spatial_state_loss = [] 
+        all_state_target_loss = []
         
-        return loss
+        for sei in batchStartEndIndices:
+            
+            loss, shopkeeper_action_loss, camera_index_loss, attribute_index_loss, location_loss, spatial_state_loss, state_target_loss = self._get_loss(
+                inputSequenceVectors[sei[0]:sei[1]],
+                outputActionIds[sei[0]:sei[1]],
+                outputCameraIndices[sei[0]:sei[1]],
+                outputAttributeIndices[sei[0]:sei[1]],
+                outputLocations[sei[0]:sei[1]],
+                outputSpatialStates[sei[0]:sei[1]],
+                outputStateTargets[sei[0]:sei[1]],
+                outputMasks[sei[0]:sei[1]],
+                dbContentLens[sei[0]:sei[1]])
+            
+            all_loss.append(loss) 
+            all_shopkeeper_action_loss.append(shopkeeper_action_loss) 
+            all_camera_index_loss.append(camera_index_loss)
+            all_attribute_index_loss.append(attribute_index_loss)
+            all_location_loss.append(location_loss)
+            all_spatial_state_loss.append(spatial_state_loss) 
+            all_state_target_loss.append(state_target_loss)
+            
+        return all_loss, all_shopkeeper_action_loss, all_camera_index_loss, all_attribute_index_loss, all_location_loss, all_spatial_state_loss, all_state_target_loss
     
     
-    def predict(self, 
+    def _get_loss(self, 
               inputSequenceVectors,
               outputActionIds,
               outputCameraIndices,
@@ -412,14 +489,110 @@ class CustomNeuralNetwork(object):
                     self.speechClusterWeightsTensor: self.speechClusterWeights,
                     self.attributeIndexWeightsTensor: self.attributeIndexWeights}
         
-        predShkpActionID, predCameraIndices, predAttrIndices, predLocations, predSpatialStates, predStateTargets = self.sess.run([self.shopkeeper_action_argmax, 
+        
+        loss, shopkeeper_action_loss, camera_index_loss, attribute_index_loss, location_loss, spatial_state_loss, state_target_loss = self.sess.run([self.loss, self.shopkeeper_action_loss, self.camera_index_loss, self.attribute_index_loss, self.location_loss, self.spatial_state_loss, self.state_target_loss], 
+                                                                                                                                                    feed_dict=feedDict)
+        attribute_index_loss *= self.attributeIndexLossWeight
+        
+        return loss, shopkeeper_action_loss, camera_index_loss, attribute_index_loss, location_loss, spatial_state_loss, state_target_loss
+    
+    
+    
+    def predict(self, 
+              inputSequenceVectors,
+              outputActionIds,
+              outputCameraIndices,
+              outputAttributeIndices,
+              outputLocations,
+              outputSpatialStates,
+              outputStateTargets,
+              outputMasks,
+              dbContentLens):
+        
+        batchStartEndIndices = self.get_batches(len(outputActionIds))
+        
+        all_predShkpActionID = [] 
+        all_predCameraIndices = [] 
+        all_predAttrIndices = [] 
+        all_predLocations = [] 
+        all_predSpatialStates = [] 
+        all_predStateTargets = [] 
+        all_camIndexWeights = [] 
+        all_attributeIndexWeights = [] 
+        all_weightedDbContentsSum = []
+        
+        for sei in batchStartEndIndices:
+        
+            predShkpActionID, predCameraIndices, predAttrIndices, predLocations, predSpatialStates, predStateTargets, camIndexWeights, attributeIndexWeights, weightedDbContentsSum = self._predict(
+                inputSequenceVectors[sei[0]:sei[1]],
+                outputActionIds[sei[0]:sei[1]],
+                outputCameraIndices[sei[0]:sei[1]],
+                outputAttributeIndices[sei[0]:sei[1]],
+                outputLocations[sei[0]:sei[1]],
+                outputSpatialStates[sei[0]:sei[1]],
+                outputStateTargets[sei[0]:sei[1]],
+                outputMasks[sei[0]:sei[1]],
+                dbContentLens[sei[0]:sei[1]])
+            
+            all_predShkpActionID.append(predShkpActionID)
+            all_predCameraIndices.append(predCameraIndices)
+            all_predAttrIndices.append(predAttrIndices)
+            all_predLocations.append(predLocations)
+            all_predSpatialStates.append(predSpatialStates) 
+            all_predStateTargets.append(predStateTargets)
+            all_camIndexWeights.append(camIndexWeights)
+            all_attributeIndexWeights.append(attributeIndexWeights) 
+            all_weightedDbContentsSum.append(weightedDbContentsSum)
+            
+        
+        all_predShkpActionID = np.concatenate(all_predShkpActionID)
+        all_predCameraIndices = np.concatenate(all_predCameraIndices)
+        all_predAttrIndices = np.concatenate(all_predAttrIndices)
+        all_predLocations = np.concatenate(all_predLocations)
+        all_predSpatialStates = np.concatenate(all_predSpatialStates) 
+        all_predStateTargets = np.concatenate(all_predStateTargets)
+        all_camIndexWeights = np.concatenate(all_camIndexWeights)
+        all_attributeIndexWeights = np.concatenate(all_attributeIndexWeights) 
+        all_weightedDbContentsSum = np.concatenate(all_weightedDbContentsSum)
+            
+            
+        return all_predShkpActionID, all_predCameraIndices, all_predAttrIndices, all_predLocations, all_predSpatialStates, all_predStateTargets, all_camIndexWeights, all_attributeIndexWeights, all_weightedDbContentsSum
+    
+    
+    def _predict(self, 
+              inputSequenceVectors,
+              outputActionIds,
+              outputCameraIndices,
+              outputAttributeIndices,
+              outputLocations,
+              outputSpatialStates,
+              outputStateTargets,
+              outputMasks,
+              dbContentLens):
+        
+        feedDict = {self.input_sequences: inputSequenceVectors, 
+                    self.shopkeeper_action_id_targets: outputActionIds, 
+                    self.cam_index_targets: outputCameraIndices,
+                    self.attr_index_targets: outputAttributeIndices,
+                    self.shopkeeper_locations: outputLocations,
+                    self.spatial_states: outputSpatialStates,
+                    self.state_targets: outputStateTargets,
+                    self.output_mask: outputMasks,
+                    self.database_content_lengths: dbContentLens,
+                    self.speechClusterWeightsTensor: self.speechClusterWeights,
+                    self.attributeIndexWeightsTensor: self.attributeIndexWeights}
+        
+        predShkpActionID, predCameraIndices, predAttrIndices, predLocations, predSpatialStates, predStateTargets, camIndexWeights, attributeIndexWeights, weightedDbContentsSum = self.sess.run([self.shopkeeper_action_argmax, 
                                                                                                                  self.cam_index_decoder,
                                                                                                                  self.attr_index_decoder,
                                                                                                                  self.location_argmax,
                                                                                                                  self.spatial_state_argmax,
-                                                                                                                 self.state_target_argmax], feedDict)
+                                                                                                                 self.state_target_argmax,
+                                                                                                                 self.cam_index_decoder,
+                                                                                                                 self.attr_index_decoder,
+                                                                                                                 self.mostReleveantDbContentLens], feedDict)
         
-        return predShkpActionID, predCameraIndices, predAttrIndices, predLocations, predSpatialStates, predStateTargets
+        return predShkpActionID, predCameraIndices, predAttrIndices, predLocations, predSpatialStates, predStateTargets, camIndexWeights, attributeIndexWeights, weightedDbContentsSum
     
     
     def save(self, filename):

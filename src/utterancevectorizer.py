@@ -21,6 +21,7 @@ import time
 
 
 import tools
+import traceback
 
 
 
@@ -50,7 +51,7 @@ class UtteranceVectorizer(object):
         self.unigramsAndKeywordsOnly = unigramsAndKeywordsOnly
         self.tfidf = tfidf
         self.backchannelPlaceholder = "<backchannel>"
-        self.useNumbers = False
+        self.useNumbers = True
         
         self.lsa = lsa
         
@@ -67,15 +68,19 @@ class UtteranceVectorizer(object):
             #              "um","oh okay", "okay okay", "okay i see", "i see", "OK", "okay cool", 
             #              "yeah", "okay", "ok i see", "oh i see", "ah ok"]
             
-            self.stopwords = ["okay","a", "see", "alright", "and", "so", "oh", "sound", "sounds", "of",
-                               "interesting", "interest" , "does", "it", "those", "was", "for", "'s", 
-                               "the", "are", "is" "that", "one", "cool", "what", "OK", "trip", "yeah", 
-                               "um","oh okay", "okay okay", "okay i see", "i see", "OK", "okay cool", 
-                               "yeah", "okay", "ok i see", "oh i see", "ah ok"]
+            #self.stopwords = ["okay","a", "see", "alright", "and", "so", "oh", "sound", "sounds", "of",
+            #                   "interesting", "interest" , "does", "it", "those", "was", "for", "'s", 
+            #                   "the", "are", "is" "that", "one", "cool", "what", "OK", "trip", "yeah", 
+            #                   "um","oh okay", "okay okay", "okay i see", "i see", "OK", "okay cool", 
+            #                   "yeah", "okay", "ok i see", "oh i see", "ah ok"]
             
             # if the input utterance matches one of these exactly, the backchannel index is 1
-            self.backchannelList = ["okay", "ok", "oh yeah it does", "yeah", "alright", "oh yeah ok", "yeah ok", "okay okay", "yeah yeah yeah", "interesting", "interesting ok",
-                                    "ok ok", "okay Jose", "okay interesting", "OIC", "cic", "ICICI", "IC", "ic"]
+            #self.backchannelList = ["okay", "ok", "oh yeah it does", "yeah", "alright", "oh yeah ok", "yeah ok", "okay okay", "yeah yeah yeah", "interesting", "interesting ok",
+            #                        "ok ok", "okay Jose", "okay interesting", "OIC", "cic", "ICICI", "IC", "ic"]
+        
+            self.stopwords = ["with", "this", "one", "has", "includes", "you", "will", "get", "a", "'s"]
+            
+            self.backchannelList = []
         
         else:
             self.stopwords = []
@@ -204,8 +209,7 @@ class UtteranceVectorizer(object):
         for utt in allUtterances:
             
             for word in utt.split():
-                if word.startswith("$"):
-                    word = word[1:]
+                word = word.strip("$")
                 
                 if tools.is_number(word):
                     if word not in self.numbers:
@@ -221,6 +225,7 @@ class UtteranceVectorizer(object):
         self.trigramToIndex = {}
         self.keywordToIndex = {}
         self.numberToIndex = {}
+        self.symbolToIndex = {}
         
         self.indexToWord = {}
         
@@ -243,26 +248,32 @@ class UtteranceVectorizer(object):
                 self.trigramToIndex[trigram] = len(self.unigramToIndex) + len(self.bigramToIndex) + len(self.trigramToIndex)
                 self.indexToWord[self.trigramToIndex[trigram]] = trigram
                 
+        
+        for sym in self.dbSymbols:
+            self.symbolToIndex[sym] = len(self.unigramToIndex) + len(self.bigramToIndex) + len(self.trigramToIndex) + len(self.symbolToIndex)
+            self.indexToWord[self.symbolToIndex[sym]] = sym
+        
+        
         """
         for kw in self.processedKeywordSet:
             self.keywordToIndex[kw] = len(self.unigramToIndex) + len(self.bigramToIndex) + len(self.trigramToIndex) + len(self.keywordToIndex)
             self.indexToWord[self.keywordToIndex[kw]] = kw
         self.keywordsStartIndex = min(self.keywordToIndex.values())
         
-        for num in self.numbers:
-            #print num
-            self.numberToIndex[num] = len(self.unigramToIndex) + len(self.bigramToIndex) + len(self.trigramToIndex) + len(self.keywordToIndex) + len(self.numberToIndex)
-            self.indexToWord[self.numberToIndex[num]] = num
         """
         
-        self.numIndices = len(self.unigramToIndex) + len(self.bigramToIndex) + len(self.trigramToIndex) + len(self.keywordToIndex)
+        for num in self.numbers:
+            #print num
+            self.numberToIndex[num] = len(self.unigramToIndex) + len(self.bigramToIndex) + len(self.trigramToIndex) + len(self.symbolToIndex) + len(self.numberToIndex)
+            self.indexToWord[self.numberToIndex[num]] = num
+        
+        
+        self.numIndices = len(self.unigramToIndex) + len(self.bigramToIndex) + len(self.trigramToIndex) + len(self.keywordToIndex) + len(self.symbolToIndex)
         
         
         if self.useNumbers:
             self.numIndices += len(self.numberToIndex)
         
-        
-        self.numIndices += len(self.dbSymbols)
         
         
         #
@@ -379,8 +390,13 @@ class UtteranceVectorizer(object):
                 if self.useNumbers:
                     wStripped = w.strip("$")
                     if wStripped in self.numberToIndex:
-                        uttVec[self.numberToIndex[wStripped]] = 1.0 * self.keywordWeight
-
+                        uttVec[self.numberToIndex[wStripped]] = 3.0
+                
+                
+                if w in self.dbSymbols:
+                    uttVec[self.symbolToIndex[w]] = 9.0
+                
+                
                 
                 if i < length-1:
                     bigram = uttLemmas[i] + ":" + uttLemmas[i+1]
@@ -626,7 +642,7 @@ def read_simulated_interactions(filename, dbFieldnames, numInteractionsPerDb, ke
             if (keepActions == None) or (row["OUTPUT_SHOPKEEPER_ACTION"] in keepActions): # and row["SHOPKEEPER_TOPIC"] == "price"):
                 
                 row["CUSTOMER_SPEECH"] = row["CUSTOMER_SPEECH"].lower().translate(str.maketrans('', '', tools.punctuation))
-                row["SHOPKEEPER_SPEECH"] = row["SHOPKEEPER_SPEECH"].lower().translate(str.maketrans('', '', tools.punctuation))
+                #row["SHOPKEEPER_SPEECH"] = row["SHOPKEEPER_SPEECH"].lower().translate(str.maketrans('', '', tools.punctuation))
                 
                 interactions.append(row)
                 
@@ -675,11 +691,13 @@ if __name__ == '__main__':
     
     sessionDir = tools.create_session_dir("utteranceVectorizer_databaseLearning")
     
-    dataDirectory = tools.dataDir+"2019-12-05_14-58-11_advancedSimulator9"
+    dataDirectory = tools.dataDir+"2020-01-08_advancedSimulator9"
     numTrainDbs = 10
     numInteractionsPerDb = 200
     
     participant = "shopkeeper" 
+    useSymbols = True
+    keywordWeight = 3.0
     
     
     #
@@ -739,9 +757,12 @@ if __name__ == '__main__':
         gtDatabaseAttributes.append(gtDbAttribute)
         
         allCustUtts += [row["CUSTOMER_SPEECH"] for row in inters]
-        allShkpUtts += [row["SHOPKEEPER_SPEECH_WITH_SYMBOLS"] for row in inters]
-    
-    
+        
+        if useSymbols:
+            allShkpUtts += [row["SHOPKEEPER_SPEECH_WITH_SYMBOLS"] for row in inters]
+        else:
+            allShkpUtts += [row["SHOPKEEPER_SPEECH"] for row in inters]
+            
     
     if participant == "shopkeeper":
         utterances = allShkpUtts
@@ -762,19 +783,28 @@ if __name__ == '__main__':
     #
     # load the keywords
     #
-    keywordsDir = dataDirectory+"/keywords/"
+    if useSymbols:
+        keywordsDir = dataDirectory+"/shopkeeper_keywords_with_symbols/"
+        uniqueUttFilename = "unique_shopkeeper_speech_with_symbols.csv"
+    else:
+        keywordsDir = dataDirectory+"/shopkeeper_keywords_without_symbols/"
+        uniqueUttFilename = "unique_shopkeeper_speech.csv"
+    
     
     # read the csv
-    uniqueShkpUttsWithSymbols = []
+    uniqueShkpUtts = []
     
-    with open(keywordsDir+"unique_shopkeeper_speech_with_symbols.csv") as csvfile:
+    with open(keywordsDir+uniqueUttFilename) as csvfile:
         reader = csv.DictReader(csvfile)
         
         for row in reader:
-            uniqueShkpUttsWithSymbols.append(row["SHOPKEEPER_SPEECH_WITH_SYMBOLS"])
+            if useSymbols:
+                uniqueShkpUtts.append(row["SHOPKEEPER_SPEECH_WITH_SYMBOLS"]) 
+            else:
+                uniqueShkpUtts.append(row["SHOPKEEPER_SPEECH"])
     
     # read the json keyword files
-    keywordsForUniqueShkpUttsWithSymbols = [None] * len(uniqueShkpUttsWithSymbols)
+    keywordsForUniqueShkpUtts = [None] * len(uniqueShkpUtts)
     
     keywordsFilenames = filenames = [fn for fn in os.listdir(keywordsDir) if "keywords" in fn]
     
@@ -790,16 +820,16 @@ if __name__ == '__main__':
                 for kw in contents["keywords"]:
                     kwList.append(kw["text"])
         
-        keywordsForUniqueShkpUttsWithSymbols[index] = kwList
+        keywordsForUniqueShkpUtts[index] = kwList
     
     
     keywordCounts = {}
     shkpUttToKeywords = {}
     
-    for i in range(len(keywordsForUniqueShkpUttsWithSymbols)):
-        kwList = keywordsForUniqueShkpUttsWithSymbols[i]
+    for i in range(len(keywordsForUniqueShkpUtts)):
+        kwList = keywordsForUniqueShkpUtts[i]
         
-        shkpUtt = uniqueShkpUttsWithSymbols[i].lower()
+        shkpUtt = uniqueShkpUtts[i].lower()
         
         shkpUttToKeywords[shkpUtt] = []
         
@@ -833,8 +863,10 @@ if __name__ == '__main__':
                 vec[i] = 1.0
             except:
                 pass
+            
+        vec = vec * keywordWeight
         
-        shkpUttToKwVec[utt] = vec
+        shkpUttToKwVec[utt.lower()] = vec
     
     
     #
@@ -877,7 +909,7 @@ if __name__ == '__main__':
                                         keywordSet=keywords, 
                                         unigramsAndKeywordsOnly=False, 
                                         tfidf=False,
-                                        useStopwords=False,
+                                        useStopwords=True,
                                         lsa=False)
     
     
@@ -912,8 +944,16 @@ if __name__ == '__main__':
     # add on the keyword vectors
     #
     for i in range(len(utterancesNoNan)):
-        vectorsNoNan[i] = np.concatenate((vectorsNoNan[i], shkpUttToKwVec[utterancesNoNan[i].lower()]))
-    
+        try:
+            vectorsNoNan[i] = np.concatenate((vectorsNoNan[i], shkpUttToKwVec[utterancesNoNan[i].lower()]))
+        
+        except Exception as e:
+            traceback.print_tb(e.__traceback__)
+            print(e)
+            
+            vectorsNoNan[i] = np.concatenate((vectorsNoNan[i], np.zeros(len(importantKeywords))))
+            
+            
     
     #
     # compute distances
@@ -927,7 +967,7 @@ if __name__ == '__main__':
         
     print("creating full distance matrix...")
     
-    distMatrix = pairwise_distances(vectorsNoNan, metric="cosine", n_jobs=50)
+    distMatrix = pairwise_distances(vectorsNoNan, metric="euclidean", n_jobs=50)
     #distMatrix = np.zeros((len(utterancesNoNan), len(utterancesNoNan)))
     
     """
@@ -972,8 +1012,12 @@ if __name__ == '__main__':
     print("dimensionality:", vectorsNoNan.shape[1])
     
     
-    date = time.strftime("%Y%m%d")    
-    condition = "{}_simulated_data_csshkputts_withsymbols_200 {} - tri stm - 1 wgt kw - mc2 - stopwords 1".format(date, participant)
+    date = time.strftime("%Y%m%d")
+    
+    if useSymbols:
+        condition = "{}_withsymbols {}-tristm-3wgtkw-9wgtsym-3wgtnum-mc2-sw2-eucldist".format(date, participant)
+    else:
+        condition = "{}__nosymbols {}-tristm-3wgtkw-3wgtsym-3wgtnum-mc2-sw2-eucldist".format(date, participant)
     
     
     np.savetxt(sessionDir+"/{} - utterance cos dists.txt".format(condition), distMatrix, fmt="%.4f")

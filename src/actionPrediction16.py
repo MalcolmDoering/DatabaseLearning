@@ -61,7 +61,7 @@ previousSessionDir = None # tools.logDir+"/2019-07-29_18-53-49_actionPrediction1
 if previousSessionDir != None:
     sessionDir = previousSessionDir
 else:
-    sessionDir = tools.create_session_dir("actionPrediction15_dbl")
+    sessionDir = tools.create_session_dir("actionPrediction16_dbl")
     
 
 
