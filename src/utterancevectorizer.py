@@ -78,7 +78,10 @@ class UtteranceVectorizer(object):
             #self.backchannelList = ["okay", "ok", "oh yeah it does", "yeah", "alright", "oh yeah ok", "yeah ok", "okay okay", "yeah yeah yeah", "interesting", "interesting ok",
             #                        "ok ok", "okay Jose", "okay interesting", "OIC", "cic", "ICICI", "IC", "ic"]
         
-            self.stopwords = ["with", "this", "one", "has", "includes", "you", "will", "get", "a", "'s"]
+            self.stopwords = ["with", "this", "one", "has", "includes", "you", "will", "get", "a", "'s"] # stopwords 2
+            
+            self.stopwords = ["with", "this", "one", "has", "includes", "you", "will", "get", "a", "'s", "the", "camera" "is", "."] # stopwords 3
+            
             
             self.backchannelList = []
         
@@ -390,7 +393,7 @@ class UtteranceVectorizer(object):
                 if self.useNumbers:
                     wStripped = w.strip("$")
                     if wStripped in self.numberToIndex:
-                        uttVec[self.numberToIndex[wStripped]] = 3.0
+                        uttVec[self.numberToIndex[wStripped]] = 9.0
                 
                 
                 if w in self.dbSymbols:
@@ -696,7 +699,7 @@ if __name__ == '__main__':
     numInteractionsPerDb = 200
     
     participant = "shopkeeper" 
-    useSymbols = True
+    useSymbols = False
     keywordWeight = 3.0
     
     
@@ -761,7 +764,7 @@ if __name__ == '__main__':
         if useSymbols:
             allShkpUtts += [row["SHOPKEEPER_SPEECH_WITH_SYMBOLS"] for row in inters]
         else:
-            allShkpUtts += [row["SHOPKEEPER_SPEECH"] for row in inters]
+            allShkpUtts += [row["SHOPKEEPER_SPEECH"].lower().translate(str.maketrans('', '', tools.punctuation)) for row in inters]
             
     
     if participant == "shopkeeper":
@@ -866,7 +869,10 @@ if __name__ == '__main__':
             
         vec = vec * keywordWeight
         
-        shkpUttToKwVec[utt.lower()] = vec
+        if useSymbols:
+            shkpUttToKwVec[utt.lower()] = vec
+        else:
+            shkpUttToKwVec[utt.lower().translate(str.maketrans('', '', tools.punctuation))] = vec
     
     
     #
@@ -1017,10 +1023,10 @@ if __name__ == '__main__':
     if useSymbols:
         condition = "{}_withsymbols {}-tristm-3wgtkw-9wgtsym-3wgtnum-mc2-sw2-eucldist".format(date, participant)
     else:
-        condition = "{}__nosymbols {}-tristm-3wgtkw-3wgtsym-3wgtnum-mc2-sw2-eucldist".format(date, participant)
+        condition = "{}_nosymbols {}-tristm-3wgtkw-9wgtnum-mc2-sw3-eucldist".format(date, participant)
     
     
-    np.savetxt(sessionDir+"/{} - utterance cos dists.txt".format(condition), distMatrix, fmt="%.4f")
+    np.savetxt(sessionDir+"/{} - utterance dists.txt".format(condition), distMatrix, fmt="%.4f")
     
     np.savetxt(sessionDir+"/{} - utterance vectors.txt".format(condition), vectorsNoNan, fmt="%d")
     

@@ -41,8 +41,11 @@ def main(mainDir, condition):
     # running params
     #################################################################################################################
     
-    DEBUG = False
-    RUN_PARALLEL = True #True
+    DEBUG = True
+    RUN_PARALLEL = False
+    
+    SPEECH_CLUSTER_LOSS_WEIGHTS = False
+    
     
     sessionDir = mainDir + "/" + condition
     tools.create_directory(sessionDir)
@@ -429,7 +432,7 @@ def main(mainDir, condition):
     # parralell process each fold
     #################################################################################################################
     
-    def run_fold(foldId, randomSeed, gpu):
+    def run_fold(randomSeed, foldId, gpu):
         
         #################################################################################################################
         # setup logging directories
@@ -581,9 +584,9 @@ def main(mainDir, condition):
                                       "PRED_WEIGHTED_DB_CONTENT_SUM"]
         
             for c in cameras:
-                interactionsFieldnames.append("{}_WEIGHT".format(c))
+                interactionsFieldnames.append("PRED_{}_WEIGHT".format(c))
             for a in attributes:
-                interactionsFieldnames.append("{}_WEIGHT".format(a))
+                interactionsFieldnames.append("PRED_{}_WEIGHT".format(a))
         
         
         
@@ -707,35 +710,44 @@ def main(mainDir, condition):
             #
             # for speech clusters
             #
-            
-            # count number of occurrences of each speech cluster in the training dataset
-            prop_speechClustCounts = {}
-            
-            for i in trainIndices:
-                speechClustId = prop_outputSpeechClusterIds[i]
+            if SPEECH_CLUSTER_LOSS_WEIGHTS:
+                # count number of occurrences of each speech cluster in the training dataset
+                prop_speechClustCounts = {}
                 
-                if speechClustId not in prop_speechClustCounts:
-                    prop_speechClustCounts[speechClustId] = 0
-                prop_speechClustCounts[speechClustId] += 1
+                for i in trainIndices:
+                    speechClustId = prop_outputSpeechClusterIds[i]
+                    
+                    if speechClustId not in prop_speechClustCounts:
+                        prop_speechClustCounts[speechClustId] = 0
+                    prop_speechClustCounts[speechClustId] += 1
+                
+                numSamples = len(trainIndices)
+                
+                
+                # compute weights
+                prop_speechClustWeights = [None] * prop_numSpeechClusters
+                
+                for clustId in prop_speechClustIdToShkpUtts:
+                    # as in scikit learn - The “balanced” heuristic is inspired by Logistic Regression in Rare Events Data, King, Zen, 2001.
+                    prop_speechClustWeights[clustId] = numSamples / (prop_numSpeechClusters * prop_speechClustCounts[clustId])
+                
+                # don't train on junk speech clusters
+                for clustId in prop_junkSpeechClusterIds:
+                    prop_speechClustWeights[clustId] = 0
+                
+                
+                if None in prop_speechClustWeights:
+                    print("WARNING: missing training weight for PROPOSED shopkeeper speech cluster!", flush=True, file=foldTerminalOutputStream)
             
-            numSamples = len(trainIndices)
+            else:
+                prop_speechClustWeights = []
+                for clustId in range(prop_numSpeechClusters):
+                    prop_speechClustWeights.append(1.0)
             
             
-            # compute weights
-            prop_speechClustWeights = [None] * prop_numSpeechClusters
-            
-            for clustId in prop_speechClustIdToShkpUtts:
-                # as in scikit learn - The “balanced” heuristic is inspired by Logistic Regression in Rare Events Data, King, Zen, 2001.
-                prop_speechClustWeights[clustId] = numSamples / (prop_numSpeechClusters * prop_speechClustCounts[clustId])
-            
-            # don't train on junk speech clusters
             for clustId in prop_junkSpeechClusterIds:
-                prop_speechClustWeights[clustId] = 0
+                prop_speechClustWeights[clustId] = 0.0
             
-            
-            if None in prop_speechClustWeights:
-                print("WARNING: missing training weight for PROPOSED shopkeeper speech cluster!", flush=True, file=foldTerminalOutputStream)
-        
             
             #
             # for attributes
@@ -780,33 +792,42 @@ def main(mainDir, condition):
             #
             # for speech clusters
             #
-            
-            # count number of occurrences of each speech cluster in the training dataset
-            bl1_speechClustCounts = {}
-            
-            for i in trainIndices:
-                speechClustId = bl1_outputSpeechClusterIds[i]
+            if SPEECH_CLUSTER_LOSS_WEIGHTS:
+                # count number of occurrences of each speech cluster in the training dataset
+                bl1_speechClustCounts = {}
                 
-                if speechClustId not in bl1_speechClustCounts:
-                    bl1_speechClustCounts[speechClustId] = 0
-                bl1_speechClustCounts[speechClustId] += 1
-            
-            numSamples = len(trainIndices)
-            
-            
-            # compute weights
-            bl1_speechClustWeights = [None] * bl1_numSpeechClusters
-            
-            for clustId in bl1_speechClustIdToShkpUtts:
-                # as in scikit learn - The “balanced” heuristic is inspired by Logistic Regression in Rare Events Data, King, Zen, 2001.
-                if clustId in bl1_speechClustCounts:
-                    bl1_speechClustWeights[clustId] = numSamples / (bl1_numSpeechClusters * bl1_speechClustCounts[clustId])
-                else:
-                    # sometimes a cluster won't appear in the training set, so give it a weight of 1
-                    bl1_speechClustWeights[clustId] = 1.0
+                for i in trainIndices:
+                    speechClustId = bl1_outputSpeechClusterIds[i]
                     
-            if None in bl1_speechClustWeights:
-                print("WARNING: missing training weight for BASELINE 1 shopkeeper speech cluster!", flush=True, file=foldTerminalOutputStream)
+                    if speechClustId not in bl1_speechClustCounts:
+                        bl1_speechClustCounts[speechClustId] = 0
+                    bl1_speechClustCounts[speechClustId] += 1
+                
+                numSamples = len(trainIndices)
+                
+                
+                # compute weights
+                bl1_speechClustWeights = [None] * bl1_numSpeechClusters
+                
+                for clustId in bl1_speechClustIdToShkpUtts:
+                    # as in scikit learn - The “balanced” heuristic is inspired by Logistic Regression in Rare Events Data, King, Zen, 2001.
+                    if clustId in bl1_speechClustCounts:
+                        bl1_speechClustWeights[clustId] = numSamples / (bl1_numSpeechClusters * bl1_speechClustCounts[clustId])
+                    else:
+                        # sometimes a cluster won't appear in the training set, so give it a weight of 1
+                        bl1_speechClustWeights[clustId] = 1.0
+                        
+                if None in bl1_speechClustWeights:
+                    print("WARNING: missing training weight for BASELINE 1 shopkeeper speech cluster!", flush=True, file=foldTerminalOutputStream)
+            
+            else:
+                bl1_speechClustWeights = []
+                for clustId in range(bl1_numSpeechClusters):
+                    bl1_speechClustWeights.append(1.0)
+            
+            
+            for clustId in bl1_junkSpeechClusterIds:
+                bl1_speechClustWeights[clustId] = 0.0
         
         
         
@@ -863,7 +884,7 @@ def main(mainDir, condition):
                 
                 if e != 0:
                     # train
-                    trainCost, trainShopkeeperSpeechClusterLoss, trainCameraIndexLoss, trainAttributeIndexLoss, trainLocationLoss, trainSpatialStateLoss, trainStateTargetLoss = learner.train(
+                    learner.train(
                         inputSequenceVectors[trainIndices],
                         prop_outputSpeechClusterIds[trainIndices],
                         prop_outputCameraIndices[trainIndices],
@@ -874,8 +895,11 @@ def main(mainDir, condition):
                         prop_outputMasks[trainIndices],
                         databaseConentLengthsForInput[trainIndices])
                 
-                else:
-                    # get loss for initialized network before any training is done
+                
+                # evaluate
+                if e % evalEvery == 0 or e == numEpochs:
+                    
+                    # training loss
                     trainCost, trainShopkeeperSpeechClusterLoss, trainCameraIndexLoss, trainAttributeIndexLoss, trainLocationLoss, trainSpatialStateLoss, trainStateTargetLoss = learner.get_loss(
                         inputSequenceVectors[trainIndices],
                         prop_outputSpeechClusterIds[trainIndices],
@@ -886,13 +910,9 @@ def main(mainDir, condition):
                         outputStateTargets[trainIndices],                                           
                         prop_outputMasks[trainIndices],
                         databaseConentLengthsForInput[trainIndices])
-                
-                
-                # test
-                if (e-1) % evalEvery == 0:
                     
                     # validation loss
-                    valCost, valShopkeeperSpeechClusterLoss, valCameraIndexLoss, valAttributeIndexLoss, valLocationLoss, valSpatialStateLoss, valStateTargetLoss = learner.train(
+                    valCost, valShopkeeperSpeechClusterLoss, valCameraIndexLoss, valAttributeIndexLoss, valLocationLoss, valSpatialStateLoss, valStateTargetLoss = learner.get_loss(
                         inputSequenceVectors[valIndices],
                         prop_outputSpeechClusterIds[valIndices],
                         prop_outputCameraIndices[valIndices],
@@ -904,7 +924,7 @@ def main(mainDir, condition):
                         databaseConentLengthsForInput[valIndices])
                     
                     # test loss
-                    testCost, testShopkeeperSpeechClusterLoss, testCameraIndexLoss, testAttributeIndexLoss, testLocationLoss, testSpatialStateLoss, testStateTargetLoss = learner.train(
+                    testCost, testShopkeeperSpeechClusterLoss, testCameraIndexLoss, testAttributeIndexLoss, testLocationLoss, testSpatialStateLoss, testStateTargetLoss = learner.get_loss(
                         inputSequenceVectors[testIndices],
                         prop_outputSpeechClusterIds[testIndices],
                         prop_outputCameraIndices[testIndices],
@@ -1076,6 +1096,7 @@ def main(mainDir, condition):
                                 shkpSpeechTemplate = "ERROR: No representative utterance found for cluster {}.".format(predShkpSpeechClustID[i])
                             
                             outShkpSpeechTemplate = shkpSpeechTemplate
+                            outShkpSpeech = shkpSpeechTemplate
                             
                             
                             # find any DB contents symbols in the speech template
@@ -1091,9 +1112,7 @@ def main(mainDir, condition):
                                     
                                     outDbIndices.append((camPredArgmax, j))
                                     outDbContents.append(cameraInfo[attr])
-                                else:
-                                    outShkpSpeech = outShkpSpeechTemplate
-                            
+                                
                             
                             csvLogRows[i]["PRED_OUTPUT_SHOPKEEPER_SPEECH_CLUSTER_ID"] = predShkpSpeechClustID[i]
                             csvLogRows[i]["PRED_OUTPUT_CAMERA_INDEX"] = camPredArgmaxOver05
@@ -1111,10 +1130,10 @@ def main(mainDir, condition):
                             csvLogRows[i]["PRED_WEIGHTED_DB_CONTENT_SUM"] = predWeightedDbContentsSum[i]
                             
                             for c in range(len(cameras)):
-                                csvLogRows[i]["{}_WEIGHT".format(cameras[c])] = predCamIndexWeights[i,c]
+                                csvLogRows[i]["PRED_{}_WEIGHT".format(cameras[c])] = predCamIndexWeights[i,c]
                                 
                             for a in range(len(attributes)):
-                                csvLogRows[i]["{}_WEIGHT".format(attributes[a])] = predAttributeIndexWeights[i,a]
+                                csvLogRows[i]["PRED_{}_WEIGHT".format(attributes[a])] = predAttributeIndexWeights[i,a]
                             
                             
                             #
@@ -1273,36 +1292,36 @@ def main(mainDir, condition):
                                          ])    
                 
                     
-                # training
-                print("===== {} EPOCH {} LOSSES AND ACCURACIES=====".format(condition.upper(), e), flush=True, file=foldTerminalOutputStream)
-                tableData = []
-                
-                tableData.append(["CostAve", trainCostAve, valCostAve, testCostAve])
-                tableData.append(["CostStd", trainCostStd, valCostStd, testCostStd])
-                tableData.append(["ShopkeeperSpeechClusterLossAve", trainShopkeeperSpeechClusterLossAve, valShopkeeperSpeechClusterLossAve, testShopkeeperSpeechClusterLossAve])
-                tableData.append(["ShopkeeperSpeechClusterLossStd", trainShopkeeperSpeechClusterLossStd, valShopkeeperSpeechClusterLossStd, testShopkeeperSpeechClusterLossStd])
-                tableData.append(["CameraIndexLossAve", trainCameraIndexLossAve, valCameraIndexLossAve, testCameraIndexLossAve])
-                tableData.append(["CameraIndexLossStd", trainCameraIndexLossStd, valCameraIndexLossStd, testCameraIndexLossStd])
-                tableData.append(["AttributeIndexLossAve", trainAttributeIndexLossAve, valAttributeIndexLossAve, testAttributeIndexLossAve])
-                tableData.append(["AttributeIndexLossStd", trainAttributeIndexLossStd, valAttributeIndexLossStd, testAttributeIndexLossStd])
-                tableData.append(["LocationLossAve", trainLocationLossAve, valLocationLossAve, testLocationLossAve])
-                tableData.append(["LocationLossStd", trainLocationLossStd, valLocationLossStd, testLocationLossStd])
-                tableData.append(["SpatialStateLossAve", trainSpatialStateLossAve, valSpatialStateLossAve, testSpatialStateLossAve])
-                tableData.append(["SpatialStateLossStd", trainSpatialStateLossStd, valSpatialStateLossStd, testSpatialStateLossStd])
-                tableData.append(["StateTargetLossAve", trainStateTargetLossAve, valStateTargetLossAve, testStateTargetLossAve])
-                tableData.append(["StateTargetLossStd", trainStateTargetLossStd, valStateTargetLossStd, testStateTargetLossStd])
-                
-                tableData.append(["SpeechClustCorrAcc", trainSpeechClustCorrAcc, valSpeechClustCorrAcc, testSpeechClustCorrAcc])
-                tableData.append(["CamCorrAcc", trainCamCorrAcc, valCamCorrAcc, testCamCorrAcc])
-                tableData.append(["AttrExactMatch", trainAttrExactMatch, valAttrExactMatch, testAttrExactMatch])
-                tableData.append(["AttrJaccardIndex", trainAttrJaccardIndex, valAttrJaccardIndex, testAttrJaccardIndex])
-                tableData.append(["LocCorrAcc", trainLocCorrAcc, valLocCorrAcc, testLocCorrAcc])
-                tableData.append(["SpatStCorrAcc", trainSpatStCorrAcc, valSpatStCorrAcc, testSpatStCorrAcc])
-                tableData.append(["StTargCorrAcc", trainStTargCorrAcc, valStTargCorrAcc, testStTargCorrAcc])
-                
-                print(tabulate(tableData, headers=["METRIC", "TRAINING", "VALIDATION", "TESTING"], floatfmt=".3f", tablefmt="grid"), flush=True, file=foldTerminalOutputStream)
-                        
-                print("", flush=True, file=foldTerminalOutputStream)
+                    # training
+                    print("===== {} EPOCH {} LOSSES AND ACCURACIES=====".format(condition.upper(), e), flush=True, file=foldTerminalOutputStream)
+                    tableData = []
+                    
+                    tableData.append(["CostAve", trainCostAve, valCostAve, testCostAve])
+                    tableData.append(["CostStd", trainCostStd, valCostStd, testCostStd])
+                    tableData.append(["ShopkeeperSpeechClusterLossAve", trainShopkeeperSpeechClusterLossAve, valShopkeeperSpeechClusterLossAve, testShopkeeperSpeechClusterLossAve])
+                    tableData.append(["ShopkeeperSpeechClusterLossStd", trainShopkeeperSpeechClusterLossStd, valShopkeeperSpeechClusterLossStd, testShopkeeperSpeechClusterLossStd])
+                    tableData.append(["CameraIndexLossAve", trainCameraIndexLossAve, valCameraIndexLossAve, testCameraIndexLossAve])
+                    tableData.append(["CameraIndexLossStd", trainCameraIndexLossStd, valCameraIndexLossStd, testCameraIndexLossStd])
+                    tableData.append(["AttributeIndexLossAve", trainAttributeIndexLossAve, valAttributeIndexLossAve, testAttributeIndexLossAve])
+                    tableData.append(["AttributeIndexLossStd", trainAttributeIndexLossStd, valAttributeIndexLossStd, testAttributeIndexLossStd])
+                    tableData.append(["LocationLossAve", trainLocationLossAve, valLocationLossAve, testLocationLossAve])
+                    tableData.append(["LocationLossStd", trainLocationLossStd, valLocationLossStd, testLocationLossStd])
+                    tableData.append(["SpatialStateLossAve", trainSpatialStateLossAve, valSpatialStateLossAve, testSpatialStateLossAve])
+                    tableData.append(["SpatialStateLossStd", trainSpatialStateLossStd, valSpatialStateLossStd, testSpatialStateLossStd])
+                    tableData.append(["StateTargetLossAve", trainStateTargetLossAve, valStateTargetLossAve, testStateTargetLossAve])
+                    tableData.append(["StateTargetLossStd", trainStateTargetLossStd, valStateTargetLossStd, testStateTargetLossStd])
+                    
+                    tableData.append(["SpeechClustCorrAcc", trainSpeechClustCorrAcc, valSpeechClustCorrAcc, testSpeechClustCorrAcc])
+                    tableData.append(["CamCorrAcc", trainCamCorrAcc, valCamCorrAcc, testCamCorrAcc])
+                    tableData.append(["AttrExactMatch", trainAttrExactMatch, valAttrExactMatch, testAttrExactMatch])
+                    tableData.append(["AttrJaccardIndex", trainAttrJaccardIndex, valAttrJaccardIndex, testAttrJaccardIndex])
+                    tableData.append(["LocCorrAcc", trainLocCorrAcc, valLocCorrAcc, testLocCorrAcc])
+                    tableData.append(["SpatStCorrAcc", trainSpatStCorrAcc, valSpatStCorrAcc, testSpatStCorrAcc])
+                    tableData.append(["StTargCorrAcc", trainStTargCorrAcc, valStTargCorrAcc, testStTargCorrAcc])
+                    
+                    print(tabulate(tableData, headers=["METRIC", "TRAINING", "VALIDATION", "TESTING"], floatfmt=".3f", tablefmt="grid"), flush=True, file=foldTerminalOutputStream)
+                            
+                    print("", flush=True, file=foldTerminalOutputStream)
             
                 #################################################################################################################
                 # END PROPOSED RUN!
@@ -1317,7 +1336,7 @@ def main(mainDir, condition):
                 
                 if e != 0:
                     # train
-                    trainCost, trainShopkeeperSpeechClusterLoss, trainLocationLoss, trainSpatialStateLoss, trainStateTargetLoss = learner.train(
+                    learner.train(
                         inputSequenceVectors[trainIndices],
                         bl1_outputSpeechClusterIds[trainIndices],
                         outputShopkeeperLocations[trainIndices],
@@ -1325,8 +1344,11 @@ def main(mainDir, condition):
                         outputStateTargets[trainIndices],                                           
                         bl1_outputMasks[trainIndices])
                 
-                else:
-                    # get loss for initialized network before any training is done
+                
+                # evaluate
+                if e % evalEvery == 0 or e == numEpochs:
+                    
+                    # training loss
                     trainCost, trainShopkeeperSpeechClusterLoss, trainLocationLoss, trainSpatialStateLoss, trainStateTargetLoss = learner.get_loss(
                         inputSequenceVectors[trainIndices],
                         bl1_outputSpeechClusterIds[trainIndices],
@@ -1334,13 +1356,9 @@ def main(mainDir, condition):
                         outputSpatialStates[trainIndices],
                         outputStateTargets[trainIndices],                                           
                         bl1_outputMasks[trainIndices])
-                
-                
-                # test
-                if (e-1) % evalEvery == 0:
                     
                     # validation loss
-                    valCost, valShopkeeperSpeechClusterLoss, valLocationLoss, valSpatialStateLoss, valStateTargetLoss = learner.train(
+                    valCost, valShopkeeperSpeechClusterLoss, valLocationLoss, valSpatialStateLoss, valStateTargetLoss = learner.get_loss(
                         inputSequenceVectors[valIndices],
                         bl1_outputSpeechClusterIds[valIndices],
                         outputShopkeeperLocations[valIndices],
@@ -1349,7 +1367,7 @@ def main(mainDir, condition):
                         bl1_outputMasks[valIndices])
                     
                     # test loss
-                    testCost, testShopkeeperSpeechClusterLoss, testLocationLoss, testSpatialStateLoss, testStateTargetLoss = learner.train(
+                    testCost, testShopkeeperSpeechClusterLoss, testLocationLoss, testSpatialStateLoss, testStateTargetLoss = learner.get_loss(
                         inputSequenceVectors[testIndices],
                         bl1_outputSpeechClusterIds[testIndices],
                         outputShopkeeperLocations[testIndices],
@@ -1560,29 +1578,29 @@ def main(mainDir, condition):
                                          ])    
                 
                 
-                # training
-                print("===== {} EPOCH {} LOSSES AND ACCURACIES=====".format(condition.upper(), e), flush=True, file=foldTerminalOutputStream)
-                tableData = []
-                
-                tableData.append(["CostAve", trainCostAve, valCostAve, testCostAve])
-                tableData.append(["CostStd", trainCostStd, valCostStd, testCostStd])
-                tableData.append(["ShopkeeperSpeechClusterLossAve", trainShopkeeperSpeechClusterLossAve, valShopkeeperSpeechClusterLossAve, testShopkeeperSpeechClusterLossAve])
-                tableData.append(["ShopkeeperSpeechClusterLossStd", trainShopkeeperSpeechClusterLossStd, valShopkeeperSpeechClusterLossStd, testShopkeeperSpeechClusterLossStd])
-                tableData.append(["LocationLossAve", trainLocationLossAve, valLocationLossAve, testLocationLossAve])
-                tableData.append(["LocationLossStd", trainLocationLossStd, valLocationLossStd, testLocationLossStd])
-                tableData.append(["SpatialStateLossAve", trainSpatialStateLossAve, valSpatialStateLossAve, testSpatialStateLossAve])
-                tableData.append(["SpatialStateLossStd", trainSpatialStateLossStd, valSpatialStateLossStd, testSpatialStateLossStd])
-                tableData.append(["StateTargetLossAve", trainStateTargetLossAve, valStateTargetLossAve, testStateTargetLossAve])
-                tableData.append(["StateTargetLossStd", trainStateTargetLossStd, valStateTargetLossStd, testStateTargetLossStd])
-                
-                tableData.append(["SpeechClustCorrAcc", trainSpeechClustCorrAcc, valSpeechClustCorrAcc, testSpeechClustCorrAcc])
-                tableData.append(["LocCorrAcc", trainLocCorrAcc, valLocCorrAcc, testLocCorrAcc])
-                tableData.append(["SpatStCorrAcc", trainSpatStCorrAcc, valSpatStCorrAcc, testSpatStCorrAcc])
-                tableData.append(["StTargCorrAcc", trainStTargCorrAcc, valStTargCorrAcc, testStTargCorrAcc])
-                
-                print(tabulate(tableData, headers=["METRIC", "TRAINING", "VALIDATION", "TESTING"], floatfmt=".3f", tablefmt="grid"), flush=True, file=foldTerminalOutputStream)
-                        
-                print("", flush=True, file=foldTerminalOutputStream)
+                    # training
+                    print("===== {} EPOCH {} LOSSES AND ACCURACIES=====".format(condition.upper(), e), flush=True, file=foldTerminalOutputStream)
+                    tableData = []
+                    
+                    tableData.append(["CostAve", trainCostAve, valCostAve, testCostAve])
+                    tableData.append(["CostStd", trainCostStd, valCostStd, testCostStd])
+                    tableData.append(["ShopkeeperSpeechClusterLossAve", trainShopkeeperSpeechClusterLossAve, valShopkeeperSpeechClusterLossAve, testShopkeeperSpeechClusterLossAve])
+                    tableData.append(["ShopkeeperSpeechClusterLossStd", trainShopkeeperSpeechClusterLossStd, valShopkeeperSpeechClusterLossStd, testShopkeeperSpeechClusterLossStd])
+                    tableData.append(["LocationLossAve", trainLocationLossAve, valLocationLossAve, testLocationLossAve])
+                    tableData.append(["LocationLossStd", trainLocationLossStd, valLocationLossStd, testLocationLossStd])
+                    tableData.append(["SpatialStateLossAve", trainSpatialStateLossAve, valSpatialStateLossAve, testSpatialStateLossAve])
+                    tableData.append(["SpatialStateLossStd", trainSpatialStateLossStd, valSpatialStateLossStd, testSpatialStateLossStd])
+                    tableData.append(["StateTargetLossAve", trainStateTargetLossAve, valStateTargetLossAve, testStateTargetLossAve])
+                    tableData.append(["StateTargetLossStd", trainStateTargetLossStd, valStateTargetLossStd, testStateTargetLossStd])
+                    
+                    tableData.append(["SpeechClustCorrAcc", trainSpeechClustCorrAcc, valSpeechClustCorrAcc, testSpeechClustCorrAcc])
+                    tableData.append(["LocCorrAcc", trainLocCorrAcc, valLocCorrAcc, testLocCorrAcc])
+                    tableData.append(["SpatStCorrAcc", trainSpatStCorrAcc, valSpatStCorrAcc, testSpatStCorrAcc])
+                    tableData.append(["StTargCorrAcc", trainStTargCorrAcc, valStTargCorrAcc, testStTargCorrAcc])
+                    
+                    print(tabulate(tableData, headers=["METRIC", "TRAINING", "VALIDATION", "TESTING"], floatfmt=".3f", tablefmt="grid"), flush=True, file=foldTerminalOutputStream)
+                            
+                    print("", flush=True, file=foldTerminalOutputStream)
             
             #################################################################################################################
             # END BASELINE 1 RUN!
@@ -1596,9 +1614,18 @@ def main(mainDir, condition):
         run_fold(randomSeed=0, foldId=0, gpu=0)
     
     else:
+        processes = []
+        
         for gpu in range(8):
             process = Process(target=run_fold, args=[0, gpu, gpu])
             process.start()
+            processes.append(process)
+        
+        for p in processes:
+            p.join()
+            
+            
+            
 
 
 

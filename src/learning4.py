@@ -803,12 +803,6 @@ class Baseline1(object):
         
         batchStartEndIndices = self.get_batches(len(outputActionIds))
         
-        all_loss = [] 
-        all_shopkeeper_action_loss = []
-        all_location_loss = []
-        all_spatial_state_loss = [] 
-        all_state_target_loss = []
-        
         for sei in batchStartEndIndices:
             
             ###
@@ -821,18 +815,11 @@ class Baseline1(object):
                         self.output_mask: outputMasks[sei[0]:sei[1]],
                         self.speechClusterWeightsTensor: self.speechClusterWeights}
             
-            loss, shopkeeper_action_loss, location_loss, spatial_state_loss, state_target_loss, _ = self.sess.run([self.loss, self.shopkeeper_action_loss, self.location_loss, self.spatial_state_loss, self.state_target_loss, self.train_op], 
-                                                                                                                                                    feed_dict=feedDict)
+            _ = self.sess.run([self.train_op], feed_dict=feedDict)
             
             ###
-            
-            all_loss.append(loss) 
-            all_shopkeeper_action_loss.append(shopkeeper_action_loss)
-            all_location_loss.append(location_loss)
-            all_spatial_state_loss.append(spatial_state_loss) 
-            all_state_target_loss.append(state_target_loss)
-            
-        return all_loss, all_shopkeeper_action_loss, all_location_loss, all_spatial_state_loss, all_state_target_loss
+        
+        return None
     
     
     def get_loss(self, 

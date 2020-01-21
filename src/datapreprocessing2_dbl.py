@@ -21,18 +21,21 @@ from utterancevectorizer import UtteranceVectorizer
 
 dataDirectory = tools.dataDir+"2020-01-08_advancedSimulator9"
 
-#sessionDir = tools.create_session_dir("datapreprocessing1_dbl")
+#sessionDir = tools.create_session_dir("datapreprocessing2_dbl")
 sessionDir = dataDirectory+"_input_sequence_vectors"
 tools.create_directory(sessionDir)
 
 
 shopkeeperSpeechClusterFilename = tools.modelDir + "20200109_withsymbols shopkeeper-tristm-3wgtkw-9wgtsym-3wgtnum-mc2-sw2-eucldist- speech_clusters.csv"
+#shopkeeperSpeechClusterFilename = tools.modelDir + "20200116_nosymbols shopkeeper-tristm-3wgtkw-9wgtnum-mc2-sw3-eucldist- speech_clusters.csv"
 
 
 numTrainDbs = 10
 numInteractionsPerDb = 200
 dtype = np.int8
 inputSeqCutoffLen = 10
+useSymbols = True
+
 
 cameras = ["CAMERA_1", "CAMERA_2", "CAMERA_3"]
 attributes = ["camera_ID", "camera_name", "camera_type", "color", "weight", "preset_modes", "effects", "price", "resolution", "optical_zoom", "settings", "autofocus_points", "sensor_size", "ISO", "long_exposure"]
@@ -199,7 +202,7 @@ for i in range(len(interactionFilenames)):
 #
 # load the shopkeeper speech clusters
 #
-shkpUttToSpeechClustId, shkpSpeechClustIdToRepUtt, speechClustIdToShkpUtts, junkSpeechClusterIds = tools.load_shopkeeper_speech_clusters(shopkeeperSpeechClusterFilename)
+shkpUttToSpeechClustId, shkpSpeechClustIdToRepUtt, speechClustIdToShkpUtts, junkSpeechClusterIds = tools.load_shopkeeper_speech_clusters(shopkeeperSpeechClusterFilename, cleanPunct=not useSymbols)
 print(len(speechClustIdToShkpUtts), "shopkeeper speech clusters")
 
 
@@ -266,7 +269,11 @@ with open(sessionDir+"/shopkeeper_action_clusters.csv", "w", newline="") as csvf
 for i in range(len(interactions)):
     for j in range(len(interactions[i])):
         
-        shkpSpeech = interactions[i][j]["SHOPKEEPER_SPEECH_WITH_SYMBOLS"].lower()
+        if useSymbols:
+            shkpSpeech = interactions[i][j]["SHOPKEEPER_SPEECH_WITH_SYMBOLS"].lower()
+        else:
+            shkpSpeech = interactions[i][j]["SHOPKEEPER_SPEECH"]
+        
         shkpSpeechClustId = shkpUttToSpeechClustId[shkpSpeech]        
         interactions[i][j]["OUTPUT_SHOPKEEPER_SPEECH_CLUSTER_ID"] = shkpSpeechClustId
         
@@ -457,6 +464,7 @@ jsvDim = len(interactions[0][0]["JOINT_STATE_VECTOR"])
 
 print(np.mean(allInteractionLens), np.std(allInteractionLens), "average interaction length")
 
+numDataOPointsSaved = 0
 
 for i in range(len(interactions)):
     
@@ -532,9 +540,16 @@ for i in range(len(interactions)):
     #outputActionIds = np.asarray(outputActionIds)
     #np.save(sessionDir+"/"+fn, outputActionIds)
     
-    fn = interactionFilenamesAll[i].split("/")[-1][:-4] + "_output_speech_cluster_ids"
-    outputSpeechClusters = np.asarray(outputSpeechClusters)
-    np.save(sessionDir+"/"+fn, outputSpeechClusters)
+    if useSymbols:
+        fn = interactionFilenamesAll[i].split("/")[-1][:-4] + "_output_speech_cluster_ids_withsymbols"
+        outputSpeechClusters = np.asarray(outputSpeechClusters)
+        np.save(sessionDir+"/"+fn, outputSpeechClusters)
+    
+    else:
+        fn = interactionFilenamesAll[i].split("/")[-1][:-4] + "_output_speech_cluster_ids_nosymbols"
+        outputSpeechClusters = np.asarray(outputSpeechClusters)
+        np.save(sessionDir+"/"+fn, outputSpeechClusters)
+    
     
     fn = interactionFilenamesAll[i].split("/")[-1][:-4] + "_output_locations"
     outputLocations = np.asarray(outputLocations)
@@ -558,6 +573,9 @@ for i in range(len(interactions)):
     
     
     print("completed", i+1, "of", len(interactions))
+    numDataOPointsSaved += len(outputSpeechClusters)
+    
     
 print(sum(len(x) for x in interactions), "total data points")
+print(numDataOPointsSaved, "data points saved")
     
