@@ -35,17 +35,18 @@ import tools
 mainDir = tools.create_session_dir("actionPrediction18_dbl")
 
 
-def main(mainDir, condition):
+def main(mainDir, condition, gpuCount):
 
     #################################################################################################################
     # running params
     #################################################################################################################
     
-    DEBUG = True
-    RUN_PARALLEL = False
+    DEBUG = False
+    RUN_PARALLEL = True
     
-    SPEECH_CLUSTER_LOSS_WEIGHTS = False
+    SPEECH_CLUSTER_LOSS_WEIGHTS = True
     
+    NUM_GPUS = 8
     
     sessionDir = mainDir + "/" + condition
     tools.create_directory(sessionDir)
@@ -62,8 +63,8 @@ def main(mainDir, condition):
     
     # params that should be the same for all conditions (predictors)
     numDatabases = 11
-    numTrainDbs = 8
-    numValDbs = 2
+    numTrainDbs = 9
+    numValDbs = 1
     numTestDbs = 1
     
     numInteractionsPerDb = 200
@@ -327,6 +328,7 @@ def main(mainDir, condition):
         # load the shopkeeper speech clusters
         prop_shkpUttToSpeechClustId, prop_shkpSpeechClustIdToRepUtt, prop_speechClustIdToShkpUtts, prop_junkSpeechClusterIds = tools.load_shopkeeper_speech_clusters(prop_shopkeeperSpeechClusterFilename)
         prop_numSpeechClusters = len(prop_speechClustIdToShkpUtts)
+        prop_silenceSpeechClusterId = prop_shkpUttToSpeechClustId[""]
         print(prop_numSpeechClusters, "shopkeeper speech clusters for PROPOSED", flush=True, file=sessionTerminalOutputStream)
         
         
@@ -363,6 +365,7 @@ def main(mainDir, condition):
         # load the shopkeeper speech clusters
         bl1_shkpUttToSpeechClustId, bl1_shkpSpeechClustIdToRepUtt, bl1_speechClustIdToShkpUtts, bl1_junkSpeechClusterIds = tools.load_shopkeeper_speech_clusters(bl1_shopkeeperSpeechClusterFilename)
         bl1_numSpeechClusters = len(bl1_speechClustIdToShkpUtts)
+        bl1_silenceSpeechClusterId = bl1_shkpUttToSpeechClustId[""]
         print(bl1_numSpeechClusters, "shopkeeper speech clusters for BASELINE 1", flush=True, file=sessionTerminalOutputStream)
         
         
@@ -481,6 +484,7 @@ def main(mainDir, condition):
                                  "Training Location Correct ({})".format(foldIdentifier),
                                  "Training Spatial State Correct ({})".format(foldIdentifier),
                                  "Training State Target Correct ({})".format(foldIdentifier),
+                                 "Training Silence Correct ({})".format(foldIdentifier),
                                  
                                  "Validation Loss Ave ({})".format(foldIdentifier), 
                                  "Validation Loss SD ({})".format(foldIdentifier),
@@ -503,6 +507,7 @@ def main(mainDir, condition):
                                  "Validation Location Correct ({})".format(foldIdentifier),
                                  "Validation Spatial State Correct ({})".format(foldIdentifier),
                                  "Validation State Target Correct ({})".format(foldIdentifier),
+                                 "Validation Silence Correct ({})".format(foldIdentifier),
                                  
                                  "Testing Loss Ave ({})".format(foldIdentifier), 
                                  "Testing Loss SD ({})".format(foldIdentifier),
@@ -525,6 +530,7 @@ def main(mainDir, condition):
                                  "Testing Location Correct ({})".format(foldIdentifier),
                                  "Testing Spatial State Correct ({})".format(foldIdentifier),
                                  "Testing State Target Correct ({})".format(foldIdentifier),
+                                 "Testing Silence Correct ({})".format(foldIdentifier),
                                  ])
         
         
@@ -609,6 +615,7 @@ def main(mainDir, condition):
                                  "Training Location Correct ({})".format(foldIdentifier),
                                  "Training Spatial State Correct ({})".format(foldIdentifier),
                                  "Training State Target Correct ({})".format(foldIdentifier),
+                                 "Training Silence Correct ({})".format(foldIdentifier),
                                  
                                  "Validation Loss Ave ({})".format(foldIdentifier), 
                                  "Validation Loss SD ({})".format(foldIdentifier),
@@ -624,6 +631,7 @@ def main(mainDir, condition):
                                  "Validation Location Correct ({})".format(foldIdentifier),
                                  "Validation Spatial State Correct ({})".format(foldIdentifier),
                                  "Validation State Target Correct ({})".format(foldIdentifier),
+                                 "Validation Silence Correct ({})".format(foldIdentifier),
                                  
                                  "Testing Loss Ave ({})".format(foldIdentifier), 
                                  "Testing Loss SD ({})".format(foldIdentifier),
@@ -639,6 +647,7 @@ def main(mainDir, condition):
                                  "Testing Location Correct ({})".format(foldIdentifier),
                                  "Testing Spatial State Correct ({})".format(foldIdentifier),
                                  "Testing State Target Correct ({})".format(foldIdentifier),
+                                 "Testing Silence Correct ({})".format(foldIdentifier),
                                  ])
         
         
@@ -721,15 +730,26 @@ def main(mainDir, condition):
                         prop_speechClustCounts[speechClustId] = 0
                     prop_speechClustCounts[speechClustId] += 1
                 
-                numSamples = len(trainIndices)
+                # remove junk cluster counts
+                for speechClustId in prop_junkSpeechClusterIds:
+                    del prop_speechClustCounts[speechClustId]
+                
+                numSamples = sum(prop_speechClustCounts.values())
                 
                 
                 # compute weights
                 prop_speechClustWeights = [None] * prop_numSpeechClusters
                 
                 for clustId in prop_speechClustIdToShkpUtts:
-                    # as in scikit learn - The “balanced” heuristic is inspired by Logistic Regression in Rare Events Data, King, Zen, 2001.
-                    prop_speechClustWeights[clustId] = numSamples / (prop_numSpeechClusters * prop_speechClustCounts[clustId])
+
+                    if clustId in prop_speechClustCounts:
+                        # as in scikit learn - The “balanced” heuristic is inspired by Logistic Regression in Rare Events Data, King, Zen, 2001.
+                        prop_speechClustWeights[clustId] = numSamples / ((prop_numSpeechClusters-len(prop_junkSpeechClusterIds)) * prop_speechClustCounts[clustId])
+                    
+                    else:       
+                        # sometimes a cluster won't appear in the training set, so give it a weight of 1
+                        prop_speechClustWeights[clustId] = 1.0
+                
                 
                 # don't train on junk speech clusters
                 for clustId in prop_junkSpeechClusterIds:
@@ -803,7 +823,11 @@ def main(mainDir, condition):
                         bl1_speechClustCounts[speechClustId] = 0
                     bl1_speechClustCounts[speechClustId] += 1
                 
-                numSamples = len(trainIndices)
+                # remove junk cluster counts
+                for speechClustId in bl1_junkSpeechClusterIds:
+                    del bl1_speechClustCounts[speechClustId]
+                
+                numSamples = sum(bl1_speechClustCounts.values())
                 
                 
                 # compute weights
@@ -812,7 +836,7 @@ def main(mainDir, condition):
                 for clustId in bl1_speechClustIdToShkpUtts:
                     # as in scikit learn - The “balanced” heuristic is inspired by Logistic Regression in Rare Events Data, King, Zen, 2001.
                     if clustId in bl1_speechClustCounts:
-                        bl1_speechClustWeights[clustId] = numSamples / (bl1_numSpeechClusters * bl1_speechClustCounts[clustId])
+                        bl1_speechClustWeights[clustId] = numSamples / ((bl1_numSpeechClusters-len(bl1_junkSpeechClusterIds)) * bl1_speechClustCounts[clustId])
                     else:
                         # sometimes a cluster won't appear in the training set, so give it a weight of 1
                         bl1_speechClustWeights[clustId] = 1.0
@@ -875,6 +899,7 @@ def main(mainDir, condition):
         print("training and testing...", flush=True, file=foldTerminalOutputStream)
         
         for e in range(numEpochs+1):
+            startTime = time.time()
             
             if prop_run:
                 
@@ -1028,6 +1053,9 @@ def main(mainDir, condition):
                         stTargs_gt = []
                         stTargs_pred = []
                         
+                        silence_gt = []
+                        silence_pred = []
+                        
                         
                         for i in evalIndices:
                             
@@ -1088,18 +1116,17 @@ def main(mainDir, condition):
                             
                             
                             try:
-                                shkpSpeechTemplate = prop_shkpSpeechClustIdToRepUtt[predShkpSpeechClustID[i]]
+                                outShkpSpeechTemplate = prop_shkpSpeechClustIdToRepUtt[predShkpSpeechClustID[i]]
                             except Exception as err:
                                 traceback.print_tb(err.__traceback__)
                                 print(err, flush=True, file=foldTerminalOutputStream)
                                 
-                                shkpSpeechTemplate = "ERROR: No representative utterance found for cluster {}.".format(predShkpSpeechClustID[i])
-                            
-                            outShkpSpeechTemplate = shkpSpeechTemplate
-                            outShkpSpeech = shkpSpeechTemplate
+                                outShkpSpeechTemplate = "ERROR: No representative utterance found for cluster {}.".format(predShkpSpeechClustID[i])
                             
                             
                             # find any DB contents symbols in the speech template
+                            outShkpSpeech = outShkpSpeechTemplate
+                            
                             dbId = interactions[i]["DATABASE_ID"]
                             cameraInfo = databases[int(dbId)][camPredArgmax]
                             
@@ -1107,8 +1134,8 @@ def main(mainDir, condition):
                                 attr = dbFieldnames[j]
                                 symbol = "<{}>".format(attr.lower())
                                 
-                                if symbol in outShkpSpeechTemplate:
-                                    outShkpSpeech = outShkpSpeechTemplate.replace(symbol, cameraInfo[attr])
+                                while symbol in outShkpSpeech:
+                                    outShkpSpeech = outShkpSpeech.replace(symbol, cameraInfo[attr])
                                     
                                     outDbIndices.append((camPredArgmax, j))
                                     outDbContents.append(cameraInfo[attr])
@@ -1178,8 +1205,12 @@ def main(mainDir, condition):
                             
                             stTargs_gt.append(csvLogRows[i]["TARG_OUTPUT_STATE_TARGET"])
                             stTargs_pred.append(csvLogRows[i]["PRED_OUTPUT_STATE_TARGET"])
-                        
-                        
+                            
+                            
+                            if ((csvLogRows[i]["TARG_SHOPKEEPER_SPEECH_CLUSTER_ID"] == prop_silenceSpeechClusterId) or (predShkpSpeechClustID[i] == prop_silenceSpeechClusterId)):
+                                silence_gt.append(csvLogRows[i]["TARG_SHOPKEEPER_SPEECH_CLUSTER_ID"])
+                                silence_pred.append(predShkpSpeechClustID[i])
+                                
                         #
                         # compute accuracies
                         #
@@ -1190,18 +1221,18 @@ def main(mainDir, condition):
                         locCorrAcc = accuracy_score(locs_gt, locs_pred)
                         spatStCorrAcc = accuracy_score(spatSts_gt, spatSts_pred)
                         stTargCorrAcc = accuracy_score(stTargs_gt, stTargs_pred)
+                        silenceCorrAcc = accuracy_score(silence_gt, silence_pred)
                         
-                        
-                        return csvLogRows, speechClustCorrAcc, camCorrAcc, attrExactMatch, attrJaccardIndex, locCorrAcc, spatStCorrAcc, stTargCorrAcc
+                        return csvLogRows, speechClustCorrAcc, camCorrAcc, attrExactMatch, attrJaccardIndex, locCorrAcc, spatStCorrAcc, stTargCorrAcc, silenceCorrAcc
                     
                     
                     csvLogRows = copy.deepcopy(interactions)
                     
-                    csvLogRows, trainSpeechClustCorrAcc, trainCamCorrAcc, trainAttrExactMatch, trainAttrJaccardIndex, trainLocCorrAcc, trainSpatStCorrAcc, trainStTargCorrAcc = evaluate_predictions_prop("TRAIN", trainIndices, csvLogRows)
+                    csvLogRows, trainSpeechClustCorrAcc, trainCamCorrAcc, trainAttrExactMatch, trainAttrJaccardIndex, trainLocCorrAcc, trainSpatStCorrAcc, trainStTargCorrAcc, trainSilenceCorrAcc = evaluate_predictions_prop("TRAIN", trainIndices, csvLogRows)
                     
-                    csvLogRows, valSpeechClustCorrAcc, valCamCorrAcc, valAttrExactMatch, valAttrJaccardIndex, valLocCorrAcc, valSpatStCorrAcc, valStTargCorrAcc = evaluate_predictions_prop("VAL", valIndices, csvLogRows)
+                    csvLogRows, valSpeechClustCorrAcc, valCamCorrAcc, valAttrExactMatch, valAttrJaccardIndex, valLocCorrAcc, valSpatStCorrAcc, valStTargCorrAcc, valSilenceCorrAcc = evaluate_predictions_prop("VAL", valIndices, csvLogRows)
                     
-                    csvLogRows, testSpeechClustCorrAcc, testCamCorrAcc, testAttrExactMatch, testAttrJaccardIndex, testLocCorrAcc, testSpatStCorrAcc, testStTargCorrAcc = evaluate_predictions_prop("TEST", testIndices, csvLogRows)
+                    csvLogRows, testSpeechClustCorrAcc, testCamCorrAcc, testAttrExactMatch, testAttrJaccardIndex, testLocCorrAcc, testSpatStCorrAcc, testStTargCorrAcc, testSilenceCorrAcc = evaluate_predictions_prop("TEST", testIndices, csvLogRows)
                     
                     
                     #
@@ -1241,6 +1272,7 @@ def main(mainDir, condition):
                                          trainLocCorrAcc,
                                          trainSpatStCorrAcc,
                                          trainStTargCorrAcc,
+                                         trainSilenceCorrAcc,
                                          
                                          # validation
                                          valCostAve,
@@ -1265,6 +1297,7 @@ def main(mainDir, condition):
                                          valLocCorrAcc,
                                          valSpatStCorrAcc,
                                          valStTargCorrAcc,
+                                         valSilenceCorrAcc,
                                          
                                          # testing
                                          testCostAve,
@@ -1288,7 +1321,8 @@ def main(mainDir, condition):
                                          testAttrJaccardIndex,
                                          testLocCorrAcc,
                                          testSpatStCorrAcc,
-                                         testStTargCorrAcc
+                                         testStTargCorrAcc,
+                                         testSilenceCorrAcc
                                          ])    
                 
                     
@@ -1318,6 +1352,8 @@ def main(mainDir, condition):
                     tableData.append(["LocCorrAcc", trainLocCorrAcc, valLocCorrAcc, testLocCorrAcc])
                     tableData.append(["SpatStCorrAcc", trainSpatStCorrAcc, valSpatStCorrAcc, testSpatStCorrAcc])
                     tableData.append(["StTargCorrAcc", trainStTargCorrAcc, valStTargCorrAcc, testStTargCorrAcc])
+                    tableData.append(["SilenceCorrAcc", trainSilenceCorrAcc, valSilenceCorrAcc, testSilenceCorrAcc])
+                    
                     
                     print(tabulate(tableData, headers=["METRIC", "TRAINING", "VALIDATION", "TESTING"], floatfmt=".3f", tablefmt="grid"), flush=True, file=foldTerminalOutputStream)
                             
@@ -1441,6 +1477,8 @@ def main(mainDir, condition):
                         stTargs_gt = []
                         stTargs_pred = []
                         
+                        silence_gt = []
+                        silence_pred = []
                         
                         for i in evalIndices:
                             
@@ -1488,6 +1526,10 @@ def main(mainDir, condition):
                             
                             stTargs_gt.append(csvLogRows[i]["TARG_OUTPUT_STATE_TARGET"])
                             stTargs_pred.append(csvLogRows[i]["PRED_OUTPUT_STATE_TARGET"])
+                            
+                            if ((csvLogRows[i]["TARG_SHOPKEEPER_SPEECH_CLUSTER_ID"] == bl1_silenceSpeechClusterId) or (predShkpSpeechClustID[i] == bl1_silenceSpeechClusterId)):
+                                silence_gt.append(csvLogRows[i]["TARG_SHOPKEEPER_SPEECH_CLUSTER_ID"])
+                                silence_pred.append(predShkpSpeechClustID[i])
                         
                         
                         #
@@ -1497,18 +1539,19 @@ def main(mainDir, condition):
                         locCorrAcc = accuracy_score(locs_gt, locs_pred)
                         spatStCorrAcc = accuracy_score(spatSts_gt, spatSts_pred)
                         stTargCorrAcc = accuracy_score(stTargs_gt, stTargs_pred)
+                        silenceCorrAcc = accuracy_score(silence_gt, silence_pred)
                         
                         
-                        return csvLogRows, speechClustCorrAcc, locCorrAcc, spatStCorrAcc, stTargCorrAcc
+                        return csvLogRows, speechClustCorrAcc, locCorrAcc, spatStCorrAcc, stTargCorrAcc, silenceCorrAcc
                     
                     
                     csvLogRows = copy.deepcopy(interactions)
                     
-                    csvLogRows, trainSpeechClustCorrAcc, trainLocCorrAcc, trainSpatStCorrAcc, trainStTargCorrAcc = evaluate_predictions_bl1("TRAIN", trainIndices, csvLogRows)
+                    csvLogRows, trainSpeechClustCorrAcc, trainLocCorrAcc, trainSpatStCorrAcc, trainStTargCorrAcc, trainSilenceCorrAcc = evaluate_predictions_bl1("TRAIN", trainIndices, csvLogRows)
                     
-                    csvLogRows, valSpeechClustCorrAcc, valLocCorrAcc, valSpatStCorrAcc, valStTargCorrAcc = evaluate_predictions_bl1("VAL", valIndices, csvLogRows)
+                    csvLogRows, valSpeechClustCorrAcc, valLocCorrAcc, valSpatStCorrAcc, valStTargCorrAcc, valSilenceCorrAcc = evaluate_predictions_bl1("VAL", valIndices, csvLogRows)
                     
-                    csvLogRows, testSpeechClustCorrAcc, testLocCorrAcc, testSpatStCorrAcc, testStTargCorrAcc = evaluate_predictions_bl1("TEST", testIndices, csvLogRows)
+                    csvLogRows, testSpeechClustCorrAcc, testLocCorrAcc, testSpatStCorrAcc, testStTargCorrAcc, testSilenceCorrAcc = evaluate_predictions_bl1("TEST", testIndices, csvLogRows)
                     
                     
                     #
@@ -1541,6 +1584,7 @@ def main(mainDir, condition):
                                          trainLocCorrAcc,
                                          trainSpatStCorrAcc,
                                          trainStTargCorrAcc,
+                                         trainSilenceCorrAcc,
                                          
                                          # validation
                                          valCostAve,
@@ -1558,6 +1602,7 @@ def main(mainDir, condition):
                                          valLocCorrAcc,
                                          valSpatStCorrAcc,
                                          valStTargCorrAcc,
+                                         valSilenceCorrAcc,
                                          
                                          # testing
                                          testCostAve,
@@ -1575,6 +1620,7 @@ def main(mainDir, condition):
                                          testLocCorrAcc,
                                          testSpatStCorrAcc,
                                          testStTargCorrAcc,
+                                         testSilenceCorrAcc
                                          ])    
                 
                 
@@ -1597,6 +1643,7 @@ def main(mainDir, condition):
                     tableData.append(["LocCorrAcc", trainLocCorrAcc, valLocCorrAcc, testLocCorrAcc])
                     tableData.append(["SpatStCorrAcc", trainSpatStCorrAcc, valSpatStCorrAcc, testSpatStCorrAcc])
                     tableData.append(["StTargCorrAcc", trainStTargCorrAcc, valStTargCorrAcc, testStTargCorrAcc])
+                    tableData.append(["SilenceCorrAcc", trainSilenceCorrAcc, valSilenceCorrAcc, testSilenceCorrAcc])
                     
                     print(tabulate(tableData, headers=["METRIC", "TRAINING", "VALIDATION", "TESTING"], floatfmt=".3f", tablefmt="grid"), flush=True, file=foldTerminalOutputStream)
                             
@@ -1606,6 +1653,7 @@ def main(mainDir, condition):
             # END BASELINE 1 RUN!
             #################################################################################################################
             
+            print("Epoch {} time: {}s".format(e, round(time.time() - startTime, 2)), flush=True, file=sessionTerminalOutputStream)
             
     #
     # start parallel processing
@@ -1616,17 +1664,23 @@ def main(mainDir, condition):
     else:
         processes = []
         
+        for fold in range(numDatabases):
+            process = Process(target=run_fold, args=[0, fold, gpuCount%NUM_GPUS]) # randomSeed, foldId, gpu
+            process.start()
+            processes.append(process)
+            gpuCount += 1
+        
+        """
         for gpu in range(8):
-            process = Process(target=run_fold, args=[0, gpu, gpu])
+            process = Process(target=run_fold, args=[0, gpu, gpu]) # randomSeed, foldId, gpu
             process.start()
             processes.append(process)
         
         for p in processes:
             p.join()
-            
-            
-            
-
+        """
+    
+    return gpuCount
 
 
 
@@ -1634,8 +1688,12 @@ def main(mainDir, condition):
 # start here...
 #
 
-main(mainDir, "proposed")
+gpuCount = 0
+gpuCount = main(mainDir, "proposed", gpuCount)
+gpuCount = main(mainDir, "baseline1", gpuCount)
 
-main(mainDir, "baseline1")
+
+
+
 
 
