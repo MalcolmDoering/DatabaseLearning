@@ -11,15 +11,16 @@ from scipy.stats import entropy
 
 
 # for Malcolm desktop (robovie)
-#projectDir = "C:/Users/robovie/eclipse-workspace/DatabaseLearning/"
-#logDir = "E:/eclipse-log"
+projectDir = "C:/Users/robovie/eclipse-workspace/DatabaseLearning/"
+logDir = "E:/eclipse-log"
+dataDir = "E:/DatabaseLearning/data/"
 
 # for malcolm @ gpgpu1
-projectDir = "/home/malcolm//eclipse-workspace/DatabaseLearning/"
-logDir = "/data1/malcolm/eclipse-log"
+#projectDir = "/home/malcolm//eclipse-workspace/DatabaseLearning/"
+#logDir = "/data1/malcolm/eclipse-log"
+#dataDir = projectDir + "data/"
 
 
-dataDir = projectDir + "data/"
 modelDir = projectDir + "models/"
 
 punctuation = r"""!"#%&()*+,:;<=>?@[\]^`{|}~""" # leave in $ . / - ' _
