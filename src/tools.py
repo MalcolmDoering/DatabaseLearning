@@ -22,7 +22,7 @@ logDir = "/data1/malcolm/eclipse-log"
 dataDir = projectDir + "data/"
 modelDir = projectDir + "models/"
 
-punctuation = r"""!"#%&()*+,:;<=>?@[\]^_`{|}~""" # leave in $ . / - '
+punctuation = r"""!"#%&()*+,:;<=>?@[\]^`{|}~""" # leave in $ . / - ' _
 
 
 
@@ -155,7 +155,7 @@ def read_crossvalidation_splits(numFolds):
     return dataSplits
 
 
-def load_shopkeeper_speech_clusters(shopkeeperSpeechClusterFilename):
+def load_shopkeeper_speech_clusters(shopkeeperSpeechClusterFilename, cleanPunct=False):
     shkpUttToSpeechClustId = {}
     speechClustIdToShkpUtts = {}
     shkpSpeechClustIdToRepUtt = {}
@@ -168,7 +168,11 @@ def load_shopkeeper_speech_clusters(shopkeeperSpeechClusterFilename):
             
             
             for row in reader:
-                utt = row["Utterance"].lower()
+                if cleanPunct:
+                    utt = row["Utterance"].lower().translate(str.maketrans('', '', punctuation))
+                else:
+                    utt = row["Utterance"].lower()
+                
                 speechClustId = int(row["Cluster.ID"])
             
                 if utt not in shkpUttToSpeechClustId:
@@ -204,6 +208,7 @@ def load_shopkeeper_speech_clusters(shopkeeperSpeechClusterFilename):
     # add a cluster for no speech
     shkpUttToSpeechClustId[""] = len(shkpSpeechClustIdToRepUtt)
     shkpSpeechClustIdToRepUtt[shkpUttToSpeechClustId[""]] = ""
+    speechClustIdToShkpUtts[shkpUttToSpeechClustId[""]] = [""]
     
     return shkpUttToSpeechClustId, shkpSpeechClustIdToRepUtt, speechClustIdToShkpUtts, junkSpeechClusterIds
 
