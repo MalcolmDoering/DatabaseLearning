@@ -79,7 +79,7 @@ def main(mainDir, condition, gpuCount):
     numTestDbs = 1
     
     numInteractionsPerDb = 200
-    batchSize = 64
+    batchSize = 32
     randomizeTrainingBatches = False
     numEpochs = 500
     evalEvery = 1
@@ -2780,7 +2780,7 @@ def main(mainDir, condition, gpuCount):
     else:
         processes = []
         
-        for fold in range(NUM_GPUS): #numDatabases
+        for fold in range(numDatabases): #numDatabases
             process = Process(target=run_fold, args=[0, fold, gpuCount%NUM_GPUS]) # randomSeed, foldId, gpu
             process.start()
             processes.append(process)

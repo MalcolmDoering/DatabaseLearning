@@ -1100,8 +1100,8 @@ class CopynetBased(object):
         self.shopkeeper_speech_sequence_mask = tf.sequence_mask(self.shopkeeper_speech_sequence_lengths, self.outputSeqLen, dtype=tf.int32)
         
         self.copynet_cell = copynet.CopyNetWrapper3(cell=tf.nn.rnn_cell.GRUCell(self.embeddingSize, kernel_initializer=tf.initializers.glorot_normal()),
-                                                   encoder_states=self.database_encodings_most_relevant,
-                                                   encoder_input_ids=self.database_sequences_most_relevant,
+                                                   db_val_seq_encodings=self.database_encodings_most_relevant,
+                                                   db_val_seq_ids=self.database_sequences_most_relevant,
                                                    vocab_size=self.vocabSize)
         
         self.decoder_initial_state = self.copynet_cell.zero_state(self.batchSize, tf.float32).clone(cell_state=self.input_encoding)
@@ -1539,6 +1539,8 @@ class CoreqaBased(object):
         
         
         # encode the DB contents
+        self.dbFactEncodingSize = 0
+        
         with tf.variable_scope("db_encoding/cam"):
             
             # bi-directional GRU
@@ -1560,7 +1562,8 @@ class CoreqaBased(object):
             
             self.db_cam_encodings = tf.concat([database_encodings_fw, database_encodings_bw], axis=1)
             self.db_cam_encodings = tf.reshape(self.db_cam_encodings, (self.batchSize, self.numDbFacts, self.embeddingSize*2))
-        
+            self.dbFactEncodingSize += self.embeddingSize * 2
+            
         
         with tf.variable_scope("db_encoding/attr"):
             
@@ -1583,7 +1586,8 @@ class CoreqaBased(object):
             
             self.db_attr_encodings = tf.concat([database_encodings_fw, database_encodings_bw], axis=1)
             self.db_attr_encodings = tf.reshape(self.db_attr_encodings, (self.batchSize, self.numDbFacts, self.embeddingSize*2))
-        
+            self.dbFactEncodingSize += self.embeddingSize * 2
+            
         
         with tf.variable_scope("db_encoding/vals"):
             
@@ -1608,41 +1612,33 @@ class CoreqaBased(object):
             
             self.db_val_encodings = tf.concat([database_encodings_fw_0, database_encodings_fw_1, database_encodings_bw_0, database_encodings_bw_1], axis=1)
             self.db_val_encodings = tf.reshape(self.db_val_encodings, (self.batchSize, self.numDbFacts, tf.shape(self.db_val_encodings)[-1]))
+            self.dbFactEncodingSize += self.embeddingSize * 4
             
             self.db_val_seq_encodings = tf.reshape(database_encodings_flat, (self.batchSize, self.numDbFacts, self.dbValLen, self.embeddingSize*2))
-        
+                        
         
         with tf.variable_scope("db_addressing/database_contents_selector"):
             # get the most relevant DB contents
             
             # prepare DB fact encodings
             self.db_fact_encodings = tf.concat([self.db_cam_encodings, self.db_attr_encodings, self.db_val_encodings], axis=2)
+            #self.db_fact_match_scores = tf.zeros((self.batchSize, self.numDbFacts, 1), tf.float32, name='dummy_db_fact_match_scores')
+            
+            
+            """
             db_fact_encodings_reshaped = tf.reshape(self.db_fact_encodings, (self.batchSize*self.numDbFacts, tf.shape(self.db_fact_encodings)[-1]))
-            
-            # test addressing using only the DB encodings...
-            #self.db_fact_match_scores = tf.layers.dense(db_fact_encodings_reshaped, self.embeddingSize, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
-            #self.db_fact_match_scores = tf.layers.dense(self.db_fact_match_scores, 1, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
-            #self.db_fact_match_scores = tf.reshape(self.db_fact_match_scores, (self.batchSize, self.numDbFacts, 1))
-            
             
             # prepare input encodings
             input_encodings_reshaped = tf.keras.backend.repeat(self.input_encoding, self.numDbFacts)
-            input_encodings_reshaped = tf.reshape(input_encodings_reshaped, (self.batchSize*self.numDbFacts, tf.shape(input_encodings_reshaped)[-1]))
+            input_encodings_reshaped = tf.reshape(input_encodings_reshaped, (self.batchSize*self.numDbFacts, tf.shape(input_encodings_reshaped)[-1]))    
             
-            # test addressing using only the input encodings...
-            #self.db_fact_match_scores = tf.layers.dense(input_encodings_reshaped, self.embeddingSize, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
-            #self.db_fact_match_scores = tf.layers.dense(self.db_fact_match_scores, 1, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
+            # combine encodings
+            self.combined_encodings_for_db_addressing = tf.concat([db_fact_encodings_reshaped, input_encodings_reshaped], axis=-1)
             
-            
-            # combine encodings and get the scores using both input and DB facts
-            combined_encodings = tf.concat([db_fact_encodings_reshaped, input_encodings_reshaped], axis=-1)
-            
-            self.db_fact_match_scores = tf.layers.dense(combined_encodings, self.embeddingSize, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
+            # get the scores using both input and DB facts
+            self.db_fact_match_scores = tf.layers.dense(self.combined_encodings_for_db_addressing, self.embeddingSize, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
             self.db_fact_match_scores = tf.layers.dense(self.db_fact_match_scores, 1, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal())
-            
-            
             self.db_fact_match_scores = tf.reshape(self.db_fact_match_scores, (self.batchSize, self.numDbFacts, 1))
-            
             
             # apply the scores...
             
@@ -1658,7 +1654,7 @@ class CoreqaBased(object):
             temp = tf.expand_dims(self.db_fact_match_scores, axis=-1)
             self.db_match_val_seq = tf.multiply(self.database_vals_one_hot, temp)
             self.db_match_val_seq = tf.reduce_sum(self.db_match_val_seq, axis=1)
-            
+            """
         
         with tf.variable_scope("speech_and_spatial_output/location_decoder"):
             self.location_decoder = tf.layers.dense(self.input_encoding, self.numLocations, activation=tf.nn.leaky_relu, use_bias=True, kernel_initializer=tf.initializers.he_normal())
@@ -1683,10 +1679,13 @@ class CoreqaBased(object):
         #
         self.shopkeeper_speech_sequence_mask = tf.sequence_mask(self.shopkeeper_speech_sequence_lengths, self.outputSeqLen, dtype=tf.int32)
         
-        self.copynet_cell = copynet.CopyNetWrapper3(cell=tf.nn.rnn_cell.GRUCell(self.embeddingSize, kernel_initializer=tf.initializers.glorot_normal()),
-                                                   encoder_states=self.db_match_val_seq_encoding,
-                                                   encoder_input_ids=self.db_match_val_seq,
-                                                   vocab_size=self.vocabSize)
+        self.copynet_cell = copynet.CopyNetWrapper4(cell=tf.nn.rnn_cell.GRUCell(self.embeddingSize, kernel_initializer=tf.initializers.glorot_normal()),
+                                                   db_val_seq_encodings=self.db_val_seq_encodings,
+                                                   db_val_seq_ids=self.database_vals_one_hot,
+                                                   interaction_state_encoding=self.input_encoding,
+                                                   db_fact_encodings=self.db_fact_encodings,
+                                                   vocab_size=self.vocabSize,
+                                                   db_fact_encoding_size=self.dbFactEncodingSize)
         
         self.decoder_initial_state = self.copynet_cell.zero_state(self.batchSize, tf.float32).clone(cell_state=self.input_encoding)
         
@@ -1702,8 +1701,8 @@ class CoreqaBased(object):
         self.teacher_forcing_prob = tf.zeros((), tf.float32, name='teacher_forcing_prob')
         
         
-        self.shopkeeper_speech_train_loss, self.shopkeeper_speech_sequence_train_preds, self.copy_scores_train, self.gen_scores_train = self.build_decoder(teacherForcing=True, scopeName="speech_decoder_train")
-        self.shopkeeper_speech_test_loss, self.shopkeeper_speech_sequence_test_preds, self.copy_scores_test, self.gen_scores_test = self.build_decoder(teacherForcing=False, scopeName="speech_decoder_test")
+        self.shopkeeper_speech_train_loss, self.shopkeeper_speech_sequence_train_preds, self.copy_scores_train, self.gen_scores_train, self.ave_db_fact_match_scores_train = self.build_decoder_with_db_addressing(teacherForcing=True, scopeName="speech_decoder_train")
+        self.shopkeeper_speech_test_loss, self.shopkeeper_speech_sequence_test_preds, self.copy_scores_test, self.gen_scores_test, self.ave_db_fact_match_scores_test = self.build_decoder_with_db_addressing(teacherForcing=False, scopeName="speech_decoder_test")
         
         
         #
@@ -1771,6 +1770,69 @@ class CoreqaBased(object):
         self.saver = tf.train.Saver()
         
         self.pred_utt_op = tf.argmax(self.shopkeeper_speech_sequence_test_preds, 2, name="predict_utterance_op")
+    
+    
+    
+    def build_decoder_with_db_addressing(self, teacherForcing=False, scopeName="decoder"):
+        
+        
+        with tf.variable_scope(scopeName):
+            
+            loss = 0
+            predicted_output_sequences = []
+            copy_scores = []
+            gen_scores = []
+            ave_db_fact_match_scores = tf.zeros((self.batchSize, self.numDbFacts, 1), tf.float32)
+            
+            state = self.decoder_initial_state
+            output = self.decoder_inputs_one_hot[:, 0, :] # each output sequence must have a 'start' char appended to the beginning
+            
+            
+            for i in range(self.outputSeqLen):
+                
+                if teacherForcing:
+                    # if using teacher forcing
+                    bernoulliSample = tf.to_float(tf.distributions.Bernoulli(probs=self.teacher_forcing_prob).sample())
+                    output = tf.math.scalar_mul(bernoulliSample, self.decoder_inputs_one_hot[:, i, :]) + tf.math.scalar_mul((1.0-bernoulliSample), output)
+                    output, state, copy_score, gen_score, db_fact_match_scores = self.copynet_cell(output, state)
+                    
+                    #output, state, copy_score, gen_score = self.copynet_cell(self.decoder_inputs_one_hot[:, i, :], state)
+                    
+                else:
+                    # if not using teacher forcing
+                    output, state, copy_score, gen_score, db_fact_match_scores = self.copynet_cell(output, state)
+                
+                
+                predicted_output_sequences.append(tf.reshape(output, shape=(tf.shape(output)[0], 1, self.vocabSize)))
+                copy_scores.append(tf.reshape(copy_score, shape=(tf.shape(copy_score)[0], 1, self.vocabSize)))
+                gen_scores.append(tf.reshape(gen_score, shape=(tf.shape(gen_score)[0], 1, self.vocabSize)))
+                
+                m = tf.reshape(self.shopkeeper_speech_sequence_mask[:,i], (self.batchSize, 1, 1))
+                db_fact_match_scores = tf.multiply(db_fact_match_scores, tf.cast(m, tf.float32))
+                ave_db_fact_match_scores = tf.add(ave_db_fact_match_scores, db_fact_match_scores)
+                
+                
+                # get the ground truth output
+                ground_truth_output = tf.one_hot(self.shopkeeper_speech_sequence_targets[:, i], self.vocabSize) # these are one-hot char encodings at timestep i
+                
+                # compute the loss
+                #cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=ground_truth_output, logits=output)
+                cross_entropy = tf.losses.softmax_cross_entropy(ground_truth_output, output, weights=self.shopkeeper_speech_sequence_mask[:,i], reduction=tf.losses.Reduction.SUM_OVER_BATCH_SIZE) # is this right for sequence eval?
+                #current_loss = tf.reduce_sum(cross_entropy)
+                loss = loss + cross_entropy
+            
+            
+            predicted_output_sequences = tf.concat(predicted_output_sequences, 1)
+            copy_scores = tf.concat(copy_scores, 1)
+            gen_scores = tf.concat(gen_scores, 1)
+            
+            mSum = tf.reshape(tf.reduce_sum(self.shopkeeper_speech_sequence_mask, axis=1), (self.batchSize, 1, 1))
+            ave_db_fact_match_scores = tf.divide(ave_db_fact_match_scores, tf.cast(mSum, tf.float32))
+            
+        
+        return loss, predicted_output_sequences, copy_scores, gen_scores, ave_db_fact_match_scores
+    
+    
     
     
     def build_decoder(self, teacherForcing=False, scopeName="decoder"):
@@ -1982,7 +2044,7 @@ class CoreqaBased(object):
                         self.location_argmax,
                         self.spatial_state_argmax,
                         self.state_target_argmax,
-                        self.db_fact_match_scores],
+                        self.ave_db_fact_match_scores_test],
                         feed_dict=feedDict)
                         
             ###
