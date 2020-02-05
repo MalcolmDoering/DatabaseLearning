@@ -14,6 +14,7 @@ import numpy as np
 import string
 import os
 import ast
+import nltk
 
 import tools
 from utterancevectorizer import UtteranceVectorizer
@@ -197,6 +198,189 @@ for i in range(len(interactionFilenames)):
     
     # combine the three dictionaries into one
     shkpUttToDbEntryRange = {**shkpUttToDbEntryRange, **sutder}
+
+
+#
+# find the vocabulary in the shopkeeper utterances and the database contents
+#
+indexToWord = {}
+wordToIndex = {}
+
+# shopkeeper utterances
+maxShkpSpeechLen = 0
+
+for i in range(len(interactions)):
+    for j in range(len(interactions[i])):
+        
+        tokens = nltk.word_tokenize(interactions[i][j]["SHOPKEEPER_SPEECH"])
+
+        maxShkpSpeechLen = max(maxShkpSpeechLen, len(tokens))
+        
+        for w in tokens:
+            if w not in wordToIndex:
+                wordToIndex[w] = len(wordToIndex)
+                indexToWord[wordToIndex[w]] = w
+
+# database contents
+maxCamLen = 0
+maxAttrLen = 0
+maxValLen = 0
+
+for db in databases:
+    for c in db:
+        for attr, val in c.items():
+            tokens = nltk.word_tokenize(val.lower().translate(str.maketrans('', '', tools.punctuation)))
+            
+            maxValLen = max(maxValLen, len(tokens))
+            
+            for w in tokens:
+                if w not in wordToIndex:
+                    wordToIndex[w] = len(wordToIndex)
+                    indexToWord[wordToIndex[w]] = w
+                
+for attr in dbFieldnames:
+    tokens = nltk.word_tokenize(attr.lower().translate(str.maketrans('', '', tools.punctuation)))
+    
+    maxAttrLen = max(maxAttrLen, len(tokens))
+    
+    for w in tokens:
+        if w not in wordToIndex:
+            wordToIndex[w] = len(wordToIndex)
+            indexToWord[wordToIndex[w]] = w
+
+for cam in cameras:
+    tokens = nltk.word_tokenize(cam.lower().translate(str.maketrans('', '', tools.punctuation)))
+    
+    maxCamLen = max(maxCamLen, len(tokens))
+    
+    for w in tokens:
+        if w not in wordToIndex:
+            wordToIndex[w] = len(wordToIndex)
+            indexToWord[wordToIndex[w]] = w
+
+
+
+goToken = "<go>"
+eofToken = "<eof>"
+
+wordToIndex[goToken] = len(wordToIndex)
+indexToWord[wordToIndex[goToken]] = goToken
+
+wordToIndex[eofToken] = len(wordToIndex)
+indexToWord[wordToIndex[eofToken]] = eofToken
+
+# add 1 for EOF token
+maxShkpSpeechLen += 1 
+maxCamLen += 1
+maxAttrLen += 1
+maxValLen += 1
+
+vocabSize = len(indexToWord)
+
+
+# save the vocab
+with open(sessionDir+"/db_and_output_vocab.csv", "w", newline="") as csvfile:
+    writer = csv.DictWriter(csvfile, ["INDEX", "TOKEN"])
+    writer.writeheader()
+    
+    for i, w in indexToWord.items():
+        row = {}
+        row["INDEX"] = i
+        row["TOKEN"] = w 
+        writer.writerow(row)
+
+
+#
+# save the DB sequence vectorizations
+#
+
+# format 1
+for i in range(len(databases)):
+    db = []
+    
+    for c in range(len(databases[i])):
+        valSeqs = []
+        
+        for attr in dbFieldnames:
+            
+            cam = databases[i][c]["camera_ID"]
+            val = databases[i][c][attr]
+            
+            valSeq = []
+            tokens = nltk.word_tokenize(val.lower().translate(str.maketrans('', '', tools.punctuation)))
+            
+            for w in tokens:
+                valSeq.append(wordToIndex[w])
+            valSeq.append(wordToIndex[eofToken])
+            
+            valSeq += [-1] * (maxValLen - len(valSeq))
+            
+            valSeqs.append(valSeq)
+        
+        db.append(valSeqs)
+    
+    db = np.asarray(db)
+    fn = interactionFilenamesAll[i].split("/")[-1][:-4] + "_database_vector_sequences".format(i)
+    np.save(sessionDir+"/"+fn, db)
+
+
+# format 2 - as in the COREQA paper (He at al., 2017)
+print("DB camera length:", maxCamLen)
+print("DB attribute length:", maxAttrLen)
+print("DB value length:", maxValLen)
+
+
+for i in range(len(databases)):
+    dbCams = []
+    dbAttrs = []
+    dbVals = []
+    
+    for c in range(len(databases[i])):
+        for attr in dbFieldnames:
+            
+            cam = databases[i][c]["camera_ID"]
+            val = databases[i][c][attr]
+            
+            camTokens = nltk.word_tokenize(cam.lower().translate(str.maketrans('', '', tools.punctuation)))
+            attrTokens = nltk.word_tokenize(attr.lower().translate(str.maketrans('', '', tools.punctuation)))
+            valTokens = nltk.word_tokenize(val.lower().translate(str.maketrans('', '', tools.punctuation)))
+            
+            
+            camSeq = [wordToIndex[w] for w in camTokens]
+            camSeq.append(wordToIndex[eofToken])
+            camSeq += [-1] * (maxCamLen - len(camSeq))
+            
+            attrSeq = [wordToIndex[w] for w in attrTokens]
+            attrSeq.append(wordToIndex[eofToken])
+            attrSeq += [-1] * (maxAttrLen - len(attrSeq))
+            
+            valSeq = [wordToIndex[w] for w in valTokens]
+            valSeq.append(wordToIndex[eofToken])
+            valSeq += [-1] * (maxValLen - len(valSeq))
+            
+            camSeq = np.asarray(camSeq)
+            attrSeq = np.asarray(attrSeq)
+            valSeq = np.asarray(valSeq)
+            
+            
+            dbCams.append(camSeq)
+            dbAttrs.append(attrSeq)
+            dbVals.append(valSeq)
+            
+            
+    
+    dbCams = np.asarray(dbCams)
+    fn = interactionFilenamesAll[i].split("/")[-1][:-4] + "_database_fact_cams".format(i)
+    np.save(sessionDir+"/"+fn, dbCams)
+    
+    dbAttrs = np.asarray(dbAttrs)
+    fn = interactionFilenamesAll[i].split("/")[-1][:-4] + "_database_fact_attrs".format(i)
+    np.save(sessionDir+"/"+fn, dbAttrs)
+    
+    dbVals = np.asarray(dbVals)
+    fn = interactionFilenamesAll[i].split("/")[-1][:-4] + "_database_fact_vals".format(i)
+    np.save(sessionDir+"/"+fn, dbVals)
+
 
 
 #
@@ -474,6 +658,8 @@ for i in range(len(interactions)):
     #outputActionIds = []
     
     outputSpeechClusters = []
+    outputSpeechSequences = []
+    outputSpeechSequenceLens = []
     outputLocations = []
     outputSpatialStates = []
     outputStateTargets = []
@@ -481,6 +667,7 @@ for i in range(len(interactions)):
     outputCameraIndices = []
     outputAttributeIndices = []
     #outputDbIndexMasks = []
+    databaseIds = []
     
     count = 0
     
@@ -519,6 +706,7 @@ for i in range(len(interactions)):
                 attributeIndexOutputs[index] = 1
             
             
+            
             outputSpeechClusters.append(interactions[i][j]["OUTPUT_SHOPKEEPER_SPEECH_CLUSTER_ID"])
             outputLocations.append(interactions[i][j]["OUTPUT_SHOPKEEPER_LOCATION"])
             outputSpatialStates.append(interactions[i][j]["OUTPUT_SPATIAL_STATE"])
@@ -526,6 +714,23 @@ for i in range(len(interactions)):
             
             outputCameraIndices.append(cameraIndexOutputs)
             outputAttributeIndices.append(attributeIndexOutputs)
+            databaseIds.append(int(interactions[i][j]["DATABASE_ID"]))
+            
+            
+            #
+            outputSpeechSeq = []
+            tokens = nltk.word_tokenize(interactions[i][j]["SHOPKEEPER_SPEECH"])
+            
+            for w in tokens:
+                outputSpeechSeq.append(wordToIndex[w])
+            outputSpeechSeq.append(wordToIndex[eofToken])
+            
+            outputSpeechSeq += [-1] * (maxShkpSpeechLen - len(outputSpeechSeq))
+            outputSpeechSequences.append(outputSpeechSeq)
+            
+            outputSpeechSequenceLens.append(len(tokens)+1)
+            #
+            
             
             count += 1
             #print("{} / {}".format(count, len(interactions[i])))
@@ -540,16 +745,22 @@ for i in range(len(interactions)):
     #outputActionIds = np.asarray(outputActionIds)
     #np.save(sessionDir+"/"+fn, outputActionIds)
     
+    
     if useSymbols:
         fn = interactionFilenamesAll[i].split("/")[-1][:-4] + "_output_speech_cluster_ids_withsymbols"
-        outputSpeechClusters = np.asarray(outputSpeechClusters)
-        np.save(sessionDir+"/"+fn, outputSpeechClusters)
-    
     else:
         fn = interactionFilenamesAll[i].split("/")[-1][:-4] + "_output_speech_cluster_ids_nosymbols"
-        outputSpeechClusters = np.asarray(outputSpeechClusters)
-        np.save(sessionDir+"/"+fn, outputSpeechClusters)
+    outputSpeechClusters = np.asarray(outputSpeechClusters)
+    np.save(sessionDir+"/"+fn, outputSpeechClusters)
     
+    
+    fn = interactionFilenamesAll[i].split("/")[-1][:-4] + "_output_speech_vector_sequences"
+    outputSpeechSequences = np.asarray(outputSpeechSequences)
+    np.save(sessionDir+"/"+fn, outputSpeechSequences)
+    
+    fn = interactionFilenamesAll[i].split("/")[-1][:-4] + "_output_speech_vector_sequence_lens"
+    outputSpeechSequenceLens = np.asarray(outputSpeechSequenceLens)
+    np.save(sessionDir+"/"+fn, outputSpeechSequenceLens)
     
     fn = interactionFilenamesAll[i].split("/")[-1][:-4] + "_output_locations"
     outputLocations = np.asarray(outputLocations)
@@ -570,6 +781,10 @@ for i in range(len(interactions)):
     fn = interactionFilenamesAll[i].split("/")[-1][:-4] + "_output_attribute_indices"
     outputCameraIndices = np.asarray(outputAttributeIndices)
     np.save(sessionDir+"/"+fn, outputAttributeIndices)
+    
+    fn = interactionFilenamesAll[i].split("/")[-1][:-4] + "_database_indices"
+    databaseIds = np.asarray(databaseIds)
+    np.save(sessionDir+"/"+fn, databaseIds)
     
     
     print("completed", i+1, "of", len(interactions))
