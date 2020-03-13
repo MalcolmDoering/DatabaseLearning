@@ -42,8 +42,8 @@ def main(mainDir, condition, gpuCount):
     # running params
     #################################################################################################################
     
-    DEBUG = False
-    RUN_PARALLEL = True
+    DEBUG = True
+    RUN_PARALLEL = False
     
     SPEECH_CLUSTER_LOSS_WEIGHTS = True
     
@@ -79,9 +79,9 @@ def main(mainDir, condition, gpuCount):
     numTestDbs = 1
     
     numInteractionsPerDb = 200
-    batchSize = 32
+    batchSize = 8
     randomizeTrainingBatches = False
-    numEpochs = 500
+    numEpochs = 300
     evalEvery = 1
     
     dataDirectory = tools.dataDir+"2020-01-08_advancedSimulator9" # handmade databases, customer-driven interactions, deterministic introductions, crowdsourced shopkeeper utts
@@ -602,6 +602,8 @@ def main(mainDir, condition, gpuCount):
         foldIdentifier = "rs{}_fold{}".format(randomSeed, foldId)
         
         foldDir = tools.create_directory(sessionDir + "/" + foldIdentifier)
+        modelDir = tools.create_directory(foldDir+"/model")
+        
         
         foldLogFile = sessionDir + "/fold_log_{}.csv".format(foldIdentifier)
         foldTerminalOutputLogFile = foldDir + "/terminal_output_log_{}.txt".format(foldIdentifier)
@@ -2759,7 +2761,11 @@ def main(mainDir, condition, gpuCount):
                     
                     
                     print(tabulate(tableData, headers=["METRIC", "TRAINING", "VALIDATION", "TESTING"], floatfmt=".3f", tablefmt="grid"), flush=True, file=foldTerminalOutputStream)
-                            
+                    
+                    
+                    
+                    learner.save(modelDir+"/model")        
+                    
                     print("", flush=True, file=foldTerminalOutputStream)
                     
                 
@@ -2769,7 +2775,8 @@ def main(mainDir, condition, gpuCount):
             
             
             
-            print("Epoch {} time: {}s".format(e, round(time.time() - startTime, 2)), flush=True, file=sessionTerminalOutputStream)
+            
+            print("Epoch {} time: {}s".format(e, round(time.time() - startTime, 2)), flush=True, file=foldTerminalOutputStream)
             
     #
     # start parallel processing
@@ -2806,9 +2813,9 @@ def main(mainDir, condition, gpuCount):
 
 gpuCount = 0
 #gpuCount = main(mainDir, "proposed", gpuCount)
-#gpuCount = main(mainDir, "baseline1", gpuCount)
+gpuCount = main(mainDir, "baseline1", gpuCount)
 #gpuCount = main(mainDir, "copynet", gpuCount)
-gpuCount = main(mainDir, "coreqa", gpuCount)
+#gpuCount = main(mainDir, "coreqa", gpuCount)
 
 
 

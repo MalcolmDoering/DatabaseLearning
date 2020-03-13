@@ -23,7 +23,7 @@ from utterancevectorizer import UtteranceVectorizer
 dataDirectory = tools.dataDir+"2020-01-08_advancedSimulator9"
 
 #sessionDir = tools.create_session_dir("datapreprocessing2_dbl")
-sessionDir = dataDirectory+"_input_sequence_vectors"
+sessionDir = dataDirectory+"_input_sequence_vectors_2"
 tools.create_directory(sessionDir)
 
 
