@@ -617,7 +617,7 @@ class CopyNetWrapper4(tf.nn.rnn_cell.RNNCell):
         self.db_match_fact_encoding_hist = tf.zeros((self.batchSize, self._db_fact_encoding_size), tf.float32, name='teacher_forcing_prob')
         
         
-        self._copy_weight = tf.get_variable('CopyWeight', [self._encoder_state_size , self._cell.output_size + self._db_fact_encoding_size])
+        self._copy_weight = tf.get_variable('CopyWeight', [self._encoder_state_size , self._cell.output_size + self._db_fact_encoding_size], trainable=True, initializer=tf.initializers.he_normal())
         #self._copy_weight = tf.layers.Dense(self._cell.output_size, activation=tf.nn.tanh, use_bias=True, kernel_initializer=tf.initializers.he_normal(), name="CopyWeight")
         
         

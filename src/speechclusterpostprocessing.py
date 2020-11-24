@@ -22,7 +22,7 @@ import tools
 #shopkeeperSpeechVectorFilename = tools.dataDir+"/utterance vectors/" + "20191212_simulated_data_csshkputts_withsymbols_200 shopkeeper - tri stm - 1 wgt kw - mc2 - stopwords 1 - utterance vectors.txt"
 
 # for baseline 1
-shopkeeperSpeechClusterFilename = tools.modelDir + "20191219_simulated_data_csshkputts_nosymbols_200 shopkeeper - tri stm - 1 wgt kw - mc2 - stopwords 1- speech_clusters.csv"
+shopkeeperSpeechClusterFilename_prop = tools.modelDir + "20191219_simulated_data_csshkputts_nosymbols_200 shopkeeper - tri stm - 1 wgt kw - mc2 - stopwords 1- speech_clusters.csv"
 shopkeeperSpeechVectorFilename = tools.dataDir+"/utterance vectors/" + "20191219_simulated_data_csshkputts_nosymbols_200 shopkeeper - tri stm - 1 wgt kw - mc2 - stopwords 1 - utterance vectors.txt"
 
 

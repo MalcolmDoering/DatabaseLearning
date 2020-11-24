@@ -1701,8 +1701,8 @@ class CoreqaBased(object):
         self.teacher_forcing_prob = tf.zeros((), tf.float32, name='teacher_forcing_prob')
         
         
-        self.shopkeeper_speech_train_loss, self.shopkeeper_speech_sequence_train_preds, self.copy_scores_train, self.gen_scores_train, self.ave_db_fact_match_scores_train = self.build_decoder_with_db_addressing(teacherForcing=True, scopeName="speech_decoder_train")
-        self.shopkeeper_speech_test_loss, self.shopkeeper_speech_sequence_test_preds, self.copy_scores_test, self.gen_scores_test, self.ave_db_fact_match_scores_test = self.build_decoder_with_db_addressing(teacherForcing=False, scopeName="speech_decoder_test")
+        self.shopkeeper_speech_train_loss, self.shopkeeper_speech_sequence_train_preds, self.copy_scores_train, self.gen_scores_train, self.ave_db_fact_match_scores_train = self.build_decoder_with_db_addressing(teacherForcing=False, scopeName="speech_decoder_train")
+        #self.shopkeeper_speech_test_loss, self.shopkeeper_speech_sequence_test_preds, self.copy_scores_test, self.gen_scores_test, self.ave_db_fact_match_scores_test = self.build_decoder_with_db_addressing(teacherForcing=False, scopeName="speech_decoder_test")
         
         
         #
@@ -1732,7 +1732,7 @@ class CoreqaBased(object):
         #
         # setup the training function
         #
-        opt = tf.train.AdamOptimizer(learning_rate=3e-4)
+        opt = tf.train.AdamOptimizer(learning_rate=1e-4)
         
         self.reset_optimizer_op = tf.variables_initializer(opt.variables())
         
@@ -1769,7 +1769,8 @@ class CoreqaBased(object):
         
         self.saver = tf.train.Saver()
         
-        self.pred_utt_op = tf.argmax(self.shopkeeper_speech_sequence_test_preds, 2, name="predict_utterance_op")
+        #self.pred_utt_op = tf.argmax(self.shopkeeper_speech_sequence_test_preds, 2, name="predict_utterance_op")
+        self.pred_utt_op = tf.argmax(self.shopkeeper_speech_sequence_train_preds, 2, name="predict_utterance_op")
     
     
     
@@ -1831,59 +1832,6 @@ class CoreqaBased(object):
             
         
         return loss, predicted_output_sequences, copy_scores, gen_scores, ave_db_fact_match_scores
-    
-    
-    
-    
-    def build_decoder(self, teacherForcing=False, scopeName="decoder"):
-        
-        
-        with tf.variable_scope(scopeName):
-            
-            loss = 0
-            predicted_output_sequences = []
-            copy_scores = []
-            gen_scores = []
-            
-            state = self.decoder_initial_state
-            output = self.decoder_inputs_one_hot[:, 0, :] # each output sequence must have a 'start' char appended to the beginning
-            
-            
-            for i in range(self.outputSeqLen):
-                
-                if teacherForcing:
-                    # if using teacher forcing
-                    bernoulliSample = tf.to_float(tf.distributions.Bernoulli(probs=self.teacher_forcing_prob).sample())
-                    output = tf.math.scalar_mul(bernoulliSample, self.decoder_inputs_one_hot[:, i, :]) + tf.math.scalar_mul((1.0-bernoulliSample), output)
-                    output, state, copy_score, gen_score = self.copynet_cell(output, state)
-                    
-                    #output, state, copy_score, gen_score = self.copynet_cell(self.decoder_inputs_one_hot[:, i, :], state)
-                    
-                else:
-                    # if not using teacher forcing
-                    output, state, copy_score, gen_score = self.copynet_cell(output, state)
-                
-                
-                predicted_output_sequences.append(tf.reshape(output, shape=(tf.shape(output)[0], 1, self.vocabSize)))
-                copy_scores.append(tf.reshape(copy_score, shape=(tf.shape(copy_score)[0], 1, self.vocabSize)))
-                gen_scores.append(tf.reshape(gen_score, shape=(tf.shape(gen_score)[0], 1, self.vocabSize)))
-                
-                # get the ground truth output
-                ground_truth_output = tf.one_hot(self.shopkeeper_speech_sequence_targets[:, i], self.vocabSize) # these are one-hot char encodings at timestep i
-                
-                # compute the loss
-                #cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=ground_truth_output, logits=output)
-                cross_entropy = tf.losses.softmax_cross_entropy(ground_truth_output, output, weights=self.shopkeeper_speech_sequence_mask[:,i], reduction=tf.losses.Reduction.SUM_OVER_BATCH_SIZE) # is this right for sequence eval?
-                #current_loss = tf.reduce_sum(cross_entropy)
-                loss = loss + cross_entropy
-            
-            
-            predicted_output_sequences = tf.concat(predicted_output_sequences, 1)
-            copy_scores = tf.concat(copy_scores, 1)
-            gen_scores = tf.concat(gen_scores, 1)
-        
-        return loss, predicted_output_sequences, copy_scores, gen_scores
-    
     
     
     def initialize(self):
@@ -1990,7 +1938,8 @@ class CoreqaBased(object):
                         }
             
             loss, shopkeeper_action_loss, location_loss, spatial_state_loss, state_target_loss, = self.sess.run([self.loss, 
-                                                                                                                   self.shopkeeper_speech_test_loss, 
+                                                                                                                   #self.shopkeeper_speech_test_loss, 
+                                                                                                                   self.shopkeeper_speech_train_loss, 
                                                                                                                    self.location_loss, 
                                                                                                                    self.spatial_state_loss, 
                                                                                                                    self.state_target_loss],
@@ -2044,7 +1993,8 @@ class CoreqaBased(object):
                         self.location_argmax,
                         self.spatial_state_argmax,
                         self.state_target_argmax,
-                        self.ave_db_fact_match_scores_test],
+                        #self.ave_db_fact_match_scores_test],
+                        self.ave_db_fact_match_scores_train],
                         feed_dict=feedDict)
                         
             ###

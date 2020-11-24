@@ -2813,9 +2813,9 @@ def main(mainDir, condition, gpuCount):
 
 gpuCount = 0
 #gpuCount = main(mainDir, "proposed", gpuCount)
-gpuCount = main(mainDir, "baseline1", gpuCount)
+#gpuCount = main(mainDir, "baseline1", gpuCount)
 #gpuCount = main(mainDir, "copynet", gpuCount)
-#gpuCount = main(mainDir, "coreqa", gpuCount)
+gpuCount = main(mainDir, "coreqa", gpuCount)
 
 
 
