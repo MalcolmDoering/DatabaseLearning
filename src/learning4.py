@@ -158,7 +158,7 @@ class CustomNeuralNetwork(object):
             # get the length of the most relevant DB contents
             # this is the weighted sum of DB content lens
             self.mostReleveantDbContentLens = self.database_content_lengths * tf.expand_dims(self.cam_index_decoder, 2)
-            self.mostReleveantDbContentLens = self.database_content_lengths * tf.expand_dims(self.attr_index_decoder, 1)
+            self.mostReleveantDbContentLens = self.mostReleveantDbContentLens * tf.expand_dims(self.attr_index_decoder, 1)
             self.mostReleveantDbContentLens = tf.reduce_sum(self.mostReleveantDbContentLens, axis=2)
             self.mostReleveantDbContentLens = tf.reduce_sum(self.mostReleveantDbContentLens, axis=1)
             
